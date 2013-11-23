@@ -3,16 +3,97 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .1
+Version: .3
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
 
 /*
 	Set these to the ids of your main and sponsored levels. 	
+	
+	Now using a global array so you can have multiple main and sponsored levels.	
+	Array keys should be the main account level.
+		
+	array(
+		1 => array(
+			'main_level_id' => 1,		//redundant but useful
+			'sponsored_level_id' => 2,
+			'seats' => 5,
+			'seat_cost' => 250,
+			'max_seats' => 10
+		)
+	)
 */
-define('PMPROSM_MAIN_ACCOUNT_LEVEL', 1);
-define('PMPROSM_SPONSORED_ACCOUNT_LEVEL', 2);
+global $pmprosm_sponsored_account_levels;
+$pmprosm_sponsored_account_levels = array(
+										1 => array(
+											'main_level_id' => 1,
+											'sponsored_level_id' => 2,
+											'seats' => 5,
+											'seat_cost' => 250,
+											'max_seats' => 10
+										)
+									);
+
+//old constant values for reference. not used anymore
+//define('PMPROSM_MAIN_ACCOUNT_LEVEL', 1);
+//define('PMPROSM_SPONSORED_ACCOUNT_LEVEL', 2);
+//define('PMPROSM_NUM_SEATS', 5);
+//define('PMPROSM_SEAT_COST', 250);
+//define('PMPROSM_MAX_SEATS', 10);
+
+//check if a level id is a "main account" level
+function pmprosm_isMainLevel($level_id)
+{
+	global $pmprosm_sponsored_account_levels;
+	
+	if(empty($pmprosm_sponsored_account_levels))
+		return false;
+	
+	foreach($pmprosm_sponsored_account_levels as $key => $values)
+	{
+		if($level_id == $key)
+			return true;
+	}
+	
+	return false;
+}
+
+//check if a level id is a "sponsored level"
+function pmprosm_isSponsoredLevel($level_id)
+{
+	global $pmprosm_sponsored_account_levels;
+	
+	if(empty($pmprosm_sponsored_account_levels))
+		return false;
+	
+	foreach($pmprosm_sponsored_account_levels as $key => $values)
+	{
+		if($value['sponsored_level_id'] == $key)
+			return true;
+	}
+	
+	return false;
+}
+
+//get values by main account level
+function pmprosm_getValuesByMainLevel($level_id)
+{
+	global $pmprosm_sponsored_account_levels;
+	return $pmprosm_sponsored_account_levels[$level_id];
+}
+
+//get values by sponsored account level
+function pmprosm_getValuesBySponsoredLevel($level_id)
+{
+	global $pmprosm_sponsored_account_levels;
+	
+	foreach($pmprosm_sponsored_account_levels as $key => $values)
+	{
+		if($value['sponsored_level_id'] == $key)
+			return $pmprosm_sponsored_account_levels[$key];
+	}
+}
 
 //cancel sub members when a main account cancels
 //activate sub members when changed to main account
@@ -42,19 +123,37 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 				}
 			}
 		}
+		
+		//remove seats from meta
+		update_user_meta($user_id, "pmprosm_seats", "");
 	}
-	elseif($level_id == PMPROSM_MAIN_ACCOUNT_LEVEL)
+	elseif(pmprosm_isMainLevel($level_id))
 	{
+		//get values for this sponsorship
+		$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
+				
 		//check if this user already has a discount code
 		$code_id = pmprosm_getCodeByUserID($user_id);
-		
+				
 		if(empty($code_id))
 		{
+			//if seats cost money and there are no seats, just return
+			if(!empty($pmprosm_values['seat_cost']) && empty($_REQUEST['seats']))
+				return;
+			
 			//generate a new code. change these values if you want.
 			$code = "S" . pmpro_getDiscountCode();
 			$starts = date("Y-m-d");
 			$expires = date("Y-m-d", strtotime("+1 year"));
-			$uses = "";
+			
+			//check for seats
+			if(isset($_REQUEST['seats']))
+				$uses = intval($_REQUEST['seats']);
+			elseif(defined('PMPROSM_NUM_SEATS'))
+				$uses = PMPROSM_NUM_SEATS;
+			else
+				$uses = "";
+			
 			$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . $wpdb->escape($code) . "', '" . $starts . "', '" . $expires . "', '" . intval($uses) . "')";
 			
 			if($wpdb->query($sqlQuery) !== false)
@@ -62,32 +161,147 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 				$code_id = $wpdb->insert_id;
 				
 				//okay update level
-				if(PMPROSM_SPONSORED_ACCOUNT_LEVEL > 0)
+				if($pmprosm_values['sponsored_level_id'] > 0)
 				{
-					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period) VALUES('" . $wpdb->escape($code_id) . "', '" . $wpdb->escape(PMPROSM_SPONSORED_ACCOUNT_LEVEL) . "', '0', '0', '0', 'Month', '0', '0', '0', '0', 'Month')";
+					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period) VALUES('" . $wpdb->escape($code_id) . "', '" . $wpdb->escape($pmprosm_values['sponsored_level_id']) . "', '0', '0', '0', 'Month', '0', '0', '0', '0', 'Month')";
 					$wpdb->query($sqlQuery);
 					
 					pmprosm_setCodeUserID($code_id, $user_id);
 				}
 			}
 		}	
-		elseif(PMPROSM_SPONSORED_ACCOUNT_LEVEL > 0)
+		elseif($pmprosm_values['sponsored_level_id'] > 0)
 		{
-			//see if we should enable some accounts
-			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
-			$sub_user_ids = $wpdb->get_col($sqlQuery);
-			if(!empty($sub_user_ids))
+			//update sponsor code and sub accounts
+			pmprosm_sponsored_account_change($level_id, $user_id);
+			
+			//make sure we only do it once
+			remove_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout_sponsor_account_change", 10, 2);
+		}	
+	}
+}
+add_action("pmpro_after_change_membership_level", "pmprosm_pmpro_after_change_membership_level", 10, 2);
+
+/*
+	This is the function that handles updating discount codes and sub accounts when a sponsor renews or changes levels.
+*/
+function pmprosm_sponsored_account_change($level_id, $user_id)
+{
+	global $wpdb;
+	
+	$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
+	$code_id = pmprosm_getCodeByUserID($user_id);
+
+	//update seats for code
+	if(isset($_REQUEST['seats']))			
+		$seats = intval($_REQUEST['seats']);
+	else
+		$seats = "";
+	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "' WHERE code_id = '" . $code_id . "' LIMIT 1";
+	$wpdb->query($sqlQuery);
+	
+	//see if we should enable some accounts
+	$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
+	$sub_user_ids = $wpdb->get_col($sqlQuery);
+		
+	if(!empty($sub_user_ids))
+	{
+		//check if they have enough seats				
+		if($seats >= count($sub_user_ids))
+		{				
+			foreach($sub_user_ids as $sub_user_id)
 			{
-				foreach($sub_user_ids as $sub_user_id)
-				{
-					//change their membership
-					pmpro_changeMembershipLevel(PMPROSM_SPONSORED_ACCOUNT_LEVEL, $sub_user_id);
-				}
+				$count++;
+				
+				//change their membership
+				pmpro_changeMembershipLevel($pmprosm_values['sponsored_level_id'], $sub_user_id);
+			}
+		}
+		else
+		{
+			//get code
+			$code = $wpdb->get_var("SELECT code FROM $wpdb->pmpro_discount_codes WHERE id = '" . $code_id . "' LIMIT 1");
+			
+			//cancel sponsnored accounts
+			foreach($sub_user_ids as $sub_user_id)
+			{
+				//cancel their membership
+				pmpro_changeMembershipLevel(0, $sub_user_id);
+			}
+			
+			//detach sponsored accounts
+			$sqlQuery = "DELETE FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";					
+			$wpdb->query($sqlQuery);
+						
+			//we better warn them					
+			if(is_admin())
+			{
+				//assuming an admin update
+				set_transient("pmprosm_error", "This user has fewer seats than they had sponsored accounts. The sponsored accounts have been deactivated. The user must have his sponsored accounts checkout again using the code: " . $code . ".");
+			}
+			else
+			{
+				//assuming a checkout
+				add_filter("pmpro_confirmation_url", "pmprosm_pmpro_confirmation_url_lowseats");				
 			}
 		}
 	}
 }
-add_action("pmpro_after_change_membership_level", "pmprosm_pmpro_after_change_membership_level", 10, 2);
+
+/*
+	Want to make sure we trigger an update when a sponsor renews the same level.
+*/
+function pmprosm_pmpro_after_checkout_sponsor_account_change($user_id)
+{
+	//get level
+	$level_id = intval($_REQUEST['level']);
+	
+	pmprosm_sponsored_account_change($level_id, $user_id);	
+}
+add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout_sponsor_account_change", 10, 2);
+
+/*
+	low seats message for confirmation message
+*/
+//add param to checkout URL (queued up in pmprosm_sponsored_account_change())
+function pmprosm_pmpro_confirmation_url_lowseats($url)
+{
+	$url .= "&lowseats=1";
+	
+	return $url;
+}
+//add message to confirmation page
+function pmprosm_pmpro_confirmation_message_lowseats($message)
+{
+	global $wpdb, $current_user;
+	$code_id = pmprosm_getCodeByUserID($current_user->ID);
+	$code = $wpdb->get_var("SELECT code FROM $wpdb->pmpro_discount_codes WHERE id = '" . $code_id . "' LIMIT 1");
+	
+	$message .= "<p><strong>Notice:</strong>Your current membership has fewer seats than you had sponsored accounts. The accounts have been deactivated. You must have your sponsored accounts checkout again using your code: " . $code . ".</p>";
+	
+	return $message;
+}
+if(!empty($_REQUEST['lowseats']))
+	add_filter("pmpro_confirmation_message", "pmprosm_pmpro_confirmation_message_lowseats");
+
+//low seats message for edit user page
+function pmprosm_admin_head_errors()
+{
+	$error = get_transient("pmprosm_error");
+	if(!empty($error))
+	{		
+	?>
+		<script>
+		jQuery(document).ready(function() {
+			jQuery('div.wrap h2').after('<div id="message" class="updated"><p><?php echo $error;?></p></div>');
+		});
+		</script>
+	<?php
+	
+		delete_transient("pmprosm_error");
+	}
+}
+add_action("admin_head", "pmprosm_admin_head_errors");
 
 //functions to get and set a code user ID
 function pmprosm_getCodeUserID($code_id)
@@ -131,38 +345,22 @@ function pmprosm_getCodeByUserID($user_id)
 	return false;
 }
 
-//show a user's discount code on the account page
-function pmprosm_the_content_account_page($content)
-{
-	global $post, $pmpro_pages, $current_user, $wpdb;
-			
-	if(!is_admin() && $post->ID == $pmpro_pages['account'])
-	{
-		$code_id = pmprosm_getCodeByUserID($current_user->ID);
-				
-		if(!empty($code_id))
-			$code = $wpdb->get_var("SELECT code FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
-				
-		if(!empty($code))
-			$content = "<p>Give this code for your sponsors to use at checkout: <strong>" . $code . "</strong></p>" . $content;
-	}
-	
-	return $content;
-}
-add_filter("the_content", "pmprosm_the_content_account_page");
-
 //show a user's discount code on the confirmation page
 function pmprosm_pmpro_confirmation_message($message)
 {
 	global $current_user, $wpdb;
 	
-	$code_id = pmprosm_getCodeByUserID($current_user->ID);
-				
+	$code_id = pmprosm_getCodeByUserID($current_user->ID);	
+	
 	if(!empty($code_id))
-		$code = $wpdb->get_var("SELECT code FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
+	{
+		$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
+		$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
+		$code_url = pmpro_url("checkout", "?level=" . $pmprosm_values['sponsored_level_id'] . "&discount_code=" . $code->code);
+	}
 			
 	if(!empty($code))
-		$message .= "<p>Give this code for your sponsors to use at checkout: <strong>" . $code . "</strong></p>";
+		$message .= "<p>Give this code for your sponsored members to use at checkout: <strong><a target=\"_blank\" href=\"" . $code_url . "\">" . $code->code . "</a></strong></p>";
 	
 	return $message;
 }
@@ -184,21 +382,22 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 
 	//level = PMPROSM_SPONSORED_ACCOUNT_LEVEL and there is no discount code, then show an error message
 	global $pmpro_level, $discount_code, $wpdb;
-	if($pmpro_level->id == PMPROSM_SPONSORED_ACCOUNT_LEVEL && empty($discount_code))
+	if(pmprosm_isSponsoredLevel($pmpro_level->id) && empty($discount_code))
 	{
 		pmpro_setMessage("You must use a valid discount code to register for this level.", "pmpro_error");
 		return false;
 	}
 		
 	//if a discount code is being used, check that the main account is active
-	if($pmpro_level->id == PMPROSM_SPONSORED_ACCOUNT_LEVEL && !empty($discount_code))
+	if(pmprosm_isSponsoredLevel($pmpro_level->id) && !empty($discount_code))
 	{
+		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
 		$code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . $wpdb->escape($discount_code) . "' LIMIT 1");
 		if(!empty($code_id))
 		{
 			$code_user_id = pmprosm_getCodeUserID($code_id);
 						
-			if(!pmpro_hasMembershipLevel(PMPROSM_MAIN_ACCOUNT_LEVEL, $code_user_id))
+			if(!empty($code_user_id) && !pmpro_hasMembershipLevel($pmprosm_values['main_level_id'], $code_user_id))
 			{
 				pmpro_setMessage("The sponsor for this code is inactive. Ask them to renew their account.", "pmpro_error");
 				return false;
@@ -255,3 +454,193 @@ function pmprosm_pmpro_save_discount_code($code_id)
 	}	
 }
 add_action("pmpro_save_discount_code", "pmprosm_pmpro_save_discount_code", 5);
+
+//add a dropdown to choose number of seats on checkout page
+function pmprosm_pmpro_checkout_boxes()
+{
+	global $current_user, $pmpro_level, $pmpro_currency_symbol;
+		
+	//only for PMPROSM_MAIN_ACCOUNT_LEVEL
+	if(empty($pmpro_level) || !pmprosm_isMainLevel($pmpro_level->id))
+		return;
+		
+	//make sure options are defined for this
+	$pmprosm_values = pmprosm_getValuesByMainLevel($pmpro_level->id);
+		
+	if(empty($pmprosm_values['max_seats']) || empty($pmprosm_values['seat_cost']))
+		return;
+		
+	//get seats from submit
+	if(isset($_REQUEST['seats']))
+		$seats = intval($_REQUEST['seats']);
+	elseif(!empty($current_user->ID))
+		$seats = get_user_meta($current_user->ID, "pmprosm_seats", true);
+	else
+		$seats = "";			
+?>
+<table id="pmpro_payment_method" class="pmpro_checkout top1em" width="100%" cellpadding="0" cellspacing="0" border="0">
+	<thead>
+		<tr>
+			<th>Would you like to purchase extra seats?</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>
+				<div>
+					<label for="seats">How many?</label>
+					<input type="text" id="seats" name="seats" value="<?php echo esc_attr($seats);?>" size="10" />
+					<small>Enter a number from 1 to <?php echo $pmprosm_values['max_seats'];?>. +<?php echo $pmpro_currency_symbol . $pmprosm_values['seat_cost'];?> per extra seat.</small>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<?php
+}
+add_action("pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes");
+
+//adjust price based on seats
+function pmprosm_pmpro_checkout_levels($level)
+{
+	//get seats from submit
+	if(isset($_REQUEST['seats']))
+		$seats = intval($_REQUEST['seats']);
+	else
+		$seats = "";
+		
+	if(!empty($seats))
+	{
+		$pmprosm_values = pmprosm_getValuesByMainLevel($level->id);
+		if(!empty($pmprosm_values['seat_cost']))
+		{		
+			if($level->initial_payment > 0)
+				$level->initial_payment += $pmprosm_values['seat_cost'] * $seats;
+			if($level->billing_amount > 0)
+				$level->billing_amount += $pmprosm_values['seat_cost'] * $seats;
+		}
+	}
+
+	return $level;
+}
+add_filter("pmpro_checkout_level", "pmprosm_pmpro_checkout_levels");
+
+//save seats at checkout
+function pmprosm_pmpro_after_checkout($user_id)
+{
+	//get seats from submit
+	if(isset($_REQUEST['seats']))
+		$seats = intval($_REQUEST['seats']);
+	else
+		$seats = "";
+
+	update_user_meta($user_id, "pmprosm_seats", $seats);
+}
+add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout");
+
+//add seats field to profile for admins
+function pmprosm_profile_fields_seats($user)
+{
+	if(current_user_can("manage_options"))
+	{
+	?>
+		<h3><?php _e("Sponsored Seats"); ?></h3>
+		<table class="form-table">
+		<tr>
+			<th><label for="seats"><?php _e("Seats"); ?></label></th>
+			<td>
+				<?php
+					$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true));					
+				?>
+				<input type="text" id="seats" name="seats" size="5" value="<?=$seats?>" />
+			</td>
+		</tr>
+		</table>
+	<?php
+	}
+}
+add_action('show_user_profile', 'pmprosm_profile_fields_seats');
+add_action('edit_user_profile', 'pmprosm_profile_fields_seats');
+
+//save seats on profile save
+function pmprosm_profile_update_seats($user_id)
+{
+	//make sure they can edit
+	if ( !current_user_can( 'edit_user', $user_id ) )
+		return false;
+
+	//only let admin's edit the seats
+	if(current_user_can("manage_options") && isset($_POST['seats']))	
+	{
+		//update user meta
+		update_user_meta( $user_id, "pmprosm_seats", intval($_POST['seats']) );			
+		
+		//update code
+		global $wpdb;
+		$code_id = pmprosm_getCodeByUserID($user_id);
+		$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . intval($_POST['seats']) . "' WHERE id = '" . $code_id . "' LIMIT 1";
+		$wpdb->query($sqlQuery);
+	}
+}
+add_action('profile_update', 'pmprosm_profile_update_seats');
+
+/*
+	Show seats on the account page and show if they have been claimed.
+*/
+function pmprosm_the_content_account_page($content)
+{
+	global $post, $pmpro_pages, $current_user, $wpdb;
+			
+	if(!is_admin() && $post->ID == $pmpro_pages['account'])
+	{
+		//what's their code?
+		$code_id = pmprosm_getCodeByUserID($current_user->id);
+		$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
+		
+		if(!empty($code_id) && !empty($pmprosm_values))
+		{			
+			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
+			$code_url = pmpro_url("checkout", "?level=" . $pmprosm_values['sponsored_level_id'] . "&discount_code=" . $code->code);
+			
+			ob_start();
+			//get members
+			$member_ids = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . intval($code_id) . "' LIMIT 1");
+			?>
+			<div id="pmpro_account-gift_codes" class="pmpro_box">	
+				 
+				<h3>Sponsored Members</h3>
+				
+				<p>Give this code to your sponsored members to use at checkout: <strong><a target="_blank" href="<?php echo $code_url;?>"><?php echo $code->code;?></a></strong></p>
+				<p>
+					<?php if(empty($code->uses)) { ?>
+						This code has unlimited uses.
+					<?php } else { ?>
+						<?php echo count($member_ids);?>/<?php echo $code->uses;?> used.
+					<?php } ?>
+				</p>
+				
+				<ul>
+				<?php
+					
+					foreach($member_ids as $member_id)
+					{
+						$member = get_userdata($member_id);
+						?>
+						<li><?php echo $member->display_name;?></li>
+						<?php
+					}
+				?>
+				</ul>			
+			</div>
+			<?php
+			
+			$temp_content = ob_get_contents();
+			ob_end_clean();
+					
+			$content = str_replace('<!-- end pmpro_account-profile -->', '<!-- end pmpro_account-profile -->' . $temp_content, $content);
+		}			
+	}
+	
+	return $content;
+}
+add_filter("the_content", "pmprosm_the_content_account_page", 30);
