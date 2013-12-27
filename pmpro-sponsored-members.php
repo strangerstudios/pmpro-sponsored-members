@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .3.2
+Version: .3.3
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -549,14 +549,30 @@ function pmprosm_pmpro_after_checkout($user_id)
 }
 add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout");
 
-//add seats field to profile for admins
+//add code and seats fields to profile for admins
 function pmprosm_profile_fields_seats($user)
 {
+	global $wpdb;
+	
 	if(current_user_can("manage_options"))
 	{
 	?>
 		<h3><?php _e("Sponsored Seats"); ?></h3>
 		<table class="form-table">
+		<?php
+			$sponsor_code_id = pmprosm_getCodeByUserID($user->ID);
+			if(!empty($sponsor_code_id))
+			{
+		?>
+		<tr>
+			<th><label for="sponsor_code"><?php _e("Sponsor Code"); ?></label></th>
+			<td>
+				<?php echo $wpdb->get_var("SELECT code FROM $wpdb->pmpro_discount_codes WHERE id = '" . $sponsor_code_id . "' LIMIT 1");?>
+			</td>
+		</tr>
+		<?php
+			}
+		?>
 		<tr>
 			<th><label for="seats"><?php _e("Seats"); ?></label></th>
 			<td>
