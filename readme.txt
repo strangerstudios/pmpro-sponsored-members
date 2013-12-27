@@ -39,6 +39,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 == Changelog ==
 = .3.3 =
 * Added Sponsor Code field to edit user profile page for admins.
+* Using $seed parameter in calls to pmpro_getDiscountCode if running PMPro 1.7.6 or higher.
 
 = .3.2 =
 * Fixed pmprosm_isSponsoredLevel()

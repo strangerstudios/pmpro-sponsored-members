@@ -142,7 +142,10 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 				return;
 			
 			//generate a new code. change these values if you want.
-			$code = "S" . pmpro_getDiscountCode();
+			if(version_compare(PMPRO_VERSION, "1.7.5") > 0)
+				$code = "S" . pmpro_getDiscountCode($user_id); 	//seed parameter added in version 1.7.6
+			else
+				$code = "S" . pmpro_getDiscountCode();
 			$starts = date("Y-m-d");
 			$expires = date("Y-m-d", strtotime("+1 year"));
 			
