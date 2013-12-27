@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
 Tested up to: 3.7.1
-Stable tag: .3
+Stable tag: .3.2
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,14 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .3.2 =
+* Fixed pmprosm_isSponsoredLevel()
+
+= .3.1 =
+* Fixed bug where the seats value was not being honored and codes were being created with unlimited seats.
+* Fixed bug where uses value for codes was not being updated if a user with an existing code checked out again.
+* Changed language on account and confirmation page.
+
 = .3 =
 * All settings now defined in the $pmprosm_sponsored_account_levels global. This is an array that supports more than one "main" account level at a time.
 

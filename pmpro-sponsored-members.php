@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .3
+Version: .3.2
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -15,25 +15,25 @@ Author URI: http://www.strangerstudios.com
 	Array keys should be the main account level.
 		
 	array(
+		//set 5 seats at checkout
 		1 => array(
 			'main_level_id' => 1,		//redundant but useful
 			'sponsored_level_id' => 2,
-			'seats' => 5,
+			'seats' => 5			
+		),
+		//seats based on field at checkout
+		3 => array(
+			'main_level_id' => 3,		//redundant but useful
+			'sponsored_level_id' => 4,			
 			'seat_cost' => 250,
 			'max_seats' => 10
 		)
 	)
 */
 global $pmprosm_sponsored_account_levels;
-$pmprosm_sponsored_account_levels = array(
-										1 => array(
-											'main_level_id' => 1,
-											'sponsored_level_id' => 2,
-											'seats' => 5,
-											'seat_cost' => 250,
-											'max_seats' => 10
-										)
-									);
+/*
+	Set $pmprosm_sponsored_account_levels above here or in a custom plugin.
+*/
 
 //old constant values for reference. not used anymore
 //define('PMPROSM_MAIN_ACCOUNT_LEVEL', 1);
@@ -63,13 +63,13 @@ function pmprosm_isMainLevel($level_id)
 function pmprosm_isSponsoredLevel($level_id)
 {
 	global $pmprosm_sponsored_account_levels;
-	
+		
 	if(empty($pmprosm_sponsored_account_levels))
 		return false;
 	
 	foreach($pmprosm_sponsored_account_levels as $key => $values)
-	{
-		if($value['sponsored_level_id'] == $key)
+	{		
+		if($values['sponsored_level_id'] == $level_id)
 			return true;
 	}
 	
@@ -149,8 +149,8 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			//check for seats
 			if(isset($_REQUEST['seats']))
 				$uses = intval($_REQUEST['seats']);
-			elseif(defined('PMPROSM_NUM_SEATS'))
-				$uses = PMPROSM_NUM_SEATS;
+			elseif(!empty($pmprosm_values['seats']))
+				$uses = $pmprosm_values['seats'];
 			else
 				$uses = "";
 			
@@ -195,11 +195,14 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 	//update seats for code
 	if(isset($_REQUEST['seats']))			
 		$seats = intval($_REQUEST['seats']);
+	elseif(!empty($pmprosm_values['seats']))
+		$seats = $pmprosm_values['seats'];
 	else
 		$seats = "";
-	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "' WHERE code_id = '" . $code_id . "' LIMIT 1";
+			
+	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "' WHERE id = '" . $code_id . "' LIMIT 1";
 	$wpdb->query($sqlQuery);
-	
+		
 	//see if we should enable some accounts
 	$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
 	$sub_user_ids = $wpdb->get_col($sqlQuery);
@@ -360,8 +363,16 @@ function pmprosm_pmpro_confirmation_message($message)
 	}
 			
 	if(!empty($code))
-		$message .= "<p>Give this code for your sponsored members to use at checkout: <strong><a target=\"_blank\" href=\"" . $code_url . "\">" . $code->code . "</a></strong></p>";
-	
+	{
+		$message .= "<div class=\"pmpro_content_message\"><p>Give this code to your sponsored members to use at checkout: <strong>" . $code->code . "</strong></p><p>Or provide this direct link to register:<br /><strong>" . $code_url . "</strong></p>";
+		
+		if(empty($code->uses))
+			$message .= "This code has unlimited uses.";
+		else
+			$message .= "This code has " . $code->uses . " uses.";
+		
+		$message .= "</div>";
+	}
 	return $message;
 }
 add_filter("pmpro_confirmation_message", "pmprosm_pmpro_confirmation_message");
@@ -606,11 +617,12 @@ function pmprosm_the_content_account_page($content)
 			//get members
 			$member_ids = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . intval($code_id) . "' LIMIT 1");
 			?>
-			<div id="pmpro_account-gift_codes" class="pmpro_box">	
+			<div id="pmpro_account-sponsored" class="pmpro_box">	
 				 
 				<h3>Sponsored Members</h3>
 				
-				<p>Give this code to your sponsored members to use at checkout: <strong><a target="_blank" href="<?php echo $code_url;?>"><?php echo $code->code;?></a></strong></p>
+				<p>Give this code to your sponsored members to use at checkout: <strong><?php echo $code->code;?></strong></p>
+				<p>Or provide this direct link to register: <strong><a target="_blank" href="<?php echo $code_url;?>"><?php echo $code_url;?></a></strong></p>
 				<p>
 					<?php if(empty($code->uses)) { ?>
 						This code has unlimited uses.
@@ -619,6 +631,8 @@ function pmprosm_the_content_account_page($content)
 					<?php } ?>
 				</p>
 				
+				<?php if(!empty($member_ids)) { ?>
+				<p><strong>Your Sponsored Members</strong></p>
 				<ul>
 				<?php
 					
@@ -630,8 +644,9 @@ function pmprosm_the_content_account_page($content)
 						<?php
 					}
 				?>
-				</ul>			
-			</div>
+				</ul>
+				<?php } ?>
+			</div> <!-- end pmpro_account-sponsored -->
 			<?php
 			
 			$temp_content = ob_get_contents();
