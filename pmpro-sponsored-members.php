@@ -423,6 +423,26 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 }
 add_filter("pmpro_registration_checks", "pmprosm_pmpro_registration_checks");
 
+// add parent account column to the discount codes table view
+function pmprosm_pmpro_discountcodes_extra_cols_header()
+{
+	?>
+	<th>Parent Account</th>
+	<?php
+}
+add_action("pmpro_discountcodes_extra_cols_header", "pmprosm_pmpro_discountcodes_extra_cols_header");
+
+function pmprosm_pmpro_discountcodes_extra_cols_body($code)
+{
+	$code_user_id = pmprosm_getCodeUserID($code->id);
+	$code_user = get_userdata($code_user_id);
+	?>
+	<th><?php if(!empty($code_user_id) && !empty($code_user)) { ?><a href="<?php echo get_edit_user_link($code_user_id); ?>"><?php echo $code_user->user_login; ?></a><?php } elseif(!empty($code_user_id) && empty($code_user)) { ?><em>Missing User</em><?php } else { ?><?php } ?></th>
+	<?php
+}
+add_action("pmpro_discountcodes_extra_cols_body", "pmprosm_pmpro_discountcodes_extra_cols_body");
+
+
 //add user id field to discount code page.
 function pmprosm_pmpro_discount_code_after_settings()
 {	
