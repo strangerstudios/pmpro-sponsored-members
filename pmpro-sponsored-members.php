@@ -90,7 +90,7 @@ function pmprosm_getValuesBySponsoredLevel($level_id)
 	
 	foreach($pmprosm_sponsored_account_levels as $key => $values)
 	{
-		if($value['sponsored_level_id'] == $key)
+		if($values['sponsored_level_id'] == $key)
 			return $pmprosm_sponsored_account_levels[$key];
 	}
 }
