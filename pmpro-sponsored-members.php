@@ -98,14 +98,14 @@ function pmprosm_getValuesBySponsoredLevel($level_id)
 	
 	foreach($pmprosm_sponsored_account_levels as $key => $values)
 	{
-		if(is_array($value['sponsored_level_id']))
+		if(is_array($values['sponsored_level_id']))
 		{
-			if(in_array($key, $value['sponsored_level_id']))
+			if(in_array($key, $values['sponsored_level_id']))
 				return $pmprosm_sponsored_account_levels[$key];
 		}
 		else
 		{
-			if($value['sponsored_level_id'] == $key)
+			if($values['sponsored_level_id'] == $key)
 				return $pmprosm_sponsored_account_levels[$key];
 		}
 	}
@@ -173,7 +173,7 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			else
 				$uses = "";
 			
-			$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . $wpdb->escape($code) . "', '" . $starts . "', '" . $expires . "', '" . intval($uses) . "')";
+			$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql($code) . "', '" . $starts . "', '" . $expires . "', '" . intval($uses) . "')";
 			
 			if($wpdb->query($sqlQuery) !== false)
 			{
@@ -189,7 +189,7 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 					
 				foreach($sponsored_levels as $sponsored_level)
 				{
-					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period) VALUES('" . $wpdb->escape($code_id) . "', '" . $wpdb->escape($sponsored_level) . "', '0', '0', '0', 'Month', '0', '0', '0', '0', 'Month')";
+					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period) VALUES('" . esc_sql($code_id) . "', '" . esc_sql($sponsored_level) . "', '0', '0', '0', 'Month', '0', '0', '0', '0', 'Month')";
 					$wpdb->query($sqlQuery);										
 				}
 			}
@@ -409,7 +409,7 @@ function pmprosm_pmpro_confirmation_message($message)
 	if(!empty($code_id))
 	{
 		$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
-		$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
+		$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
 		
 		if(!is_array($pmprosm_values['sponsored_level_id']))
 			$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
@@ -475,7 +475,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && !empty($discount_code))
 	{
 		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
-		$code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . $wpdb->escape($discount_code) . "' LIMIT 1");
+		$code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql($discount_code) . "' LIMIT 1");
 		if(!empty($code_id))
 		{
 			$code_user_id = pmprosm_getCodeUserID($code_id);
@@ -718,7 +718,7 @@ function pmprosm_the_content_account_page($content)
 		
 		if(!empty($code_id) && !empty($pmprosm_values))
 		{			
-			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
+			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
 			
 			if(!is_array($pmprosm_values['sponsored_level_id']))
 				$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);

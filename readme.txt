@@ -19,7 +19,7 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 * Only members using a sponsored discount code will be able to sign up for the sponsored level.
 * Sponsored members will be linked to their sponsor through the pmpro_discount_codes_uses table.
 * If a sponsor's account is cancelled, all of their sponsored members will have their accounts disabled as well.
-* If a sponsor's account is enabeld later (a user with an existint discount code checking, etc), all of their sponsored members will have their accounts enabled
+* If a sponsor's account is reenabled at a later point, all of their sponsored members will have their accounts reenabled automatically.
 
 == Installation ==
 
