@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .3.3
+Version: .3.4
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -351,6 +351,23 @@ function pmprosm_getCodeByUserID($user_id)
 	return false;
 }
 
+//get user by discount code
+function pmprosm_getUserByCodeID($needle)
+{
+	$code_user_ids = get_option("pmpro_code_user_ids");
+		
+	if(is_array($code_user_ids))
+	{
+		foreach($code_user_ids as $code_id => $code_user_id)
+		{
+			if($code_id == $needle)
+				return $code_user_id;
+		}
+	}
+	
+	return false;
+}
+
 //show a user's discount code on the confirmation page
 function pmprosm_pmpro_confirmation_message($message)
 {
@@ -422,6 +439,26 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	return $pmpro_continue_registration;
 }
 add_filter("pmpro_registration_checks", "pmprosm_pmpro_registration_checks");
+
+// add parent account column to the discount codes table view
+function pmprosm_pmpro_discountcodes_extra_cols_header()
+{
+	?>
+	<th>Parent Account</th>
+	<?php
+}
+add_action("pmpro_discountcodes_extra_cols_header", "pmprosm_pmpro_discountcodes_extra_cols_header");
+
+function pmprosm_pmpro_discountcodes_extra_cols_body($code)
+{
+	$code_user_id = pmprosm_getCodeUserID($code->id);
+	$code_user = get_userdata($code_user_id);
+	?>
+	<th><?php if(!empty($code_user_id) && !empty($code_user)) { ?><a href="<?php echo get_edit_user_link($code_user_id); ?>"><?php echo $code_user->user_login; ?></a><?php } elseif(!empty($code_user_id) && empty($code_user)) { ?><em>Missing User</em><?php } else { ?><?php } ?></th>
+	<?php
+}
+add_action("pmpro_discountcodes_extra_cols_body", "pmprosm_pmpro_discountcodes_extra_cols_body");
+
 
 //add user id field to discount code page.
 function pmprosm_pmpro_discount_code_after_settings()
@@ -582,7 +619,7 @@ function pmprosm_profile_fields_seats($user)
 				<?php
 					$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true));					
 				?>
-				<input type="text" id="seats" name="seats" size="5" value="<?=$seats?>" />
+				<input type="text" id="seats" name="seats" size="5" value="<?php echo esc_attr($seats);?>" />
 			</td>
 		</tr>
 		</table>
@@ -678,3 +715,29 @@ function pmprosm_the_content_account_page($content)
 	return $content;
 }
 add_filter("the_content", "pmprosm_the_content_account_page", 30);
+
+/*
+	Get a user's sponsoring member.
+*/
+function pmprosm_getSponsor($user_id)
+{
+	global $wpdb;
+	
+	//make sure this user has one of the sponsored levels
+	$user_level = pmpro_getMembershipLevelForUser($user_id);	
+	if(!pmprosm_isSponsoredLevel($user_level->id))
+		return false;
+	
+	//what code did this user_id sign up for?
+	$sqlQuery = "SELECT code_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . $user_id . "' ORDER BY id DESC";
+	$code_id = $wpdb->get_var($sqlQuery);
+	
+	//found a code?
+	if(empty($code_id))
+		return false;
+		
+	//okay find sponsor
+	$sponsor_user_id = pmprosm_getUserByCodeID($code_id);
+	
+	return get_userdata($sponsor_user_id);
+}
