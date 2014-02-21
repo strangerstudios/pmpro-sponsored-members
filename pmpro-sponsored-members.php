@@ -18,7 +18,7 @@ Author URI: http://www.strangerstudios.com
 		//set 5 seats at checkout
 		1 => array(
 			'main_level_id' => 1,		//redundant but useful
-			'sponsored_level_id' => 2,
+			'sponsored_level_id' => array(1,2),	//array or single id
 			'seats' => 5			
 		),
 		//seats based on field at checkout
@@ -69,8 +69,16 @@ function pmprosm_isSponsoredLevel($level_id)
 	
 	foreach($pmprosm_sponsored_account_levels as $key => $values)
 	{		
-		if($values['sponsored_level_id'] == $level_id)
-			return true;
+		if(is_array($values['']))
+		{
+			if(in_array($level_id, $values['sponsored_level_id']))
+				return true;
+		}
+		else
+		{
+			if($values['sponsored_level_id'] == $level_id)
+				return true;
+		}
 	}
 	
 	return false;
@@ -90,8 +98,16 @@ function pmprosm_getValuesBySponsoredLevel($level_id)
 	
 	foreach($pmprosm_sponsored_account_levels as $key => $values)
 	{
-		if($value['sponsored_level_id'] == $key)
-			return $pmprosm_sponsored_account_levels[$key];
+		if(is_array($value['sponsored_level_id']))
+		{
+			if(in_array($key, $value['sponsored_level_id']))
+				return $pmprosm_sponsored_account_levels[$key];
+		}
+		else
+		{
+			if($value['sponsored_level_id'] == $key)
+				return $pmprosm_sponsored_account_levels[$key];
+		}
 	}
 }
 
@@ -161,19 +177,24 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			
 			if($wpdb->query($sqlQuery) !== false)
 			{
-				$code_id = $wpdb->insert_id;
+				//set code in user meta
+				$code_id = $wpdb->insert_id;				
+				pmprosm_setCodeUserID($code_id, $user_id);
 				
-				//okay update level
-				if($pmprosm_values['sponsored_level_id'] > 0)
-				{
-					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period) VALUES('" . $wpdb->escape($code_id) . "', '" . $wpdb->escape($pmprosm_values['sponsored_level_id']) . "', '0', '0', '0', 'Month', '0', '0', '0', '0', 'Month')";
-					$wpdb->query($sqlQuery);
+				//okay update levels for code
+				if(!is_array($pmprosm_values['sponsored_level_id']))
+					$sponsored_levels = array($pmprosm_values['sponsored_level_id']);
+				else
+					$sponsored_levels = $pmprosm_values['sponsored_level_id'];
 					
-					pmprosm_setCodeUserID($code_id, $user_id);
+				foreach($sponsored_levels as $sponsored_level)
+				{
+					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period) VALUES('" . $wpdb->escape($code_id) . "', '" . $wpdb->escape($sponsored_level) . "', '0', '0', '0', 'Month', '0', '0', '0', '0', 'Month')";
+					$wpdb->query($sqlQuery);										
 				}
 			}
 		}	
-		elseif($pmprosm_values['sponsored_level_id'] > 0)
+		elseif(!empty($pmprosm_values['sponsored_level_id']))
 		{
 			//update sponsor code and sub accounts
 			pmprosm_sponsored_account_change($level_id, $user_id);
@@ -220,7 +241,17 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 				$count++;
 				
 				//change their membership
-				pmpro_changeMembershipLevel($pmprosm_values['sponsored_level_id'], $sub_user_id);
+				if(is_array($pmprosm_values['sponsored_level_id']))
+				{
+					//what level did this user have last that is a sponsored level?
+					$last_level_id = $wpdb->get_var("SELECT membership_id FROM $wpdb->pmpro_memberships_users WHERE user_id = '" . $sub_user_id . "' AND status = 'inactive' ORDER BY id DESC");
+					
+					//okay give them that level back
+					if(in_array($last_level_id, $pmprosm_values['sponsored_level_id']))
+						pmpro_changeMembershipLevel($last_level_id, $sub_user_id);
+				}
+				else				
+					pmpro_changeMembershipLevel($pmprosm_values['sponsored_level_id'], $sub_user_id);
 			}
 		}
 		else
@@ -379,12 +410,33 @@ function pmprosm_pmpro_confirmation_message($message)
 	{
 		$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
 		$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
-		$code_url = pmpro_url("checkout", "?level=" . $pmprosm_values['sponsored_level_id'] . "&discount_code=" . $code->code);
+		
+		if(!is_array($pmprosm_values['sponsored_level_id']))
+			$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
+		else
+			$sponsored_level_ids = $pmprosm_values['sponsored_level_id'];				
+		
+		$pmpro_levels = pmpro_getAllLevels();
+		
+		$code_urls = array();
+		foreach($sponsored_level_ids as $sponsored_level_id)
+		{
+			$level_name = $pmpro_levels[$sponsored_level_id]->name;
+			$code_urls[] = array("name"=>$level_name, "url"=>pmpro_url("checkout", "?level=" . $sponsored_level_id . "&discount_code=" . $code->code));
+		}
 	}
 			
 	if(!empty($code))
 	{
-		$message .= "<div class=\"pmpro_content_message\"><p>Give this code to your sponsored members to use at checkout: <strong>" . $code->code . "</strong></p><p>Or provide this direct link to register:<br /><strong>" . $code_url . "</strong></p>";
+		if(count($code_urls) > 1)
+			$message .= "<div class=\"pmpro_content_message\"><p>Give this code to your sponsored members to use at checkout: <strong>" . $code->code . "</strong></p><p>Or provide one of these direct links to register:<br /></p>";
+		else
+			$message .= "<div class=\"pmpro_content_message\"><p>Give this code to your sponsored members to use at checkout: <strong>" . $code->code . "</strong></p><p>Or provide this direct link to register:<br /></p>";
+			
+		$message .= "<ul>";
+			foreach($code_urls as $code_url)
+				$message .= "<li>" . $code_url['name'] . ":<strong> " . $code_url['url'] . "</strong></li>";
+		$message .= "</ul>";
 		
 		if(empty($code->uses))
 			$message .= "This code has unlimited uses.";
@@ -667,8 +719,20 @@ function pmprosm_the_content_account_page($content)
 		if(!empty($code_id) && !empty($pmprosm_values))
 		{			
 			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
-			$code_url = pmpro_url("checkout", "?level=" . $pmprosm_values['sponsored_level_id'] . "&discount_code=" . $code->code);
 			
+			if(!is_array($pmprosm_values['sponsored_level_id']))
+				$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
+			else
+				$sponsored_level_ids = $pmprosm_values['sponsored_level_id'];	
+			
+			$code_urls = array();
+			$pmpro_levels = pmpro_getAllLevels();
+			foreach($sponsored_level_ids as $sponsored_level_id)
+			{
+				$level_name = $pmpro_levels[$sponsored_level_id]->name;
+				$code_urls[] = array("name"=>$level_name, "url"=>pmpro_url("checkout", "?level=" . $sponsored_level_id . "&discount_code=" . $code->code));
+			}
+					
 			ob_start();
 			//get members
 			$member_ids = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . intval($code_id) . "' LIMIT 1");
@@ -678,7 +742,18 @@ function pmprosm_the_content_account_page($content)
 				<h3>Sponsored Members</h3>
 				
 				<p>Give this code to your sponsored members to use at checkout: <strong><?php echo $code->code;?></strong></p>
-				<p>Or provide this direct link to register: <strong><a target="_blank" href="<?php echo $code_url;?>"><?php echo $code_url;?></a></strong></p>
+				<?php if(count($code_urls) > 1) { ?>
+					<p>Or provide one of these direct links to register:</p>
+				<?php } else { ?>
+					<p>Or provide this direct link to register:</p>
+				<?php } ?>
+				
+				<ul>
+					<?php foreach($code_urls as $code_url) { ?>
+						<li><?php echo $code_url['name'];?>: <strong><a target="_blank" href="<?php echo $code_url['url'];?>"><?php echo $code_url['url'];?></a></strong></li>
+					<?php } ?>
+				</ul>
+				
 				<p>
 					<?php if(empty($code->uses)) { ?>
 						This code has unlimited uses.
@@ -741,3 +816,61 @@ function pmprosm_getSponsor($user_id)
 	
 	return get_userdata($sponsor_user_id);
 }
+
+/*
+	Add code to confirmation email.
+*/
+function pmprosm_pmpro_email_body($body, $pmpro_email)
+{
+	global $wpdb, $pmprosm_sponsored_account_levels;
+ 
+	//only checkout emails, not admins
+	if(strpos($pmpro_email->template, "checkout") !== false && strpos($pmpro_email->template, "admin") == false)
+	{ 
+		//get the user_id from the email
+		$user_id = $wpdb->get_var("SELECT ID FROM $wpdb->users WHERE user_email = '" . $pmpro_email->data['user_email'] . "' LIMIT 1");
+		$level_id = $pmpro_email->data['membership_id'];
+		$code_id = pmprosm_getCodeByUserID($user_id);		
+		
+		if(!empty($user_id) && !empty($code_id) && pmprosm_isMainLevel($level_id))
+		{
+			//get code
+			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
+			
+			//get sponsored levels
+			$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
+			if(!is_array($pmprosm_values['sponsored_level_id']))
+				$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
+			else
+				$sponsored_level_ids = $pmprosm_values['sponsored_level_id'];	
+			
+			//figure out urls for code
+			$code_urls = array();
+			$pmpro_levels = pmpro_getAllLevels();
+			foreach($sponsored_level_ids as $sponsored_level_id)
+			{
+				$level_name = $pmpro_levels[$sponsored_level_id]->name;
+				$code_urls[] = array("name"=>$level_name, "url"=>pmpro_url("checkout", "?level=" . $sponsored_level_id . "&discount_code=" . $code->code));
+			}
+
+			//build message
+			$message = "<p>Give this code to your sponsored members to use at checkout: " . $code->code . "<br />";
+			
+			if(count($code_urls) > 1) 
+				$message .= "Or provide one of these direct links to register:</p>";
+			else
+				$message .= "Or provide this direct link to register:</p>";
+				
+			$message .= "<ul>";
+			foreach($code_urls as $code_url) { 
+				$message .= "<li>" . $code_url['name'] . ": <strong>" . $code_url['url'] . "</strong></li>";
+			}
+			$message .= "</ul>";
+			
+			$body = $message . "<hr />" . $body;
+		}
+	}
+ 
+	return $body;
+}
+add_filter("pmpro_email_body", "pmprosm_pmpro_email_body", 10, 2);

@@ -39,6 +39,8 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 == Changelog ==
 = .3.4 =
 * Added pmprosm_getUserByCodeID and pmprosm_getSponsor functions.
+* Added the discount code and code URLs to the sponsored members checkout confirmation email.
+* Added ability for a sponsored code to work on multiple levels. Just pass an array for the 'sponsored_level_id' value in the pmprosm_sponsored_account_levels global.
 
 = .3.3 =
 * Added Sponsor Code field to edit user profile page for admins.
