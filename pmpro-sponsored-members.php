@@ -69,7 +69,7 @@ function pmprosm_isSponsoredLevel($level_id)
 	
 	foreach($pmprosm_sponsored_account_levels as $key => $values)
 	{		
-		if(is_array($values['']))
+		if(is_array($values))
 		{
 			if(in_array($level_id, $values['sponsored_level_id']))
 				return true;
