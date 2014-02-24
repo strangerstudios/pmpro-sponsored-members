@@ -69,7 +69,7 @@ function pmprosm_isSponsoredLevel($level_id)
 	
 	foreach($pmprosm_sponsored_account_levels as $key => $values)
 	{		
-		if(is_array($values['']))
+		if(is_array($values))
 		{
 			if(in_array($level_id, $values['sponsored_level_id']))
 				return true;
@@ -293,7 +293,10 @@ function pmprosm_pmpro_after_checkout_sponsor_account_change($user_id)
 	//get level
 	$level_id = intval($_REQUEST['level']);
 	
-	pmprosm_sponsored_account_change($level_id, $user_id);	
+    // handle sponsored accounts
+
+    if (pmprosm_isMainLevel($level_id))
+        pmprosm_sponsored_account_change($level_id, $user_id);
 }
 add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout_sponsor_account_change", 10, 2);
 
@@ -835,7 +838,7 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 		if(!empty($user_id) && !empty($code_id) && pmprosm_isMainLevel($level_id))
 		{
 			//get code
-			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
+			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
 			
 			//get sponsored levels
 			$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
