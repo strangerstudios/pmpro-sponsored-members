@@ -835,7 +835,7 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 		if(!empty($user_id) && !empty($code_id) && pmprosm_isMainLevel($level_id))
 		{
 			//get code
-			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . $wpdb->escape($code_id) . "' LIMIT 1");
+			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
 			
 			//get sponsored levels
 			$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
