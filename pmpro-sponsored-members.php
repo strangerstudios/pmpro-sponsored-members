@@ -293,7 +293,10 @@ function pmprosm_pmpro_after_checkout_sponsor_account_change($user_id)
 	//get level
 	$level_id = intval($_REQUEST['level']);
 	
-	pmprosm_sponsored_account_change($level_id, $user_id);	
+    // handle sponsored accounts
+
+    if (pmprosm_isMainLevel($level_id))
+        pmprosm_sponsored_account_change($level_id, $user_id);
 }
 add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout_sponsor_account_change", 10, 2);
 
