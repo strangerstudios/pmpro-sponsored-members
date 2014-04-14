@@ -419,6 +419,9 @@ function pmprosm_pmpro_confirmation_message($message)
 		else
 			$sponsored_level_ids = $pmprosm_values['sponsored_level_id'];				
 		
+		if(empty($sponsored_level_ids) || empty($sponsored_level_ids[0]))
+			return;
+			
 		$pmpro_levels = pmpro_getAllLevels();
 		
 		$code_urls = array();
@@ -799,14 +802,21 @@ add_filter("the_content", "pmprosm_the_content_account_page", 30);
 /*
 	Get a user's sponsoring member.
 */
-function pmprosm_getSponsor($user_id)
+global $pmprosm_user_sponsors;
+function pmprosm_getSponsor($user_id, $force = false)
 {
-	global $wpdb;
+	global $wpdb, $pmprosm_user_sponsors;
+	
+	if(!empty($pmprosm_user_sponsors[$user_id]) && !$force)
+		return $pmprosm_user_sponsors[$user_id];
 	
 	//make sure this user has one of the sponsored levels
 	$user_level = pmpro_getMembershipLevelForUser($user_id);	
 	if(!pmprosm_isSponsoredLevel($user_level->id))
-		return false;
+	{
+		$pmprosm_user_sponsors[$user_id] = false;
+		return $pmprosm_user_sponsors[$user_id];
+	}
 	
 	//what code did this user_id sign up for?
 	$sqlQuery = "SELECT code_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . $user_id . "' ORDER BY id DESC";
@@ -814,12 +824,16 @@ function pmprosm_getSponsor($user_id)
 	
 	//found a code?
 	if(empty($code_id))
-		return false;
+	{
+		$pmprosm_user_sponsors[$user_id] = false;
+		return $pmprosm_user_sponsors[$user_id];
+	}
 		
 	//okay find sponsor
 	$sponsor_user_id = pmprosm_getUserByCodeID($code_id);
 	
-	return get_userdata($sponsor_user_id);
+	$pmprosm_user_sponsors[$user_id] = get_userdata($sponsor_user_id);
+	return $pmprosm_user_sponsors[$user_id];
 }
 
 /*

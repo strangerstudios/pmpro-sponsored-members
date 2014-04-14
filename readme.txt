@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
 Tested up to: 3.7.1
-Stable tag: .3.5
+Stable tag: .3.6
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,9 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .3.6 =
+* Caching user sponsors into a global cache when using pmpro_getSponsor function.
+
 = .3.5 =
 * Wrapped strings for translation/gettext/etc.
 
