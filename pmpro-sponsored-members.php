@@ -343,6 +343,28 @@ function pmprosm_admin_head_errors()
 }
 add_action("admin_head", "pmprosm_admin_head_errors");
 
+//function to get children of aponsor
+function pmprosm_getChildren($user_id = NULL) {
+
+    global $wpdb, $current_user;
+
+    $children = array();
+
+    if(empty($user_id)) {
+        if(is_user_logged_in())
+            $user_id = $current_user->ID;
+        else
+            return false;
+    }
+
+    $code_id = pmprosm_getCodeByUserID($user_id);
+
+    if(!empty($code_id))
+        $children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = $code_id AND status = 'active'");
+
+    return $children;
+}
+
 //functions to get and set a code user ID
 function pmprosm_getCodeUserID($code_id)
 {
