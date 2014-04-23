@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .3.5
+Version: .3.7
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -30,20 +30,6 @@ Author URI: http://www.strangerstudios.com
 		)
 	)
 */
-
-
-global $pmprosm_sponsored_account_levels;
-
-$pmprosm_sponsored_account_levels = array(
-		
-		1 => array(
-			'main_level_id' => 1,		//redundant but useful
-			'sponsored_level_id' => array(2),	//array or single id
-			'max_seats' => 5,
-		    'seat_cost' => 250,
-			'create_sub_accounts_at_checkout' => true
-		));
-
 
 /*
 	Set $pmprosm_sponsored_account_levels above here or in a custom plugin.
@@ -627,7 +613,7 @@ function pmprosm_pmpro_checkout_boxes()
 		$seats = "";
 
 ?>
-<table id="pmpro_payment_method" class="pmpro_checkout top1em" width="100%" cellpadding="0" cellspacing="0" border="0">
+<table id="pmpro_extra_seats" class="pmpro_checkout top1em" width="100%" cellpadding="0" cellspacing="0" border="0">
 	<thead>
 		<tr>
 			<th><?php _e("Would you like to purchase extra seats?", "pmpro_sponsored_members");?></th>
@@ -647,54 +633,90 @@ function pmprosm_pmpro_checkout_boxes()
 									
 									
 				echo "<div id = 'sponsored_accounts'>";
-				$i = 0;
-				while($i < $pmprosm_values['max_seats'])
-				{
-					echo '<div id = "sponsored_account_'.$i.'"';
-					pmprosm_pmpro_add_sub_accounts_at_checkout();
-					echo '</div>';
-					$i++;
-				}
+									
+					if(!empty($_REQUEST['add_sub_accounts_username']))
+					{
+						$child_usernames = $_REQUEST['add_sub_accounts_username'];
+						$child_emails = $_REQUEST['add_sub_accounts_email'];
+					}
+					else
+					{
+						$child_usernames = array_fill(0, $seats, '');
+						$child_emails = array_fill(0, $seats, '');
+					}
+							
+					for($i = 0; $i < count($child_usernames); $i++)
+					{
+						$child_username = $child_usernames[$i];
+						$child_email = $child_emails[$i];
+					?>
+					<hr />
+					<div id="sponsored_account_<?php echo $i;?>">
+						<label><?php echo __("Username", "pmpro_sponsored_members");?></label>
+						<input type="text" name="add_sub_accounts_username[]" value="<?php echo esc_attr($child_username);?>" size="20" />
+						<br>
+						<label><?php echo __("Email", "pmpro_sponsored_members");?></label>
+						<input type="text" name="add_sub_accounts_email[]" value="<?php echo esc_attr($child_email);?>" size="20" />
+						<br>
+						<label><?php echo __("Password", "pmpro_sponsored_members");?></label>
+						<input type="password" name="add_sub_accounts_password[]" value="" size="20" />
+					</div>
+					<?php
+					}									
+				
 				echo "</div>";
 				?>
 				
-<script>
-						
-jQuery('#seats').bind("change keyup input", function() { 
+				<script>
+				var pmpro_base_level_is_free = <?php if(pmpro_isLevelFree($pmpro_level)) echo "true"; else echo "false";?>;
+				var seat_cost = <?php echo intval($pmprosm_values['seat_cost']);?>;
+				
+				jQuery('#seats').bind("change keyup input", function() { 
 
+					seats = parseInt(jQuery('#seats').val());
+					children = jQuery('#sponsored_accounts').children();
 
-seats = parseInt(jQuery('#seats').val());
-children = jQuery('#sponsored_accounts').children();
+					//jQuery(children[4]).remove();
 
-//jQuery(children[4]).remove();
-
-i = children.length-1;
-
-if(seats < children.length)
-{
-	while(i >= seats)
-	{
-		jQuery(children[i]).remove();
-		i--;
-	}
-}
-else if(seats > children.length)
-{	
-	i = children.length;
-	
-	while (i < seats)
-	{
-		jQuery('#sponsored_accounts').append("<div id = 'sponsored_account_"+i+"'><label for='add_sub_accounts_username'>Child username</label><input type='text' id='add_sub_accounts_username' name='add_sub_accounts_username[]' value='' size='20' /><br><label for='add_sub_accounts_email'>Child email</label><input type='text' id='add_sub_accounts_email' name='add_sub_accounts_email[]' value'' size='20' /><br><label for='add_sub_accounts_password'>Child password</label><input type='text' id='add_sub_accounts_password' name='add_sub_accounts_password[]' value='' size='20' /></div>");
-		i++;
-	}
-}
-
-});						
-	
-</script>
-						
+					i = children.length-1;
 					
+					if(seats < children.length)
+					{
+						while(i >= seats)
+						{
+							jQuery(children[i]).remove();
+							i--;
+						}
+					}
+					else if(seats > children.length)
+					{	
+						i = children.length;
+						
+						while (i < seats)
+						{
+							jQuery('#sponsored_accounts').append("<div id = 'sponsored_account_"+i+"'><hr /><label>Username</label><input type='text' name='add_sub_accounts_username[]' value='' size='20' /><br><label>Email</label><input type='text' name='add_sub_accounts_email[]' value'' size='20' /><br><label>Password</label><input type='password' name='add_sub_accounts_password[]' value='' size='20' /></div>");
+							i++;
+						}
+					}
 					
+					if(pmpro_base_level_is_free && seat_cost && seats)
+					{
+						//need to show billing fields
+						jQuery('#pmpro_payment_method').show();
+						jQuery('#pmpro_billing_address_fields').show();
+						jQuery('#pmpro_payment_information_fields').show();
+					}
+					else
+					{
+						//need to hide billing fields
+						jQuery('#pmpro_payment_method').hide();
+						jQuery('#pmpro_billing_address_fields').hide();
+						jQuery('#pmpro_payment_information_fields').hide();
+					}
+
+				});
+				</script>
+
 				</div>
 			</td>
 		</tr>
@@ -703,32 +725,6 @@ else if(seats > children.length)
 <?php
 }
 add_action("pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes");
-
-function pmprosm_pmpro_add_sub_accounts_at_checkout()
-{
-	global $current_user, $pmpro_level, $pmpro_currency_symbol, $pmprosm_sponsored_account_levels;
-	
-	$current_level = $pmprosm_sponsored_account_levels[$pmpro_level->id];
-	if($current_level['create_sub_accounts_at_checkout'])
-	{
-		
-		?>
-		<label for="add_sub_accounts_username"><?php echo __("Child username", "pmpro_sponsored_members");?></label>
-		<input type="text" id="add_sub_accounts_username" name="add_sub_accounts_username[]" value="" size="20" />
-		<br>
-		<label for="add_sub_accounts_email"><?php echo __("Child email", "pmpro_sponsored_members");?></label>
-		<input type="text" id="add_sub_accounts_email" name="add_sub_accounts_email[]" value="" size="20" />
-		<br>
-		<label for="add_sub_accounts_password"><?php echo __("Child password", "pmpro_sponsored_members");?></label>
-		<input type="text" id="add_sub_accounts_password" name="add_sub_accounts_password[]" value="" size="20" />
-		
-		<?php
-		
-	}
-}
-
-//add_action("pmpro_checkout_boxes", "pmprosm_pmpro_add_sub_accounts_at_checkout",15);
-
 
 //adjust price based on seats
 function pmprosm_pmpro_checkout_levels($level)
@@ -744,10 +740,18 @@ function pmprosm_pmpro_checkout_levels($level)
 		$pmprosm_values = pmprosm_getValuesByMainLevel($level->id);
 		if(!empty($pmprosm_values['seat_cost']))
 		{		
-			if($level->initial_payment > 0)
+			if((!isset($pmprosm_values['apply_seat_cost_to_initial_payment']) && $level->initial_payment > 0) || !empty($pmprosm_values['apply_seat_cost_to_initial_payment']))
 				$level->initial_payment += $pmprosm_values['seat_cost'] * $seats;
-			if($level->billing_amount > 0)
+			
+			if((!isset($pmprosm_values['apply_seat_cost_to_billing_amount']) && $level->billing_amount > 0) || !empty($pmprosm_values['apply_seat_cost_to_billing_amount']))
+			{
 				$level->billing_amount += $pmprosm_values['seat_cost'] * $seats;
+				
+				if(!empty($pmprosm_values['seat_cost_cycle_number']))
+					$level->cycle_number = $pmprosm_values['seat_cost_cycle_number'];
+				if(!empty($pmprosm_values['seat_cost_cycle_period']))
+					$level->cycle_period = $pmprosm_values['seat_cost_cycle_period'];
+			}
 		}
 	}
 
@@ -771,7 +775,7 @@ function pmprosm_pmpro_after_checkout($user_id)
 	$child_username = $_REQUEST['add_sub_accounts_username'];
 	$child_password = $_REQUEST['add_sub_accounts_password'];
 	$child_email =		$_REQUEST['add_sub_accounts_email'];
-	$parent_level = pmprosm_getValuesByMainLevel($_REQUEST['level']);
+	$parent_level = pmprosm_getValuesByMainLevel($_REQUEST['level']);		
 	
 	if($parent_level)
 	{
@@ -816,7 +820,7 @@ function pmprosm_pmpro_after_checkout($user_id)
 				$morder = new MemberOrder();						
 				$morder->InitialPayment = 0;	
 				$morder->Email = $child_email;
-				$morder->gateway = "free";	//Ask: should we change this to 'sponsored'?
+				$morder->gateway = "free";	//sponsored
 
 				$morder->user_id = $child_user_id;
 				$morder->membership_id = $child_level->id;					
@@ -840,26 +844,47 @@ function pmprosm_pmpro_check_for_existing_user($okay)
 {
 	global $pmpro_msg, $pmpro_msgt;
 	
-	$child_username = sanitize_text_field($_REQUEST['add_sub_accounts_username']);
-	$child_email = sanitize_text_field($_REQUEST['add_sub_accounts_email']);
+	$child_usernames = $_REQUEST['add_sub_accounts_username'];
+	$child_emails = $_REQUEST['add_sub_accounts_email'];
 	
-	//if registering child username or email already exisits the create an error.
-	if(username_exists($child_username))
+	//check that these emails and usernames are unique
+	$unique_usernames = array_unique($child_usernames);
+	$unique_emails = array_unique($child_emails);
+	
+	if(count($unique_usernames) != count($child_usernames) || count($unique_emails) != count($child_emails))
 	{
-			$pmpro_msg = "The username <b>".$child_username."</b> already exists. Please select a different username";
-			$pmpro_msgt = "pmpro_error";
-			pmpro_setMessage($pmpro_msg,"pmpro_error");
-			$okay = false;
+		$pmpro_msg = "Each sponsored account must have a unique username and email address.";
+		$pmpro_msgt = "pmpro_error";
+		pmpro_setMessage($pmpro_msg,"pmpro_error");
+		$okay = false;
+	}
+	else
+	{	
+		foreach($child_usernames as $child_username)
+		{
+			//if registering child username or email already exisits the create an error.
+			if(username_exists($child_username))
+			{
+					$pmpro_msg = "The username <b>".$child_username."</b> already exists. Please select a different username";
+					$pmpro_msgt = "pmpro_error";
+					pmpro_setMessage($pmpro_msg,"pmpro_error");
+					$okay = false;
+			}
+		}
+		
+		foreach($child_emails as $child_email)
+		{
+			if(email_exists($child_email))
+			{
+					$pmpro_msg = "That email <b>".$child_email."</b> already exists. Please select a different email";
+					$pmpro_msgt = "pmpro_error";
+					pmpro_setMessage($pmpro_msg,"pmpro_error");
+					
+					$okay = false;	
+			}
+		}
 	}
 	
-	elseif(email_exists($child_email))
-	{
-			$pmpro_msg = "That email <b>".$child_email."</b> already exists. Please select a different email";
-			$pmpro_msgt = "pmpro_error";
-			pmpro_setMessage($pmpro_msg,"pmpro_error");
-			
-			$okay = false;	
-	}
 	return $okay;
 }
 add_action('pmpro_registration_checks', 'pmprosm_pmpro_check_for_existing_user');
