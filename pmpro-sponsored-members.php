@@ -14,7 +14,7 @@ Author URI: http://www.strangerstudios.com
 	Now using a global array so you can have multiple main and sponsored levels.	
 	Array keys should be the main account level.
 		
-	array(
+	$pmprosm_sponsored_account_levels = array(
 		//set 5 seats at checkout
 		1 => array(
 			'main_level_id' => 1,		//redundant but useful
