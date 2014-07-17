@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .4
+Version: .4.1
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -802,96 +802,104 @@ function pmprosm_pmpro_checkout_boxes()
 						ob_end_clean();
 						//also clean it up a bit
 						$empty_child_fields = str_replace("\n", "", $empty_child_fields);
-						?>
-						
-						<script>
-						jQuery(document).ready(function() {
-							var pmpro_base_level_is_free = <?php if(pmpro_isLevelFree($pmpro_level)) echo "true"; else echo "false";?>;
-							var seat_cost = <?php echo intval($pmprosm_values['seat_cost']);?>;
-							var min_seats = <?php if(!empty($pmprosm_values['min_seats'])) echo intval($pmprosm_values['min_seats']); else echo "0";?>;
-							var max_seats = <?php if(!empty($pmprosm_values['max_seats'])) echo intval($pmprosm_values['max_seats']); else echo "false";?>;
-							
-							//update things when the # of seats changes
-							jQuery('#seats, input.old_sub_accounts_active').bind("change keyup input", function() { 
-								seatsChanged();
-							});
-
-							//run it once on load too
-							seatsChanged();
-
-							function seatsChanged()
-							{
-								//num seats entered
-								seats = parseInt(jQuery('#seats').val());										
-
-								//num of old seats checked
-								old_sub_accounts_active = 0;
-								jQuery("input.old_sub_accounts_active:checked").each(function(){
-									old_sub_accounts_active += 1;
-								});
-															
-								//max sure not over max
-								if(max_seats && seats > max_seats)
-								{
-									seats = max_seats;
-									jQuery('#seats').val(seats);
-								}
-								
-								//and not under min
-								if(min_seats && seats < min_seats)
-								{
-									seats = min_seats;
-									jQuery('#seats').val(seats);
-								}
-								
-								//how many child seats are shown now
-								children = jQuery('#sponsored_accounts').children();											
-								i = children.length-1;
-													
-								//how many should we show
-								newseats = seats - old_sub_accounts_active;
-													
-								if(newseats < children.length)
-								{
-									while(i >= newseats)
-									{
-										jQuery(children[i]).remove();
-										i--;
-									}
-								}
-								else if(newseats > children.length)
-								{	
-									i = children.length;
-									
-									while (i < newseats)
-									{																
-										jQuery('#sponsored_accounts').append('<div id = "sponsored_account_'+i+'"><hr /><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])) { ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>');
-										i++;
-									}
-								}
-														
-								if(pmpro_base_level_is_free && seat_cost && seats)
-								{
-									//need to show billing fields
-									jQuery('#pmpro_payment_method').show();
-									jQuery('#pmpro_billing_address_fields').show();
-									jQuery('#pmpro_payment_information_fields').show();
-								}
-								else if(pmpro_base_level_is_free)
-								{
-									//need to hide billing fields
-									jQuery('#pmpro_payment_method').hide();
-									jQuery('#pmpro_billing_address_fields').hide();
-									jQuery('#pmpro_payment_information_fields').hide();
-								}
-								
-								<?php do_action('pmprosm_seats_changed_js'); ?>
-							}
-						});
-						</script>
-					<?php
-					}	//if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))
+					}	//if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))					
 					?>
+						
+					<script>
+					jQuery(document).ready(function() {
+						var pmpro_base_level_is_free = <?php if(pmpro_isLevelFree($pmpro_level)) echo "true"; else echo "false";?>;
+						var seat_cost = <?php echo intval($pmprosm_values['seat_cost']);?>;
+						var min_seats = <?php if(!empty($pmprosm_values['min_seats'])) echo intval($pmprosm_values['min_seats']); else echo "0";?>;
+						var max_seats = <?php if(!empty($pmprosm_values['max_seats'])) echo intval($pmprosm_values['max_seats']); else echo "false";?>;
+						
+						//update things when the # of seats changes
+						jQuery('#seats, input.old_sub_accounts_active').bind("change keyup input", function() { 
+							seatsChanged();
+						});
+
+						//run it once on load too
+						seatsChanged();
+
+						function seatsChanged()
+						{
+							//num seats entered
+							seats = parseInt(jQuery('#seats').val());										
+
+							//num of old seats checked
+							old_sub_accounts_active = 0;
+							jQuery("input.old_sub_accounts_active:checked").each(function(){
+								old_sub_accounts_active += 1;
+							});
+														
+							//max sure not over max
+							if(max_seats && seats > max_seats)
+							{
+								seats = max_seats;
+								jQuery('#seats').val(seats);
+							}
+							
+							//and not under min
+							if(min_seats && seats < min_seats)
+							{
+								seats = min_seats;
+								jQuery('#seats').val(seats);
+							}
+							
+							<?php
+								//how many child seats are shown now (if sponsored_accounts_at_checkout is set)							
+								if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))		
+								{
+								?>
+								if(jQuery('#sponsored_accounts'))
+								{
+									children = jQuery('#sponsored_accounts').children();											
+									i = children.length-1;
+														
+									//how many should we show
+									newseats = seats - old_sub_accounts_active;
+														
+									if(newseats < children.length)
+									{
+										while(i >= newseats)
+										{
+											jQuery(children[i]).remove();
+											i--;
+										}
+									}
+									else if(newseats > children.length)
+									{	
+										i = children.length;
+										
+										while (i < newseats)
+										{																
+											jQuery('#sponsored_accounts').append('<div id = "sponsored_account_'+i+'"><hr /><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])) { ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>');
+											i++;
+										}
+									}
+								}
+								<?php
+								}
+							?>
+							
+							if(pmpro_base_level_is_free && seat_cost && seats)
+							{
+								//need to show billing fields
+								jQuery('#pmpro_payment_method').show();
+								jQuery('#pmpro_billing_address_fields').show();
+								jQuery('#pmpro_payment_information_fields').show();
+							}
+							else if(pmpro_base_level_is_free)
+							{
+								//need to hide billing fields
+								jQuery('#pmpro_payment_method').hide();
+								jQuery('#pmpro_billing_address_fields').hide();
+								jQuery('#pmpro_payment_information_fields').hide();
+							}
+							
+							<?php do_action('pmprosm_seats_changed_js'); ?>
+						}
+					});
+					</script>					
 				</div>
 			</td>
 		</tr>
@@ -912,23 +920,23 @@ function pmprosm_pmpro_checkout_levels($level)
 		
 	if(!empty($seats))
 	{
-		$pmprosm_values = pmprosm_getValuesByMainLevel($level->id);
+		$pmprosm_values = pmprosm_getValuesByMainLevel($level->id);						
 		if(!empty($pmprosm_values['seat_cost']))
 		{		
 			if((!isset($pmprosm_values['apply_seat_cost_to_initial_payment']) && $level->initial_payment > 0) || !empty($pmprosm_values['apply_seat_cost_to_initial_payment']))
 			{
-				if(!empty($pmprosm_values['apply_seat_cost_to_initial_payment']) && $pmprosm_values['apply_seat_cost_to_initial_payment'] == "sponsored_level")
+				if(!empty($pmprosm_values['apply_seat_cost_to_initial_payment']) && $pmprosm_values['apply_seat_cost_to_initial_payment'] === "sponsored_level")
 				{
 					$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level']);
 					$level->initial_payment += $sponsored_level->initial_payment * $seats;
 				}
-				else
-					$level->initial_payment += $pmprosm_values['seat_cost'] * $seats;
+				else				
+					$level->initial_payment += $pmprosm_values['seat_cost'] * $seats;					
 			}
 			
 			if((!isset($pmprosm_values['apply_seat_cost_to_billing_amount']) && $level->billing_amount > 0) || !empty($pmprosm_values['apply_seat_cost_to_billing_amount']))
 			{				
-				if(!empty($pmprosm_values['apply_seat_cost_to_billing_amount']) && $pmprosm_values['apply_seat_cost_to_billing_amount'] == "sponsored_level")
+				if(!empty($pmprosm_values['apply_seat_cost_to_billing_amount']) && $pmprosm_values['apply_seat_cost_to_billing_amount'] === "sponsored_level")
 				{
 					$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level']);
 					$level->billing_amount += $sponsored_level->billing_amount * $seats;
@@ -947,7 +955,7 @@ function pmprosm_pmpro_checkout_levels($level)
 			}
 		}
 	}
-
+	
 	return $level;
 }
 add_filter("pmpro_checkout_level", "pmprosm_pmpro_checkout_levels");
@@ -1396,7 +1404,7 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 			
 			//figure out urls for code
 			$code_urls = array();
-			$pmpro_levels = pmpro_getAllLevels();
+			$pmpro_levels = pmpro_getAllLevels(true, true);
 			foreach($sponsored_level_ids as $sponsored_level_id)
 			{
 				$level_name = $pmpro_levels[$sponsored_level_id]->name;
