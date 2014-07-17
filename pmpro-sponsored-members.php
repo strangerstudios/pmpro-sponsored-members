@@ -629,7 +629,16 @@ function pmprosm_pmpro_checkout_boxes()
 	$pmprosm_values = pmprosm_getValuesByMainLevel($pmpro_level->id);
 		
 	if(empty($pmprosm_values['max_seats']) || empty($pmprosm_values['seat_cost']))
-		return;
+	{
+		if($pmprosm_values['seat_cost'] === 'FREE')
+		{
+			$pmprosm_values['seat_cost'] = 0;
+		}
+		else
+		{
+			return;	
+		}
+	}
 	
 	//get seats from submit
 	if(isset($_REQUEST['seats']))
@@ -913,8 +922,17 @@ add_action("pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes");
 function pmprosm_pmpro_checkout_levels($level)
 {
 	//get seats from submit
-	if(isset($_REQUEST['seats']))
+	
+	//only get the seats which have an email addresses specified
+	if(isset($_REQUEST['add_sub_accounts_email']))
+	{
+		$seats = count(array_filter($_REQUEST['add_sub_accounts_email']));
+	}
+	
+	elseif(isset($_REQUEST['seats']))
+	{
 		$seats = intval($_REQUEST['seats']);
+	}
 	else
 		$seats = "";
 		
@@ -1007,6 +1025,10 @@ function pmprosm_pmpro_after_checkout($user_id)
 			//create new child accounts
 			for($i = 0; $i < count($child_email); $i++)
 			{
+				//if a blank entry is find, skip it
+				if(empty($child_email[$i]))
+					   continue;
+					   
 				$child_user_id = wp_create_user( $child_username[$i], $child_password[$i], $child_email[$i]);
 							
 				//update first/last
