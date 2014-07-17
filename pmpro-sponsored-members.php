@@ -628,16 +628,9 @@ function pmprosm_pmpro_checkout_boxes()
 	//make sure options are defined for this
 	$pmprosm_values = pmprosm_getValuesByMainLevel($pmpro_level->id);
 		
-	if(empty($pmprosm_values['max_seats']) || empty($pmprosm_values['seat_cost']))
+	if(empty($pmprosm_values['max_seats']) || !isset($pmprosm_values['seat_cost']))
 	{
-		if($pmprosm_values['seat_cost'] === 'FREE')
-		{
-			$pmprosm_values['seat_cost'] = 0;
-		}
-		else
-		{
-			return;	
-		}
+		return;
 	}
 	
 	//get seats from submit
@@ -920,19 +913,10 @@ add_action("pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes");
 
 //adjust price based on seats
 function pmprosm_pmpro_checkout_levels($level)
-{
+{	
 	//get seats from submit
-	
-	//only get the seats which have an email addresses specified
-	if(isset($_REQUEST['add_sub_accounts_email']))
-	{
-		$seats = count(array_filter($_REQUEST['add_sub_accounts_email']));
-	}
-	
-	elseif(isset($_REQUEST['seats']))
-	{
+	if(isset($_REQUEST['seats']))
 		$seats = intval($_REQUEST['seats']);
-	}
 	else
 		$seats = "";
 		
@@ -1131,6 +1115,9 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
 	else
 		$seats = 0;
 	
+	//how many new accounts?
+	$num_new_accounts = $seats - $num_old_accounts;
+	
 	//get account values
 	if(!empty($_REQUEST['add_sub_accounts_username']))
 		$child_usernames = $_REQUEST['add_sub_accounts_username'];
@@ -1151,12 +1138,23 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
 		$child_emails = $_REQUEST['add_sub_accounts_email'];
 	else
 		$child_emails = array();
+		
+	if(!empty($_REQUEST['add_sub_accounts_password']))
+		$child_passwords = $_REQUEST['add_sub_accounts_password'];
+	else
+		$child_passwords = array();
 	
 	//check that these emails and usernames are unique
-	$unique_usernames = array_unique($child_usernames);
-	$unique_emails = array_unique($child_emails);		
+	$unique_usernames = array_unique(array_filter($child_usernames));
+	$unique_emails = array_unique(array_filter($child_emails));
+	$passwords = array_filter($child_passwords);
 	
-	if(count($unique_usernames) != count($child_usernames) || count($unique_emails) != count($child_emails))
+	if($num_new_accounts > 0 && (count($unique_usernames) < $num_new_accounts || count($unique_emails) < $num_new_accounts || count($passwords) < $num_new_accounts))
+	{
+		pmpro_setMessage(__("Please enter details for each new sponsored account."),"pmpro_error");
+		$okay = false;
+	}
+	elseif(count($unique_usernames) != count($child_usernames) || count($unique_emails) != count($child_emails))
 	{		
 		pmpro_setMessage(__("Each sponsored account must have a unique username and email address."),"pmpro_error");
 		$okay = false;
@@ -1185,6 +1183,14 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
 			if(email_exists($child_email))
 			{
 				$pmpro_msg = "That email <b>".$child_email."</b> already exists. Please select a different email";
+				$pmpro_msgt = "pmpro_error";
+				pmpro_setMessage($pmpro_msg,"pmpro_error");
+				
+				$okay = false;	
+			}
+			elseif(!is_email($child_email))
+			{
+				$pmpro_msg = "<b>".$child_email."</b> is not a valid email address. Please select a different email";
 				$pmpro_msgt = "pmpro_error";
 				pmpro_setMessage($pmpro_msg,"pmpro_error");
 				
