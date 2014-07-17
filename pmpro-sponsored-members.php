@@ -929,7 +929,7 @@ function pmprosm_pmpro_checkout_levels($level)
 			{
 				if(!empty($pmprosm_values['apply_seat_cost_to_initial_payment']) && $pmprosm_values['apply_seat_cost_to_initial_payment'] === "sponsored_level")
 				{
-					$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level']);
+					$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
 					$level->initial_payment += $sponsored_level->initial_payment * $seats;
 				}
 				else				
@@ -940,7 +940,7 @@ function pmprosm_pmpro_checkout_levels($level)
 			{				
 				if(!empty($pmprosm_values['apply_seat_cost_to_billing_amount']) && $pmprosm_values['apply_seat_cost_to_billing_amount'] === "sponsored_level")
 				{
-					$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level']);
+					$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
 					$level->billing_amount += $sponsored_level->billing_amount * $seats;
 					$level->cycle_number = $sponsored_level->cycle_number;
 					$level->cycle_period = $sponsored_level->cycle_period;

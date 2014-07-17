@@ -41,6 +41,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Fixed bug where billing address wouldn't show up if the base level was free, there was a seat cost, but the sponsored_accounts_at_checkout setting was not turned on.
 * Fixed bug where apply_seat_cost_to_initial_payment and apply_seat_cost_to_billing_amount settings weren't working in some cases.
 * Better error handling when using the sponsored_accounts_at_checkout setting. Will throw error if any of the details for new accounts is missing or invalid emails are given.
+* The apply_seat_cost_to_initial_payment and apply_seat_cost_to_billing_amount settings can be set to 'sponsored_level' and it will grab the pricing from that level instead of setting a fixed amount in the code.
 
 = .4 =
 * Fixed issues with child account creation and form at checkout.
