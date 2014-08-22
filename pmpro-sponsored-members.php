@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .4.1
+Version: .4.2
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -42,6 +42,9 @@ Author URI: http://www.strangerstudios.com
 //define('PMPROSM_SEAT_COST', 250);
 //define('PMPROSM_MAX_SEATS', 10);
 
+// check database and create tables if necessary
+pmprosm_check_db();
+
 //check if a level id is a "main account" level
 function pmprosm_isMainLevel($level_id)
 {
@@ -57,6 +60,25 @@ function pmprosm_isMainLevel($level_id)
 	}
 	
 	return false;
+}
+
+function pmprosm_check_db()
+{
+  global $wpdb; 
+  require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+  
+  $sql = "create table if not exists {$wpdb->prefix}pmprosm_coupon_users (
+    code_id varchar(32) not null,
+    user_id bigint(20) unsigned not null,
+    primary key  (code_id),
+    key user_id (user_id)
+  )";
+  
+  // echo $sql;
+  
+  $wpdb->show_errors();
+  $wpdb->query($sql);
+  // dbDelta($sql);
 }
 
 //check if a level id is a "sponsored level"
@@ -395,34 +417,90 @@ function pmprosm_getChildren($user_id = NULL) {
     return $children;
 }
 
+
+// TODO: change following methods to use db table instead option
 //functions to get and set a code user ID
 function pmprosm_getCodeUserID($code_id)
 {
+  global $wpdb;
+  
+  $sql = $wpdb->prepare("select user_id from 
+    {$wpdb->prefix}pmprosm_coupon_users
+    where code_id = %s", $code_id);
+  $wpdb->show_errors();
+  $results = $wpdb->get_results($sql);
+  
+  if ($results[0]->user_id > 0)
+  {
+    return $results[0]->user_id;    
+  } else {
+    return false;
+  }
+  /*
 	$code_user_ids = get_option("pmpro_code_user_ids");	
 		
 	if(!empty($code_user_ids[$code_id]))
 		return $code_user_ids[$code_id];
 	else
 		return false;
+  */
 }
+
+
 function pmprosm_setCodeUserID($code_id, $user_id)
 {
+  global $wpdb;
+  
+  $sql = $wpdb->prepare("replace 
+    {$wpdb->prefix}pmprosm_coupon_users
+    set user_id = %d, code_id = %s", $user_id, $code_id);
+
+  $wpdb->show_errors();
+  $wpdb->query($sql);
+  
+  /*
 	$code_user_ids = get_option("pmpro_code_user_ids");	
 	$code_user_ids[$code_id] = $user_id;
 	
 	return update_option("pmpro_code_user_ids", $code_user_ids);
+  */
 }
+
+
 function pmprosm_deleteCodeUserID($code_id)
 {
+  global $wpdb;
+  $sql = $wpdb->prepare("delete from 
+    {$wpdb->prefix}pmprosm_coupon_users
+    where code_id = %s", $code_id);
+  $wpdb->show_errors();
+  $wpdb->query($sql);
+  
+  /*
 	$code_user_ids = get_option("pmpro_code_user_ids");	
 	unset($code_user_ids[$code_id]);
 	
 	return update_option("pmpro_code_user_ids", $code_user_ids);
+  */
 }
 
 //get discount code by user
 function pmprosm_getCodeByUserID($user_id)
 {
+  global $wpdb;
+  $sql = $wpdb->prepare("select code_id from 
+    {$wpdb->prefix}pmprosm_coupon_users
+    where user_id = %d", $user_id);
+  $results = $wpdb->get_results($sql);
+
+  if ($results[0]->code_id != '')
+  {
+    return $results[0]->code_id;    
+  } else {
+    return false;
+  }
+
+  /*
 	$code_user_ids = get_option("pmpro_code_user_ids");
 		
 	if(is_array($code_user_ids))
@@ -435,9 +513,12 @@ function pmprosm_getCodeByUserID($user_id)
 	}
 	
 	return false;
+  */
 }
 
 //get user by discount code
+// MH: is this function different from pmprosm_getCodeUserID()?
+/*
 function pmprosm_getUserByCodeID($needle)
 {
 	$code_user_ids = get_option("pmpro_code_user_ids");
@@ -453,6 +534,7 @@ function pmprosm_getUserByCodeID($needle)
 	
 	return false;
 }
+*/
 
 //show a user's discount code on the confirmation page
 function pmprosm_pmpro_confirmation_message($message)
@@ -1393,7 +1475,9 @@ function pmprosm_getSponsor($user_id, $force = false)
 	}
 		
 	//okay find sponsor
-	$sponsor_user_id = pmprosm_getUserByCodeID($code_id);
+  // MH: replaced by pmprosm_getCodeUserID
+	// $sponsor_user_id = pmprosm_getUserByCodeID($code_id);
+  $sponsor_user_id = pmprosm_getCodeUserID($code_id);
 	
 	$pmprosm_user_sponsors[$user_id] = get_userdata($sponsor_user_id);
 	return $pmprosm_user_sponsors[$user_id];
