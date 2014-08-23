@@ -418,7 +418,6 @@ function pmprosm_getChildren($user_id = NULL) {
 }
 
 
-// TODO: change following methods to use db table instead option
 //functions to get and set a code user ID
 function pmprosm_getCodeUserID($code_id)
 {
@@ -436,14 +435,6 @@ function pmprosm_getCodeUserID($code_id)
   } else {
     return false;
   }
-  /*
-	$code_user_ids = get_option("pmpro_code_user_ids");	
-		
-	if(!empty($code_user_ids[$code_id]))
-		return $code_user_ids[$code_id];
-	else
-		return false;
-  */
 }
 
 
@@ -457,13 +448,6 @@ function pmprosm_setCodeUserID($code_id, $user_id)
 
   $wpdb->show_errors();
   $wpdb->query($sql);
-  
-  /*
-	$code_user_ids = get_option("pmpro_code_user_ids");	
-	$code_user_ids[$code_id] = $user_id;
-	
-	return update_option("pmpro_code_user_ids", $code_user_ids);
-  */
 }
 
 
@@ -475,13 +459,6 @@ function pmprosm_deleteCodeUserID($code_id)
     where code_id = %s", $code_id);
   $wpdb->show_errors();
   $wpdb->query($sql);
-  
-  /*
-	$code_user_ids = get_option("pmpro_code_user_ids");	
-	unset($code_user_ids[$code_id]);
-	
-	return update_option("pmpro_code_user_ids", $code_user_ids);
-  */
 }
 
 //get discount code by user
@@ -499,42 +476,15 @@ function pmprosm_getCodeByUserID($user_id)
   } else {
     return false;
   }
-
-  /*
-	$code_user_ids = get_option("pmpro_code_user_ids");
-		
-	if(is_array($code_user_ids))
-	{
-		foreach($code_user_ids as $code_id => $code_user_id)
-		{
-			if($code_user_id == $user_id)
-				return $code_id;
-		}
-	}
-	
-	return false;
-  */
 }
 
 //get user by discount code
 // MH: is this function different from pmprosm_getCodeUserID()?
-/*
+// keeping the function for backwards compatibility
 function pmprosm_getUserByCodeID($needle)
 {
-	$code_user_ids = get_option("pmpro_code_user_ids");
-		
-	if(is_array($code_user_ids))
-	{
-		foreach($code_user_ids as $code_id => $code_user_id)
-		{
-			if($code_id == $needle)
-				return $code_user_id;
-		}
-	}
-	
-	return false;
+  return pmprosm_getCodeUserID($needle);
 }
-*/
 
 //show a user's discount code on the confirmation page
 function pmprosm_pmpro_confirmation_message($message)
