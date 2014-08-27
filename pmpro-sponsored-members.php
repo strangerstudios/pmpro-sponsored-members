@@ -65,20 +65,38 @@ function pmprosm_isMainLevel($level_id)
 function pmprosm_check_db()
 {
   global $wpdb; 
-  require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
   
-  $sql = "create table if not exists {$wpdb->prefix}pmprosm_coupon_users (
-    code_id varchar(32) not null,
-    user_id bigint(20) unsigned not null,
-    primary key  (code_id),
-    key user_id (user_id)
-  )";
-  
-  // echo $sql;
-  
-  $wpdb->show_errors();
-  $wpdb->query($sql);
-  // dbDelta($sql);
+  $table_name = $wpdb->prefix . 'pmprosm_coupon_users';
+  // check if we need to import old data
+  $sql = $wpdb->prepare("show tables like %s", $table_name);
+  $result = $wpdb->get_results($sql);
+  if (count($result) > 0)
+  {
+    // do nothing
+  } else {
+    // create table
+    $sql = "create table if not exists $table_name (
+      code_id varchar(32) not null,
+      user_id bigint(20) unsigned not null,
+      primary key  (code_id),
+      key user_id (user_id)
+    )";
+    
+    $wpdb->show_errors();
+    $wpdb->query($sql);
+    
+    // convert old data
+    $code_user_ids = get_option('pmpro_code_user_ids');
+    // print_r($code_user_ids);
+    foreach ($code_user_ids as $code_id => $user_id)
+    {
+      $sql = $wpdb->prepare("insert into $table_name
+        set code_id = %d, user_id = %d", $code_id, $user_id);
+      $wpdb->query($sql); 
+      // echo $sql . '<hr>'; 
+    }
+  }
+
 }
 
 //check if a level id is a "sponsored level"
