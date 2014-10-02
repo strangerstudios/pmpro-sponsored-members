@@ -654,11 +654,17 @@ function pmprosm_pmpro_checkout_boxes()
 					<label for="seats"><?php echo __("How many?", "pmpro_sponsored_members");?></label>
 					<input type="text" id="seats" name="seats" value="<?php echo esc_attr($seats);?>" size="10" />
 					<small>
-						<?php 
-							if(isset($pmprosm_values['seat_cost_text']))
-								printf(__("Enter a number from 1 to %d. %s", "pmpro_sponsored_members"), $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text']);
+						<?php							
+							//min seats defaults to 1
+							if(!empty($pmprosm_values['min_seats']))
+								$min_seats = $pmprosm_values['min_seats'];
 							else
-								printf(__("Enter a number from 1 to %d. +%s per extra seat.", "pmpro_sponsored_members"), $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost']);
+								$min_seats = 1;
+
+							if(isset($pmprosm_values['seat_cost_text']))
+								printf(__("Enter a number from %d to %d. %s", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text']);
+							else
+								printf(__("Enter a number from %d to %d. +%s per extra seat.", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost']);
 						?>						
 					</small>					
 					
@@ -690,6 +696,8 @@ function pmprosm_pmpro_checkout_boxes()
 									//acive?
 									if(pmpro_hasMembershipLevel(NULL, $child_id))
 										$active = true;
+									else
+										$active = false;
 										
 									//checked?
 									if(isset($old_sub_accounts_active[$i]))
@@ -700,7 +708,7 @@ function pmprosm_pmpro_checkout_boxes()
 								<label><?php echo $child->display_name;?></label>
 								<input type="checkbox" id="old_sub_accounts_active_<?php echo $i;?>" class="old_sub_accounts_active" name="old_sub_accounts_active[]" value="<?php echo $child_id;?>" <?php checked($checked, true);?> />
 								<label class="pmpro_normal pmpro_clickable" for="old_sub_accounts_active_<?php echo $i;?>">
-								<?php if($active) { ?>
+								<?php if(!empty($active)) { ?>
 									<?php _e('Keep checked to keep this account active.', 'pmprosm'); ?>
 								<?php } else { ?>
 									<?php _e('Check to reactivate this account.', 'pmprosm'); ?>

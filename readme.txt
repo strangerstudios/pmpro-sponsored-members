@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
-Tested up to: 3.9.1
-Stable tag: .4.1
+Tested up to: 4.0
+Stable tag: .4.2
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,9 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .4.2 =
+* Fixed bug where message under seats field would say "from 1 to X" even if the min_seats was set to something other than 1. (Thanks, martinec)
+
 = .4.1 =
 * Fixed bug where billing address wouldn't show up if the base level was free, there was a seat cost, but the sponsored_accounts_at_checkout setting was not turned on.
 * Fixed bug where apply_seat_cost_to_initial_payment and apply_seat_cost_to_billing_amount settings weren't working in some cases.
