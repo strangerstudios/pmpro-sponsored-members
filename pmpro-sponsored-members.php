@@ -42,6 +42,9 @@ Author URI: http://www.strangerstudios.com
 //define('PMPROSM_SEAT_COST', 250);
 //define('PMPROSM_MAX_SEATS', 10);
 
+// check database and create tables if necessary
+pmprosm_check_db();
+
 //check if a level id is a "main account" level
 function pmprosm_isMainLevel($level_id)
 {
@@ -57,6 +60,43 @@ function pmprosm_isMainLevel($level_id)
 	}
 	
 	return false;
+}
+
+function pmprosm_check_db()
+{
+  global $wpdb; 
+  
+  $table_name = $wpdb->prefix . 'pmprosm_coupon_users';
+  // check if we need to import old data
+  $sql = $wpdb->prepare("show tables like %s", $table_name);
+  $result = $wpdb->get_results($sql);
+  if (count($result) > 0)
+  {
+    // do nothing
+  } else {
+    // create table
+    $sql = "create table if not exists $table_name (
+      code_id varchar(32) not null,
+      user_id bigint(20) unsigned not null,
+      primary key  (code_id),
+      key user_id (user_id)
+    )";
+    
+    $wpdb->show_errors();
+    $wpdb->query($sql);
+    
+    // convert old data
+    $code_user_ids = get_option('pmpro_code_user_ids');
+    // print_r($code_user_ids);
+    foreach ($code_user_ids as $code_id => $user_id)
+    {
+      $sql = $wpdb->prepare("insert into $table_name
+        set code_id = %d, user_id = %d", $code_id, $user_id);
+      $wpdb->query($sql); 
+      // echo $sql . '<hr>'; 
+    }
+  }
+
 }
 
 //check if a level id is a "sponsored level"
@@ -395,63 +435,73 @@ function pmprosm_getChildren($user_id = NULL) {
     return $children;
 }
 
+
 //functions to get and set a code user ID
 function pmprosm_getCodeUserID($code_id)
 {
-	$code_user_ids = get_option("pmpro_code_user_ids");	
-		
-	if(!empty($code_user_ids[$code_id]))
-		return $code_user_ids[$code_id];
-	else
-		return false;
+  global $wpdb;
+  
+  $sql = $wpdb->prepare("select user_id from 
+    {$wpdb->prefix}pmprosm_coupon_users
+    where code_id = %s", $code_id);
+  $wpdb->show_errors();
+  $results = $wpdb->get_results($sql);
+  
+  if ($results[0]->user_id > 0)
+  {
+    return $results[0]->user_id;    
+  } else {
+    return false;
+  }
 }
+
+
 function pmprosm_setCodeUserID($code_id, $user_id)
 {
-	$code_user_ids = get_option("pmpro_code_user_ids");	
-	$code_user_ids[$code_id] = $user_id;
-	
-	return update_option("pmpro_code_user_ids", $code_user_ids);
+  global $wpdb;
+  
+  $sql = $wpdb->prepare("replace 
+    {$wpdb->prefix}pmprosm_coupon_users
+    set user_id = %d, code_id = %s", $user_id, $code_id);
+
+  $wpdb->show_errors();
+  $wpdb->query($sql);
 }
+
+
 function pmprosm_deleteCodeUserID($code_id)
 {
-	$code_user_ids = get_option("pmpro_code_user_ids");	
-	unset($code_user_ids[$code_id]);
-	
-	return update_option("pmpro_code_user_ids", $code_user_ids);
+  global $wpdb;
+  $sql = $wpdb->prepare("delete from 
+    {$wpdb->prefix}pmprosm_coupon_users
+    where code_id = %s", $code_id);
+  $wpdb->show_errors();
+  $wpdb->query($sql);
 }
 
 //get discount code by user
 function pmprosm_getCodeByUserID($user_id)
 {
-	$code_user_ids = get_option("pmpro_code_user_ids");
-		
-	if(is_array($code_user_ids))
-	{
-		foreach($code_user_ids as $code_id => $code_user_id)
-		{
-			if($code_user_id == $user_id)
-				return $code_id;
-		}
-	}
-	
-	return false;
+  global $wpdb;
+  $sql = $wpdb->prepare("select code_id from 
+    {$wpdb->prefix}pmprosm_coupon_users
+    where user_id = %d", $user_id);
+  $results = $wpdb->get_results($sql);
+
+  if ($results[0]->code_id != '')
+  {
+    return $results[0]->code_id;    
+  } else {
+    return false;
+  }
 }
 
 //get user by discount code
+// MH: is this function different from pmprosm_getCodeUserID()?
+// keeping the function for backwards compatibility
 function pmprosm_getUserByCodeID($needle)
 {
-	$code_user_ids = get_option("pmpro_code_user_ids");
-		
-	if(is_array($code_user_ids))
-	{
-		foreach($code_user_ids as $code_id => $code_user_id)
-		{
-			if($code_id == $needle)
-				return $code_user_id;
-		}
-	}
-	
-	return false;
+  return pmprosm_getCodeUserID($needle);
 }
 
 //show a user's discount code on the confirmation page
@@ -1401,7 +1451,9 @@ function pmprosm_getSponsor($user_id, $force = false)
 	}
 		
 	//okay find sponsor
-	$sponsor_user_id = pmprosm_getUserByCodeID($code_id);
+  // MH: replaced by pmprosm_getCodeUserID
+	// $sponsor_user_id = pmprosm_getUserByCodeID($code_id);
+  $sponsor_user_id = pmprosm_getCodeUserID($code_id);
 	
 	$pmprosm_user_sponsors[$user_id] = get_userdata($sponsor_user_id);
 	return $pmprosm_user_sponsors[$user_id];
