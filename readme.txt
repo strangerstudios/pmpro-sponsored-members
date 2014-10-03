@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: .4.2
+Stable tag: .4.2.1
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,9 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .4.2.1 =
+* Fixed bug when updating seats at checkout if both min_seats and max_seats is set.
+
 = .4.2 =
 * Fixed bug where message under seats field would say "from 1 to X" even if the min_seats was set to something other than 1. (Thanks, martinec)
 
