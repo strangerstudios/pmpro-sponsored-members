@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .4.2
+Version: .4.2.1
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -823,7 +823,7 @@ function pmprosm_pmpro_checkout_boxes()
 						var max_seats = <?php if(!empty($pmprosm_values['max_seats'])) echo intval($pmprosm_values['max_seats']); else echo "false";?>;
 						
 						//update things when the # of seats changes
-						jQuery('#seats, input.old_sub_accounts_active').bind("change keyup input", function() { 
+						jQuery('#seats, input.old_sub_accounts_active').bind("change", function() { 
 							seatsChanged();
 						});
 
