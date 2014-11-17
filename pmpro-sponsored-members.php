@@ -552,6 +552,22 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 		}
 	}
 	
+	//if the level has max or min seats, check them
+	if(pmprosm_isMainLevel($pmpro_level->id))
+	{
+		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
+		if(isset($pmprosm_values['max_seats']) && intval($_REQUEST['seats']) > intval($pmprosm_values['max_seats']))
+		{
+			pmpro_setMessage(__("The maximum number of seats allowed is " . intval($pmprosm_values['max_seats']) . ".", "pmpro_sponsored_members"), "pmpro_error");
+			return false;
+		}
+		elseif(isset($pmprosm_values['min_seats']) && intval($_REQUEST['seats']) < intval($pmprosm_values['min_seats']))
+		{
+			pmpro_setMessage(__("The minimum number of seats allowed is " . intval($pmprosm_values['min_seats']) . ".", "pmpro_sponsored_members"), "pmpro_error");
+			return false;
+		}
+	}
+	
 	return $pmpro_continue_registration;
 }
 add_filter("pmpro_registration_checks", "pmprosm_pmpro_registration_checks");
