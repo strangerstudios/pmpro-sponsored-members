@@ -40,6 +40,9 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 = .4.3 =
 * No longer showing the discount code links in confirmation messages if the code has 0 uses.
 
+= .4.2.1 =
+* Fixed bug when updating seats at checkout if both min_seats and max_seats is set.
+
 = .4.2 =
 * Fixed bug where message under seats field would say "from 1 to X" even if the min_seats was set to something other than 1. (Thanks, martinec)
 
