@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sponsored Members
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .4.2
+Version: .4.3
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -13,7 +13,8 @@ Author URI: http://www.strangerstudios.com
 	
 	Now using a global array so you can have multiple main and sponsored levels.	
 	Array keys should be the main account level.
-		
+	
+	global $pmprosm_sponsored_account_levels;	
 	$pmprosm_sponsored_account_levels = array(
 		//set 5 seats at checkout
 		1 => array(
@@ -28,7 +29,7 @@ Author URI: http://www.strangerstudios.com
 			'seat_cost' => 250,
 			'max_seats' => 10
 		)
-	)
+	);
 */
 
 /*
@@ -471,9 +472,14 @@ function pmprosm_pmpro_confirmation_message($message)
 		else
 			$sponsored_level_ids = $pmprosm_values['sponsored_level_id'];				
 		
+		//no sponsored levels to use codes for
 		if(empty($sponsored_level_ids) || empty($sponsored_level_ids[0]))
-			return;
-			
+			return $message;
+		
+		//no uses for this code
+		if(empty($code->uses))
+			return $message;
+		
 		$pmpro_levels = pmpro_getAllLevels(false, true);
 				
 		$code_urls = array();
@@ -523,7 +529,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 
 	//level = PMPROSM_SPONSORED_ACCOUNT_LEVEL and there is no discount code, then show an error message
 	global $pmpro_level, $discount_code, $wpdb;
-	if(pmprosm_isSponsoredLevel($pmpro_level->id) && empty($discount_code))
+	if(pmprosm_isSponsoredLevel($pmpro_level->id) && empty($discount_code) && !pmprosm_isMainLevel($pmpro_level->id))
 	{
 		pmpro_setMessage(__("You must use a valid discount code to register for this level.", "pmpro_sponsored_members"), "pmpro_error");
 		return false;
@@ -1297,6 +1303,14 @@ function pmprosm_the_content_account_page($content)
 			else
 				$sponsored_level_ids = $pmprosm_values['sponsored_level_id'];	
 			
+			//no sponsored levels to use codes for
+			if(empty($sponsored_level_ids) || empty($sponsored_level_ids[0]))
+				return $content;
+			
+			//no uses for this code
+			if(empty($code->uses))
+				return $content;
+			
 			$code_urls = array();
 			$pmpro_levels = pmpro_getAllLevels(false, true);
 			foreach($sponsored_level_ids as $sponsored_level_id)
@@ -1433,6 +1447,14 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 				$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
 			else
 				$sponsored_level_ids = $pmprosm_values['sponsored_level_id'];	
+			
+			//no sponsored levels to use codes for
+			if(empty($sponsored_level_ids) || empty($sponsored_level_ids[0]))
+				return $body;
+			
+			//no uses for this code
+			if(empty($code->uses))
+				return $body;
 			
 			//check if we should update confirmation email
 			if(isset($pmprosm_values['add_code_to_confirmation_email']) && $pmprosm_values['add_code_to_confirmation_email'] === false)
