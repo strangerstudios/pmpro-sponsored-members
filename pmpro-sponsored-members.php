@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: PMPro Sponsored Members
+Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
 Version: .4.3
@@ -1445,7 +1445,7 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 	global $wpdb, $pmprosm_sponsored_account_levels;
  
 	//only checkout emails, not admins
-	if(strpos($pmpro_email->template, "checkout") !== false && strpos($pmpro_email->template, "admin") == false)
+	if(strpos($pmpro_email->template, "checkout") !== false && strpos($pmpro_email->template, "admin") === false && strpos($pmpro_email->template, "debug") === false)
 	{ 
 		//get the user_id from the email
 		$user_id = $wpdb->get_var("SELECT ID FROM $wpdb->users WHERE user_email = '" . $pmpro_email->data['user_email'] . "' LIMIT 1");
@@ -1506,3 +1506,19 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 	return $body;
 }
 add_filter("pmpro_email_body", "pmprosm_pmpro_email_body", 10, 2);
+
+/*
+Function to add links to the plugin row meta
+*/
+function pmprosm_plugin_row_meta($links, $file) {
+	if(strpos($file, 'pmpro-sponsored-members.php') !== false)
+	{
+		$new_links = array(
+			'<a href="' . esc_url('http://www.paidmembershipspro.com/add-ons/plugins-on-github/pmpro-sponsored-members/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro' ) ) . '">' . __( 'Docs', 'pmpro' ) . '</a>',
+			'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro' ) ) . '">' . __( 'Support', 'pmpro' ) . '</a>',
+		);
+		$links = array_merge($links, $new_links);
+	}
+	return $links;
+}
+add_filter('plugin_row_meta', 'pmprosm_plugin_row_meta', 10, 2);

@@ -1,4 +1,4 @@
-=== PMPro Sponsored Members ===
+=== Paid Memberships Pro - Sponsored Members Add On ===
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
