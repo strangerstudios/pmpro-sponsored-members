@@ -38,7 +38,9 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 == Changelog ==
 = .5 =
-* ENHANCEMENT: Can now override the discount code that is generated for brand new main account users. Add a 'discount_code' element to the $pmprosm_sponsored_account_levels array element that is an array itself with values for any of the following discount code fields: code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period. Make sure that strings in the _period values are wrapped in single quotes, e.g. $discount_code['expiration_period']=>"'Year'"
+* BUG: Fixed bug in pmprosm_getValuesBySponsoredLevel() where it was checking the main account level id instead of the $level_id parameter passed to the function. This would have kept the registration checks from working.
+* FEATURE: Can now override the discount code that is generated for brand new main account users. Add a 'discount_code' element to the $pmprosm_sponsored_account_levels array element that is an array itself with values for any of the following discount code fields: code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period. Make sure that strings in the _period values are wrapped in single quotes, e.g. $discount_code['expiration_period']=>"'Year'"
+* FEATURE: Added a "discount_code_required" property for sponsored levels, which will remove the registration check to make sure a discount code is used when checking out for a sponsored level. This is useful if users can purchase the sponsored levels directly.
 
 = .4.3 =
 * No longer showing the discount code links in confirmation messages if the code has 0 uses.

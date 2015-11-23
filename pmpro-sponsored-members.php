@@ -104,12 +104,12 @@ function pmprosm_getValuesBySponsoredLevel($level_id)
 	{
 		if(is_array($values['sponsored_level_id']))
 		{
-			if(in_array($key, $values['sponsored_level_id']))
+			if(in_array($level_id, $values['sponsored_level_id']))
 				return $pmprosm_sponsored_account_levels[$key];
 		}
 		else
 		{
-			if($values['sponsored_level_id'] == $key)
+			if($values['sponsored_level_id'] == $level_id)
 				return $pmprosm_sponsored_account_levels[$key];
 		}
 	}
@@ -561,10 +561,16 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 
 	//level = PMPROSM_SPONSORED_ACCOUNT_LEVEL and there is no discount code, then show an error message
 	global $pmpro_level, $discount_code, $wpdb;
+	
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && empty($discount_code) && !pmprosm_isMainLevel($pmpro_level->id))
 	{
-		pmpro_setMessage(__("You must use a valid discount code to register for this level.", "pmpro_sponsored_members"), "pmpro_error");
-		return false;
+		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
+
+		if(empty($pmprosm_values) || !isset($pmprosm_values['discount_code_required']) || !empty($pmprosm_values['discount_code_required']))
+		{
+			pmpro_setMessage(__("You must use a valid discount code to register for this level.", "pmpro_sponsored_members"), "pmpro_error");
+			return false;
+		}
 	}
 		
 	//if a discount code is being used, check that the main account is active
