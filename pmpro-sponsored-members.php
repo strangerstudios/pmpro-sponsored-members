@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .4.3
+Version: .5
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -193,8 +193,40 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 					
 				foreach($sponsored_levels as $sponsored_level)
 				{
-					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period) VALUES('" . esc_sql($code_id) . "', '" . esc_sql($sponsored_level) . "', '0', '0', '0', 'Month', '0', '0', '0', '0', 'Month')";
-					$wpdb->query($sqlQuery);										
+					//default values for discount code; everything free
+					$discount_code = array(
+						'code_id'=>esc_sql($code_id),
+						'level_id'=>esc_sql($sponsored_level),
+						'initial_payment'=>'0',
+						'billing_amount'=>'0',
+						'cycle_number'=>'0',
+						'cycle_period'=>"'Month'",
+						'billing_limit'=>'0',
+						'trial_amount'=>'0',
+						'trial_limit'=>'0',
+						'expiration_number'=>'0',
+						'expiration_period' => "'Month'"
+					);
+
+					//allow override of the discount code values by setting it in the pmprosm_sponsored_account_levels array
+					if(!empty($pmprosm_values['discount_code']))
+						foreach($discount_code as $col => $value)
+							if(isset($pmprosm_values['discount_code'][$col]))
+								$discount_code[$col] = esc_sql($pmprosm_values['discount_code'][$col]);
+
+					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, 
+																				 level_id, 
+																				 initial_payment, 
+																				 billing_amount, 
+																				 cycle_number, 
+																				 cycle_period, 
+																				 billing_limit, 
+																				 trial_amount, 
+																				 trial_limit, 
+																				 expiration_number, 
+																				 expiration_period) 
+																VALUES(" . implode(",", $discount_code) . ")";
+					$wpdb->query($sqlQuery);
 				}
 			}
 		}	

@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
-Tested up to: 4.0
-Stable tag: .4.3
+Tested up to: 4.3.1
+Stable tag: .5
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,9 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .5 =
+* ENHANCEMENT: Can now override the discount code that is generated for brand new main account users. Add a 'discount_code' element to the $pmprosm_sponsored_account_levels array element that is an array itself with values for any of the following discount code fields: code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period. Make sure that strings in the _period values are wrapped in single quotes, e.g. $discount_code['expiration_period']=>"'Year'"
+
 = .4.3 =
 * No longer showing the discount code links in confirmation messages if the code has 0 uses.
 * Added checks to pmprosm_pmpro_registration_checks() to make sure seats purchased falls within min and max.
