@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
 Tested up to: 4.3.1
-Stable tag: .5
+Stable tag: .5.1
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,10 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .5.1 =
+* BUG: Added current_time('timestamp') to the date() calls to fix off by one timestamp issues.
+* BUG: No longer applying esc_sql to values in the discount_code settings. Escaping of quotes was breaking the SQL. Make sure your values in your settings are SQL safe.
+
 = .5 =
 * BUG: Fixed bug in pmprosm_getValuesBySponsoredLevel() where it was checking the main account level id instead of the $level_id parameter passed to the function. This would have kept the registration checks from working.
 * FEATURE: Can now override the discount code that is generated for brand new main account users. Add a 'discount_code' element to the $pmprosm_sponsored_account_levels array element that is an array itself with values for any of the following discount code fields: code_id, level_id, initial_payment, billing_amount, cycle_number, cycle_period, billing_limit, trial_amount, trial_limit, expiration_number, expiration_period. Make sure that strings in the _period values are wrapped in single quotes, e.g. $discount_code['expiration_period']=>"'Year'"

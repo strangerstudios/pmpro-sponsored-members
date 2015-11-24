@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .5
+Version: .5.1
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -166,8 +166,8 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 				$code = "S" . pmpro_getDiscountCode($user_id); 	//seed parameter added in version 1.7.6
 			else
 				$code = "S" . pmpro_getDiscountCode();
-			$starts = date("Y-m-d");
-			$expires = date("Y-m-d", strtotime("+1 year"));
+			$starts = date("Y-m-d", current_time("timestamp"));
+			$expires = date("Y-m-d", strtotime("+1 year", current_time("timestamp")));
 			
 			//check for seats
 			if(isset($_REQUEST['seats']))
@@ -212,7 +212,7 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 					if(!empty($pmprosm_values['discount_code']))
 						foreach($discount_code as $col => $value)
 							if(isset($pmprosm_values['discount_code'][$col]))
-								$discount_code[$col] = esc_sql($pmprosm_values['discount_code'][$col]);
+								$discount_code[$col] = $pmprosm_values['discount_code'][$col];
 
 					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, 
 																				 level_id, 
