@@ -1086,23 +1086,27 @@ function pmprosm_pmpro_after_checkout($user_id)
 				if( is_wp_error($child_user_id) ) {
 
 					$error_code = $child_user_id->get_error_code();
+					$existing_user = null;
 
-					switch( $error_code ) {
-						case 'existing_user_email':
-							$existing_user = get_user_by('email', $child_email[$i]);
-							break;
-						case 'existing_user_login':
-							$existing_user = get_user_by('login', $child_username[$i]);
-							break;
-
-						default:
-							$existing_user = null;
-							continue;
+					// check the error code & look up user if it's a duplicate email.
+					if ( $error_code == 'existing_user_email' )
+					{
+						$existing_user = get_user_by( 'email', $child_email[ $i ] );
+					}
+					else
+					{
+						// skip this user (quietly). -- TODO: Should probably return message to admin?
+						$existing_user = null;
+						continue;
 					}
 
-					if(! is_null($existing_user))
+					// have an actual WP_User object & is user already a member?
+					if( ! is_null($existing_user) && ! pmpro_getMembershipLevelForUser( $existing_user->ID ) )
 					{
 						$child_user_id = $existing_user->ID;
+					}
+					else {
+						continue;
 					}
 				}
 
