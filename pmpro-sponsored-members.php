@@ -1082,7 +1082,30 @@ function pmprosm_pmpro_after_checkout($user_id)
 					   continue;
 					   
 				$child_user_id = wp_create_user( $child_username[$i], $child_password[$i], $child_email[$i]);
-							
+
+				if( is_wp_error($child_user_id) ) {
+
+					$error_code = $child_user_id->get_error_code();
+
+					switch( $error_code ) {
+						case 'existing_user_email':
+							$existing_user = get_user_by('email', $child_email[$i]);
+							break;
+						case 'existing_user_login':
+							$existing_user = get_user_by('login', $child_username[$i]);
+							break;
+
+						default:
+							$existing_user = null;
+							continue;
+					}
+
+					if(! is_null($existing_user))
+					{
+						$child_user_id = $existing_user->ID;
+					}
+				}
+
 				//update first/last
 				if(!empty($child_first_name[$i]))
 					update_user_meta($child_user_id, "first_name", $child_first_name[$i]);
