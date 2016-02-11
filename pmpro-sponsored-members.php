@@ -259,7 +259,7 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 		$seats = $pmprosm_values['seats'];
 	else
 		$seats = "";
-			
+
 	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "' WHERE id = '" . $code_id . "' LIMIT 1";
 	$wpdb->query($sqlQuery);
 	
@@ -581,7 +581,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 		if(!empty($code_id))
 		{
 			$code_user_id = pmprosm_getCodeUserID($code_id);
-						
+
 			if(!empty($code_user_id) && !pmpro_hasMembershipLevel($pmprosm_values['main_level_id'], $code_user_id))
 			{
 				pmpro_setMessage(__("The sponsor for this code is inactive. Ask them to renew their account.", "pmpro_sponsored_members"), "pmpro_error");
@@ -1298,7 +1298,7 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
 }
 add_action('pmpro_registration_checks', 'pmprosm_pmpro_registration_checks_sponsored_accounts');
 
-//add code and seats fields to profile for admins
+//add code, seats, and sponsor field to profile for admins
 function pmprosm_profile_fields_seats($user)
 {
 	global $wpdb;
@@ -1306,7 +1306,7 @@ function pmprosm_profile_fields_seats($user)
 	if(current_user_can("manage_options"))
 	{
 	?>
-		<h3><?php _e("Sponsored Seats"); ?></h3>
+		<h3><?php _e("Sponsored Memberships"); ?></h3>
 		<table class="form-table">
 		<?php
 			$sponsor_code_id = pmprosm_getCodeByUserID($user->ID);
@@ -1329,8 +1329,23 @@ function pmprosm_profile_fields_seats($user)
 					$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true));					
 				?>
 				<input type="text" id="seats" name="seats" size="5" value="<?php echo esc_attr($seats);?>" />
-
-				
+			</td>
+		</tr>
+		<tr>
+			<th><label for="sponsor"><?php _e('Sponsor ID', 'pmpro_sponsored_members'); ?></label></th>
+			<td>
+				<?php
+				//what code did this user_id sign up for?
+				$sqlQuery = "SELECT code_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . $user->ID . "' ORDER BY id DESC";
+				$code_id = $wpdb->get_var($sqlQuery);
+				//found a code?
+				if(!empty($code_id))
+					$sponsor_user_id = pmprosm_getUserByCodeID($code_id);
+				?>
+				<input type="text" id="sponsor" name="sponsor" size="5" value="<?php echo $sponsor_user_id; ?>">
+				<?php if(!empty($sponsor_user_id)) { ?>
+				<small><a href="<?php echo get_edit_user_link($sponsor_user_id); ?>"><?php _e('Edit User', 'pmpro_sponsored_members'); ?></a></small>
+				<?php } ?>
 			</td>
 		</tr>
 		</table>
@@ -1340,25 +1355,61 @@ function pmprosm_profile_fields_seats($user)
 add_action('show_user_profile', 'pmprosm_profile_fields_seats');
 add_action('edit_user_profile', 'pmprosm_profile_fields_seats');
 
-//save seats on profile save
+//save seats and assign sponsors on profile save
 function pmprosm_profile_update_seats($user_id)
 {
 	//make sure they can edit
 	if ( !current_user_can( 'edit_user', $user_id ) )
 		return false;
 
-	//only let admin's edit the seats
-	if(current_user_can("manage_options") && isset($_POST['seats']))	
-	{
-		//update user meta
-		update_user_meta( $user_id, "pmprosm_seats", intval($_POST['seats']) );			
-		
-		//update code
-		global $wpdb;
-		$code_id = pmprosm_getCodeByUserID($user_id);
-		$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . intval($_POST['seats']) . "' WHERE id = '" . $code_id . "' LIMIT 1";
-		$wpdb->query($sqlQuery);
-	}
+	//only let admins edit the seats
+	if(current_user_can("manage_options")) {
+
+		if(isset($_POST['seats'])) {
+
+			// get sponsor code id
+			global $wpdb;
+			$code_id = pmprosm_getCodeByUserID($user_id);
+
+			//update user meta
+			update_user_meta( $user_id, "pmprosm_seats", intval($_POST['seats']) );
+
+			//update code
+			$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . intval($_POST['seats']) . "' WHERE id = '" . $code_id . "' LIMIT 1";
+			$wpdb->query($sqlQuery);
+		}
+
+		//TODO: Figure out what to do when attaching sponsors with multi-level discount codes
+//		if(isset($_POST['sponsor'])) {
+//
+//			//get current sponsor
+//			$csponsor = pmprosm_getSponsor($user_id);
+//			$old_code = pmprosm_getCodeByUserID( $csponsor->ID );
+//
+//			//are we even changing?
+//			if(!empty($_POST['sponsor']) && $csponsor->ID !== $_POST['sponsor']) {
+//
+//				//detach current sponsor
+//				pmprosm_removeDiscountCodeUse( $user_id, $old_code );
+//
+//				//attach new sponsor
+//				$sponsor_id = $_POST['sponsor'];
+//				$new_code = pmprosm_getCodeByUserID( $sponsor_id );
+//				$level = pmpro_getMembershipLevelForUser( $user_id );
+//				pmprosm_addDiscountCodeUse( $user_id, $level->id, $new_code );
+//
+//				//trigger update to sync with sponsor
+//				$slevel = pmpro_getMembershipLevelForUser($sponsor_id);
+//				//unset seats so we make sure to get them from the sponsored level
+//				unset($_REQUEST['seats']);
+//				pmprosm_sponsored_account_change($slevel->id, $sponsor_id);
+//
+//			} elseif(empty($_POST['sponsor'])) {
+//				$old_code = pmprosm_getCodeByUserID( $csponsor->ID );
+//				pmprosm_removeDiscountCodeUse( $user_id, $old_code );
+//			}
+//		}
+//	}
 }
 add_action('profile_update', 'pmprosm_profile_update_seats');
 
@@ -1475,15 +1526,15 @@ function pmprosm_getSponsor($user_id, $force = false)
 	
 	if(!empty($pmprosm_user_sponsors[$user_id]) && !$force)
 		return $pmprosm_user_sponsors[$user_id];
-	
+
 	//make sure this user has one of the sponsored levels
-	$user_level = pmpro_getMembershipLevelForUser($user_id);	
+	$user_level = pmpro_getMembershipLevelForUser($user_id);
 	if(!pmprosm_isSponsoredLevel($user_level->id))
 	{
 		$pmprosm_user_sponsors[$user_id] = false;
 		return $pmprosm_user_sponsors[$user_id];
 	}
-	
+
 	//what code did this user_id sign up for?
 	$sqlQuery = "SELECT code_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . $user_id . "' ORDER BY id DESC";
 	$code_id = $wpdb->get_var($sqlQuery);
