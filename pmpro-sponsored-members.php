@@ -100,37 +100,43 @@ function pmprosm_getValuesBySponsoredLevel($level_id)
 {
 	global $pmprosm_sponsored_account_levels;
 	
+	$pmprosm_sponsored_account_values = array();
+	
 	foreach($pmprosm_sponsored_account_levels as $key => $values)
 	{
 		if(is_array($values['sponsored_level_id']))
 		{
 			if(in_array($level_id, $values['sponsored_level_id']))
-				return $pmprosm_sponsored_account_levels[$key];
+			{
+				$pmprosm_sponsored_account_values[] = $pmprosm_sponsored_account_levels[$key];
+			}
 		}
 		else
 		{
 			if($values['sponsored_level_id'] == $level_id)
-				return $pmprosm_sponsored_account_levels[$key];
+				$pmprosm_sponsored_account_values[] = $pmprosm_sponsored_account_levels[$key];
 		}
 	}
+	
+	return $pmprosm_sponsored_account_levels;
 }
 
 //cancel sub members when a main account cancels
 //activate sub members when changed to main account
 //generate a discount code when changing to main account level
 function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
-{
+{	
 	global $wpdb;
 	
 	//are they cancelling?
 	if(empty($level_id))
 	{
 		//is there a discount code attached to this user?
-		$code_id = pmprosm_getCodeByUserID($user_id);		
-		
+		$code_id = pmprosm_getCodeByUserID($user_id);
+	
 		//if so find all users who signed up with that and cancel them as well
 		if(!empty($code_id))
-		{			
+		{	
 			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";			
 			$sub_user_ids = $wpdb->get_col($sqlQuery);
 			
@@ -406,7 +412,7 @@ function pmprosm_admin_head_errors()
 }
 add_action("admin_head", "pmprosm_admin_head_errors");
 
-//function to get children of aponsor
+//function to get children of a sponsor
 function pmprosm_getChildren($user_id = NULL) {
 
     global $wpdb, $current_user;
@@ -565,8 +571,18 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && empty($discount_code) && !pmprosm_isMainLevel($pmpro_level->id))
 	{
 		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
-
-		if(empty($pmprosm_values) || !isset($pmprosm_values['discount_code_required']) || !empty($pmprosm_values['discount_code_required']))
+		$continue_reg = false; 
+		
+		foreach($pmprosm_values as $pmprosm_value)
+		{
+			if(!$continue_reg && isset($pmprosm_value['discount_code_required']) && empty($pmprosm_value['discount_code_required']))
+				$continue_reg = false;
+			
+			else
+				$continue_reg = true;
+		}
+		
+		if(!$continue_reg)
 		{
 			pmpro_setMessage(__("You must use a valid discount code to register for this level.", "pmpro_sponsored_members"), "pmpro_error");
 			return false;
@@ -577,12 +593,24 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && !empty($discount_code))
 	{
 		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
+		
 		$code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql($discount_code) . "' LIMIT 1");
 		if(!empty($code_id))
 		{
 			$code_user_id = pmprosm_getCodeUserID($code_id);
-						
-			if(!empty($code_user_id) && !pmpro_hasMembershipLevel($pmprosm_values['main_level_id'], $code_user_id))
+		
+			$continue_reg = false; 
+
+			foreach($pmprosm_values as $pmprosm_value)
+			{
+				if(!$continue_reg && !empty($code_user_id) && !pmpro_hasMembershipLevel($pmprosm_value['main_level_id'], $code_user_id))
+					$continue_reg = false;
+				
+				else
+					$continue_reg = true;
+			}
+			
+			if(!$continue_reg)
 			{
 				pmpro_setMessage(__("The sponsor for this code is inactive. Ask them to renew their account.", "pmpro_sponsored_members"), "pmpro_error");
 				return false;
@@ -1477,7 +1505,7 @@ function pmprosm_getSponsor($user_id, $force = false)
 		return $pmprosm_user_sponsors[$user_id];
 	
 	//make sure this user has one of the sponsored levels
-	$user_level = pmpro_getMembershipLevelForUser($user_id);	
+	$user_level = pmpro_getMembershipLevelForUser($user_id);
 	if(!pmprosm_isSponsoredLevel($user_level->id))
 	{
 		$pmprosm_user_sponsors[$user_id] = false;
@@ -1487,7 +1515,7 @@ function pmprosm_getSponsor($user_id, $force = false)
 	//what code did this user_id sign up for?
 	$sqlQuery = "SELECT code_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . $user_id . "' ORDER BY id DESC";
 	$code_id = $wpdb->get_var($sqlQuery);
-	
+
 	//found a code?
 	if(empty($code_id))
 	{
