@@ -169,7 +169,16 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 				
 		//check if this user already has a discount code
 		$code_id = pmprosm_getCodeByUserID($user_id);
-				
+		
+		//make sure the code is still around
+		if($code_id)
+		{
+			$code_exists = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE id = '" . $code_id . "' LIMIT 1");
+			if(!$code_exists)
+				$code_id = false;
+		}
+		
+		//no code, make one
 		if(empty($code_id))
 		{
 			//if seats cost money and there are no seats, just return
@@ -1071,16 +1080,19 @@ add_filter("pmpro_checkout_level", "pmprosm_pmpro_checkout_levels");
 function pmprosm_pmpro_after_checkout($user_id)
 {
 	global $current_user, $pmprosm_sponsored_account_levels;
+		
+	$parent_level = pmprosm_getValuesByMainLevel($_REQUEST['level']);
+	
 	//get seats from submit
-	if(isset($_REQUEST['seats']))
+	if(!empty($parent_level['seats']))
+		$seats = $parent_level['seats'];
+	elseif(isset($_REQUEST['seats']))
 		$seats = intval($_REQUEST['seats']);
 	else
 		$seats = "";
 
 	update_user_meta($user_id, "pmprosm_seats", $seats);
-	
-	$parent_level = pmprosm_getValuesByMainLevel($_REQUEST['level']);
-	
+			
 	if(!empty($parent_level['sponsored_accounts_at_checkout']))
 	{
 		//Create additional child member here
@@ -1363,7 +1375,7 @@ function pmprosm_profile_fields_seats($user)
 			<th><label for="seats"><?php _e("Seats"); ?></label></th>
 			<td>
 				<?php
-					$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true));					
+					$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true));
 				?>
 				<input type="text" id="seats" name="seats" size="5" value="<?php echo esc_attr($seats);?>" />
 
