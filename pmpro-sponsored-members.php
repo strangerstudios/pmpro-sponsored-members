@@ -96,7 +96,7 @@ function pmprosm_getValuesByMainLevel($level_id)
 }
 
 //get values by sponsored account level
-function pmprosm_getValuesBySponsoredLevel($level_id)
+function pmprosm_getValuesBySponsoredLevel($level_id, $first = true)
 {
 	global $pmprosm_sponsored_account_levels;
 	
@@ -106,19 +106,28 @@ function pmprosm_getValuesBySponsoredLevel($level_id)
 	{
 		if(is_array($values['sponsored_level_id']))
 		{
-			if(in_array($level_id, $values['sponsored_level_id']))
+			if(in_array($level_id, $values['sponsored_level_id']) && $first)
+				return $pmprosm_sponsored_account_levels[$key];
+
+			else
 			{
 				$pmprosm_sponsored_account_values[] = $pmprosm_sponsored_account_levels[$key];
 			}
 		}
 		else
 		{
-			if($values['sponsored_level_id'] == $level_id)
+			if($values['sponsored_level_id'] == $level_id && $first)
+				return $pmprosm_sponsored_account_levels[$key];
+			
+			else	
+			{
 				$pmprosm_sponsored_account_values[] = $pmprosm_sponsored_account_levels[$key];
+				
+			}
 		}
 	}
 	
-	return $pmprosm_sponsored_account_levels;
+	return $pmprosm_sponsored_account_values;
 }
 
 //cancel sub members when a main account cancels
@@ -570,7 +579,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && empty($discount_code) && !pmprosm_isMainLevel($pmpro_level->id))
 	{
-		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
+		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id, false);
 		$continue_reg = false; 
 		
 		foreach($pmprosm_values as $pmprosm_value)
@@ -592,7 +601,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	//if a discount code is being used, check that the main account is active
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && !empty($discount_code))
 	{
-		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
+		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id, false);
 		
 		$code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql($discount_code) . "' LIMIT 1");
 		if(!empty($code_id))
@@ -621,7 +630,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	//if the level has max or min seats, check them
 	if(pmprosm_isMainLevel($pmpro_level->id))
 	{
-		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id);
+		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id, false);
 		if(isset($pmprosm_values['max_seats']) && intval($_REQUEST['seats']) > intval($pmprosm_values['max_seats']))
 		{
 			pmpro_setMessage(__("The maximum number of seats allowed is " . intval($pmprosm_values['max_seats']) . ".", "pmpro_sponsored_members"), "pmpro_error");
