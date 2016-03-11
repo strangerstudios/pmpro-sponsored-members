@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
-Tested up to: 4.3.1
-Stable tag: .5.1
+Tested up to: 4.4.2
+Stable tag: .6
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,11 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .6 =
+* BUG: Fixed bug where "seats" user meta was not updated sometimes at checkout.
+* BUG: Fixed bug where no new discount code was created if a user's old code had been deleted and the id was still linked to the user.
+* FEATURE: Can now have multiple parent levels pointing to the same child levels.
+
 = .5.1 =
 * BUG: Added current_time('timestamp') to the date() calls to fix off by one timestamp issues.
 * BUG: No longer applying esc_sql to values in the discount_code settings. Escaping of quotes was breaking the SQL. Make sure your values in your settings are SQL safe.
