@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .6
+Version: .6.1
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -42,6 +42,10 @@ Author URI: http://www.strangerstudios.com
 //define('PMPROSM_NUM_SEATS', 5);
 //define('PMPROSM_SEAT_COST', 250);
 //define('PMPROSM_MAX_SEATS', 10);
+
+//includes
+if(is_admin())
+	require_once(dirname(__FILE__) . '/includes/import-users-from-csv.php');
 
 //check if a level id is a "main account" level
 function pmprosm_isMainLevel($level_id)
@@ -185,14 +189,6 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			if(!empty($pmprosm_values['seat_cost']) && empty($_REQUEST['seats']))
 				return;
 			
-			//generate a new code. change these values if you want.
-			if(version_compare(PMPRO_VERSION, "1.7.5") > 0)
-				$code = "S" . pmpro_getDiscountCode($user_id); 	//seed parameter added in version 1.7.6
-			else
-				$code = "S" . pmpro_getDiscountCode();
-			$starts = date("Y-m-d", current_time("timestamp"));
-			$expires = date("Y-m-d", strtotime("+1 year", current_time("timestamp")));
-			
 			//check for seats
 			if(isset($_REQUEST['seats']))
 				$uses = intval($_REQUEST['seats']);
@@ -201,58 +197,8 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			else
 				$uses = "";
 			
-			$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql($code) . "', '" . $starts . "', '" . $expires . "', '" . intval($uses) . "')";
-			
-			if($wpdb->query($sqlQuery) !== false)
-			{
-				//set code in user meta
-				$code_id = $wpdb->insert_id;				
-				pmprosm_setCodeUserID($code_id, $user_id);
-				
-				//okay update levels for code
-				if(!is_array($pmprosm_values['sponsored_level_id']))
-					$sponsored_levels = array($pmprosm_values['sponsored_level_id']);
-				else
-					$sponsored_levels = $pmprosm_values['sponsored_level_id'];
-					
-				foreach($sponsored_levels as $sponsored_level)
-				{
-					//default values for discount code; everything free
-					$discount_code = array(
-						'code_id'=>esc_sql($code_id),
-						'level_id'=>esc_sql($sponsored_level),
-						'initial_payment'=>'0',
-						'billing_amount'=>'0',
-						'cycle_number'=>'0',
-						'cycle_period'=>"'Month'",
-						'billing_limit'=>'0',
-						'trial_amount'=>'0',
-						'trial_limit'=>'0',
-						'expiration_number'=>'0',
-						'expiration_period' => "'Month'"
-					);
-
-					//allow override of the discount code values by setting it in the pmprosm_sponsored_account_levels array
-					if(!empty($pmprosm_values['discount_code']))
-						foreach($discount_code as $col => $value)
-							if(isset($pmprosm_values['discount_code'][$col]))
-								$discount_code[$col] = $pmprosm_values['discount_code'][$col];
-
-					$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, 
-																				 level_id, 
-																				 initial_payment, 
-																				 billing_amount, 
-																				 cycle_number, 
-																				 cycle_period, 
-																				 billing_limit, 
-																				 trial_amount, 
-																				 trial_limit, 
-																				 expiration_number, 
-																				 expiration_period) 
-																VALUES(" . implode(",", $discount_code) . ")";
-					$wpdb->query($sqlQuery);
-				}
-			}
+			//create a new code
+			pmprosm_createSponsorCode($user_id, $level_id, $uses);
 		}	
 		elseif(!empty($pmprosm_values['sponsored_level_id']))
 		{
@@ -265,6 +211,83 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 	}
 }
 add_action("pmpro_after_change_membership_level", "pmprosm_pmpro_after_change_membership_level", 10, 2);
+
+/*
+	Create a new sponsor discount code.
+*/
+function pmprosm_createSponsorCode($user_id, $level_id, $uses = "") {
+	global $wpdb;
+	
+	//get values for this sponsorship
+	$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
+	
+	//generate a new code. change these values if you want.
+	if(version_compare(PMPRO_VERSION, "1.7.5") > 0)
+		$code = "S" . pmpro_getDiscountCode($user_id); 	//seed parameter added in version 1.7.6
+	else
+		$code = "S" . pmpro_getDiscountCode();
+	$starts = date("Y-m-d", current_time("timestamp"));
+	$expires = date("Y-m-d", strtotime("+1 year", current_time("timestamp")));
+			
+	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql($code) . "', '" . $starts . "', '" . $expires . "', '" . intval($uses) . "')";
+	
+	if($wpdb->query($sqlQuery) !== false)
+	{
+		//set code in user meta
+		$code_id = $wpdb->insert_id;				
+		pmprosm_setCodeUserID($code_id, $user_id);
+		
+		//okay update levels for code
+		if(!is_array($pmprosm_values['sponsored_level_id']))
+			$sponsored_levels = array($pmprosm_values['sponsored_level_id']);
+		else
+			$sponsored_levels = $pmprosm_values['sponsored_level_id'];
+			
+		foreach($sponsored_levels as $sponsored_level)
+		{
+			//default values for discount code; everything free
+			$discount_code = array(
+				'code_id'=>esc_sql($code_id),
+				'level_id'=>esc_sql($sponsored_level),
+				'initial_payment'=>'0',
+				'billing_amount'=>'0',
+				'cycle_number'=>'0',
+				'cycle_period'=>"'Month'",
+				'billing_limit'=>'0',
+				'trial_amount'=>'0',
+				'trial_limit'=>'0',
+				'expiration_number'=>'0',
+				'expiration_period' => "'Month'"
+			);
+
+			//allow override of the discount code values by setting it in the pmprosm_sponsored_account_levels array
+			if(!empty($pmprosm_values['discount_code']))
+				foreach($discount_code as $col => $value)
+					if(isset($pmprosm_values['discount_code'][$col]))
+						$discount_code[$col] = $pmprosm_values['discount_code'][$col];
+
+			$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id, 
+																		 level_id, 
+																		 initial_payment, 
+																		 billing_amount, 
+																		 cycle_number, 
+																		 cycle_period, 
+																		 billing_limit, 
+																		 trial_amount, 
+																		 trial_limit, 
+																		 expiration_number, 
+																		 expiration_period) 
+														VALUES(" . implode(",", $discount_code) . ")";
+			$wpdb->query($sqlQuery);
+		}
+		
+		//code created
+		return $code_id;
+	}
+	
+	//something went wrong
+	return false;
+}
 
 /*
 	This is the function that handles updating discount codes and sub accounts when a sponsor renews or changes levels.
@@ -481,7 +504,7 @@ function pmprosm_deleteCodeUserID($code_id)
 function pmprosm_getCodeByUserID($user_id)
 {
 	$code_user_ids = get_option("pmpro_code_user_ids");
-		
+
 	if(is_array($code_user_ids))
 	{
 		foreach($code_user_ids as $code_id => $code_user_id)
