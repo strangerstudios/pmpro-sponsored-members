@@ -400,11 +400,20 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 */
 function pmprosm_pmpro_after_checkout_sponsor_account_change($user_id)
 {
-	//get level
-	$level_id = intval($_REQUEST['level']);
+	global $pmpro_level;
 	
-    // handle sponsored accounts
+	//get level
+	if(!empty($pmpro_level))
+		$level_id = $pmpro_level->id;
+	elseif(!empty($_REQUEST['level']))
+		$level_id = intval($_REQUEST['level']);
+	else
+		$level_id = false;
+	
+	if(empty($level_id))
+		return;
 
+    // handle sponsored accounts
     if (pmprosm_isMainLevel($level_id))
         pmprosm_sponsored_account_change($level_id, $user_id);
 }
@@ -1102,9 +1111,19 @@ add_filter("pmpro_checkout_level", "pmprosm_pmpro_checkout_levels");
 //save seats at checkout
 function pmprosm_pmpro_after_checkout($user_id)
 {
-	global $current_user, $pmprosm_sponsored_account_levels;
-		
-	$parent_level = pmprosm_getValuesByMainLevel($_REQUEST['level']);
+	global $current_user, $pmprosm_sponsored_account_levels, $pmpro_level;
+	
+	if(!empty($pmpro_level))
+		$level_id = $pmpro_level->id;
+	elseif(!empty($_REQUEST['level']))
+		$level_id = intval($_REQUEST['level']);
+	else
+		$level_id = false;
+	
+	if(empty($level_id))
+		return;
+
+	$parent_level = pmprosm_getValuesByMainLevel($level_id);
 	
 	//get seats from submit
 	if(!empty($parent_level['seats']))
