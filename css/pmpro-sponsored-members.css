@@ -1,0 +1,211 @@
+
+/**
+ Copyright (c) 2016 - Eighty / 20 Results by Wicked Strong Chicks. ALL RIGHTS RESERVED
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+.div-table{
+    display:table;
+    width:auto;
+/*    background-color:#eee; */
+/*    border:1px solid  #666666; */
+    border-spacing:5px;/*cellspacing:poor IE support for  this*/
+}
+.div-table-row{
+    display:table-row;
+    width:auto;
+    clear:both;
+}
+.div-table-col{
+    padding: 5px !important;
+    text-align: center;
+    float:left;/*fix for  buggy browsers*/
+    display:table-column;
+    width:200px;
+    /* background-color:#ccc; */
+}
+.div-table-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+div.pmprosm-userlist-row.div-table-header {
+    border-bottom: 2px solid #e5e5e5;
+}
+
+.pmprosm-user-list *,*:after,*:before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+.pmprosm-ckbox {
+    margin: 0 auto;
+    position: relative;
+}
+
+.pmprosm-ckbox label {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: block;
+}
+
+.pmprosm-ckbox input {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    opacity: 0;
+    z-index: 100;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.pmprosm-ckbox {
+    width: 90px;
+    height: 25px;
+}
+
+.pmprosm-ckbox label {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* background: #a5a39d; */
+    border-radius: 40px;
+    box-shadow:
+            inset 0 3px 8px 1px rgba(0,0,0,0.2),
+            0 1px 0 rgba(255,255,255,0.5);
+}
+
+.pmprosm-ckbox label:after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: -8px; right: -8px; bottom: -8px; left: -8px;
+    border-radius: inherit;
+    background: #ababab;
+    background: -moz-linear-gradient(#f2f2f2, #ababab);
+    background: -ms-linear-gradient(#f2f2f2, #ababab);
+    background: -o-linear-gradient(#f2f2f2, #ababab);
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#f2f2f2), to(#ababab));
+    background: -webkit-linear-gradient(#f2f2f2, #ababab);
+    background: linear-gradient(#f2f2f2, #ababab);
+    box-shadow: 0 0 10px rgba(0,0,0,0.3),
+    0 1px 1px rgba(0,0,0,0.25);
+}
+
+.pmprosm-ckbox label:before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: -18px; right: -18px; bottom: -18px; left: -18px;
+    border-radius: inherit;
+    background: #eee;
+    background: -moz-linear-gradient(#e5e7e6, #eee);
+    background: -ms-linear-gradient(#e5e7e6, #eee);
+    background: -o-linear-gradient(#e5e7e6, #eee);
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#e5e7e6), to(#eee));
+    background: -webkit-linear-gradient(#e5e7e6, #eee);
+    background: linear-gradient(#e5e7e6, #eee);
+    box-shadow:
+            0 1px 0 rgba(255,255,255,0.5);
+    -webkit-filter: blur(1px);
+    -moz-filter: blur(1px);
+    -ms-filter: blur(1px);
+    -o-filter: blur(1px);
+    filter: blur(1px);
+}
+
+.pmprosm-ckbox label i {
+    display: block;
+    height: 100%;
+    width: 60%;
+    border-radius: inherit;
+    background: silver;
+    position: absolute;
+    z-index: 2;
+    right: 40%;
+    top: 0;
+    background: #b2ac9e;
+    background: -moz-linear-gradient(#f7f2f6, #b2ac9e);
+    background: -ms-linear-gradient(#f7f2f6, #b2ac9e);
+    background: -o-linear-gradient(#f7f2f6, #b2ac9e);
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#f7f2f6), to(#b2ac9e));
+    background: -webkit-linear-gradient(#f7f2f6, #b2ac9e);
+    background: linear-gradient(#f7f2f6, #b2ac9e);
+    box-shadow:
+            inset 0 1px 0 white,
+            0 0 8px rgba(0,0,0,0.3),
+            0 5px 5px rgba(0,0,0,0.2);
+}
+
+.pmprosm-ckbox label i:after {
+    content: "";
+    position: absolute;
+    left: 15%;
+    top: 25%;
+    width: 70%;
+    height: 50%;
+    background: #d2cbc3;
+    background: -moz-linear-gradient(#cbc7bc, #d2cbc3);
+    background: -ms-linear-gradient(#cbc7bc, #d2cbc3);
+    background: -o-linear-gradient(#cbc7bc, #d2cbc3);
+    background: -webkit-gradient(linear, 0 0, 0 100%, from(#cbc7bc), to(#d2cbc3));
+    background: -webkit-linear-gradient(#cbc7bc, #d2cbc3);
+    background: linear-gradient(#cbc7bc, #d2cbc3);
+    border-radius: inherit;
+}
+
+.pmprosm-ckbox label i:before {
+    content: "no";
+    text-transform: uppercase;
+    font-style: normal;
+    font-weight: bold;
+    color: rgba(0,0,0,0.4);
+    text-shadow: 0 1px 0 #bcb8ae, 0 -1px 0 #97958e;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    margin-top: -9px;
+    right: -50%;
+}
+
+.pmprosm-ckbox input:checked ~ label {
+    background: #9abb82;
+}
+
+.pmprosm-ckbox input:checked ~ label i {
+    right: -1%;
+}
+
+.pmprosm-ckbox input:checked ~ label i:before {
+    content: "yes";
+    right: 105%;
+    color: #FFF;
+    text-shadow:
+            0 1px 0 #afcb9b,
+            0 -1px 0 #6b8659;
+}
+.pmprosm-usage-heading {
+    border-bottom: 2px solid #e5e5e5;
+}
+#pmpro_account-sponsored .odd {
+    background-color: #d5d5d5;
+}
