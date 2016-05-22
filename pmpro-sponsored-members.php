@@ -56,12 +56,35 @@ define('PMPROSM_VER', '1.0');
 
 function pmprosm_init()
 {
+
+    add_action("admin_head", "pmprosm_admin_head_errors");
+    add_action('wp_enqueue_scripts', 'pmprosm_enqueue');
+
     add_action('wp_ajax_pmprosm_disable_membership', 'pmprosm_disable_membership_callback');
     add_action('wp_ajax_nopriv_pmprosm_disable_membership', 'pmprosm_denied_access_callback');
     add_action('wp_ajax_nopriv_pmprosm_disable_users', 'pmprosm_denied_access_callback');
 
+    add_action('show_user_profile', 'pmprosm_profile_fields_seats');
+    add_action('edit_user_profile', 'pmprosm_profile_fields_seats');
+    add_action('profile_update', 'pmprosm_profile_update_seats');
+
     add_action("pmpro_after_change_membership_level", "pmprosm_pmpro_after_change_membership_level", 10, 2);
     add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout_sponsor_account_change", 10, 2);
+
+    add_action('pmpro_registration_checks', 'pmprosm_pmpro_registration_checks_sponsored_accounts');
+    add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout");
+    add_action("pmpro_delete_discount_code", "pmprosm_pmpro_delete_discount_code");
+    add_action("pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes");
+    add_action("pmpro_save_discount_code", "pmprosm_pmpro_save_discount_code", 5);
+    add_action("pmpro_discount_code_after_settings", "pmprosm_pmpro_discount_code_after_settings");
+    add_action("pmpro_discountcodes_extra_cols_body", "pmprosm_pmpro_discountcodes_extra_cols_body");
+    add_action("pmpro_discountcodes_extra_cols_header", "pmprosm_pmpro_discountcodes_extra_cols_header");
+
+    add_filter("pmpro_registration_checks", "pmprosm_pmpro_registration_checks");
+    add_filter("pmpro_confirmation_message", "pmprosm_pmpro_confirmation_message");
+    add_filter("pmpro_checkout_level", "pmprosm_pmpro_checkout_levels");
+    
+    add_filter("the_content", "pmprosm_the_content_account_page", 30);
 
     if (!empty($_REQUEST['lowseats'])) {
         add_filter("pmpro_confirmation_message", "pmprosm_pmpro_confirmation_message_lowseats");
@@ -471,8 +494,6 @@ function pmprosm_admin_head_errors()
     }
 }
 
-add_action("admin_head", "pmprosm_admin_head_errors");
-
 //function to get children of a sponsor
 function pmprosm_getChildren($user_id = NULL)
 {
@@ -607,15 +628,11 @@ function pmprosm_pmpro_confirmation_message($message)
     return $message;
 }
 
-add_filter("pmpro_confirmation_message", "pmprosm_pmpro_confirmation_message");
-
 //delete code connection when a discount code is deleted
 function pmprosm_pmpro_delete_discount_code($code_id)
 {
     pmprosm_deleteCodeUserID($code_id);
 }
-
-add_action("pmpro_delete_discount_code", "pmprosm_pmpro_delete_discount_code");
 
 //only let members using a sponsored discount code sign up for the sponsored level
 function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
@@ -685,8 +702,6 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
     return $pmpro_continue_registration;
 }
 
-add_filter("pmpro_registration_checks", "pmprosm_pmpro_registration_checks");
-
 // add parent account column to the discount codes table view
 function pmprosm_pmpro_discountcodes_extra_cols_header()
 {
@@ -694,8 +709,6 @@ function pmprosm_pmpro_discountcodes_extra_cols_header()
     <th><?php _e("Parent Account", "pmpro_sponsored_members"); ?></th>
     <?php
 }
-
-add_action("pmpro_discountcodes_extra_cols_header", "pmprosm_pmpro_discountcodes_extra_cols_header");
 
 function pmprosm_pmpro_discountcodes_extra_cols_body($code)
 {
@@ -707,9 +720,6 @@ function pmprosm_pmpro_discountcodes_extra_cols_body($code)
             <em>Missing User</em><?php } else { ?><?php } ?></th>
     <?php
 }
-
-add_action("pmpro_discountcodes_extra_cols_body", "pmprosm_pmpro_discountcodes_extra_cols_body");
-
 
 //add user id field to discount code page.
 function pmprosm_pmpro_discount_code_after_settings()
@@ -741,8 +751,6 @@ function pmprosm_pmpro_discount_code_after_settings()
     <?php
 }
 
-add_action("pmpro_discount_code_after_settings", "pmprosm_pmpro_discount_code_after_settings");
-
 //save the code user id when saving a discount code
 function pmprosm_pmpro_save_discount_code($code_id)
 {
@@ -757,8 +765,6 @@ function pmprosm_pmpro_save_discount_code($code_id)
         pmprosm_setCodeUserID($code_id, $code_user_id);
     }
 }
-
-add_action("pmpro_save_discount_code", "pmprosm_pmpro_save_discount_code", 5);
 
 //show existing sponsored accounts and add a dropdown to choose number of seats on checkout page
 function pmprosm_pmpro_checkout_boxes()
@@ -1054,8 +1060,6 @@ function pmprosm_pmpro_checkout_boxes()
     <?php
 }
 
-add_action("pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes");
-
 //adjust price based on seats
 function pmprosm_pmpro_checkout_levels($level)
 {
@@ -1096,8 +1100,6 @@ function pmprosm_pmpro_checkout_levels($level)
 
     return $level;
 }
-
-add_filter("pmpro_checkout_level", "pmprosm_pmpro_checkout_levels");
 
 //save seats at checkout
 function pmprosm_pmpro_after_checkout($user_id)
@@ -1200,8 +1202,6 @@ function pmprosm_pmpro_after_checkout($user_id)
         }
     }
 }
-
-add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout");
 
 //change a user's level and also set the code_id
 function pmprosm_changeMembershipLevelWithCode($level_id, $user_id, $code_id)
@@ -1393,8 +1393,6 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
     return $okay;
 }
 
-add_action('pmpro_registration_checks', 'pmprosm_pmpro_registration_checks_sponsored_accounts');
-
 //add code and seats fields to profile for admins
 function pmprosm_profile_fields_seats($user)
 {
@@ -1437,9 +1435,6 @@ function pmprosm_profile_fields_seats($user)
     }
 }
 
-add_action('show_user_profile', 'pmprosm_profile_fields_seats');
-add_action('edit_user_profile', 'pmprosm_profile_fields_seats');
-
 //save seats on profile save
 function pmprosm_profile_update_seats($user_id)
 {
@@ -1476,11 +1471,14 @@ function pmprosm_profile_update_seats($user_id)
     }
 }
 
-add_action('profile_update', 'pmprosm_profile_update_seats');
-
-/*
-	Show seats on the account page and show if they have been claimed.
-*/
+/**
+ * Show seats on the account page and show if they have been claimed.
+ *
+ * @param       string      $content        HTML being filtered
+ * @return      mixed
+ *
+ * @since 1.0 - Add 'disable' button for sponsored user access
+ */
 function pmprosm_the_content_account_page($content)
 {
     global $post, $pmpro_pages, $current_user, $wpdb;
@@ -1621,8 +1619,13 @@ function pmprosm_the_content_account_page($content)
     return $content;
 }
 
-add_filter("the_content", "pmprosm_the_content_account_page", 30);
-
+/**
+ * Check whether the specified User ID is active in the context of the $code_id
+ *
+ * @param       int     $user_id
+ * @param       int     $code_id
+ * @return      bool
+ */
 function pmprosm_isActive($user_id, $code_id)
 {
     $level = pmpro_getMembershipLevelForUser($user_id);
@@ -1758,7 +1761,7 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 add_filter("pmpro_email_body", "pmprosm_pmpro_email_body", 10, 2);
 
 /**
- * Enqueue JavaScript for front-end
+ * Enqueue JavaScript & CSS for front-end
  */
 function pmprosm_enqueue()
 {
@@ -1781,8 +1784,9 @@ function pmprosm_enqueue()
     }
 }
 
-add_action('wp_enqueue_scripts', 'pmprosm_enqueue');
-
+/**
+ * Callback for the "disable access for sposored user by the sponsor" functionality
+ */
 function pmprosm_disable_membership_callback()
 {
 
