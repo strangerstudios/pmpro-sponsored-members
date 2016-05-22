@@ -28,35 +28,81 @@ var pmprosmManager = {
 
             console.log("Clicked on membership checkbox");
 
+
             var member_id = self._collect_member_id(this);
             var status = jQuery(this).is('checked') ? 1 : 0;
 
-            self.disable_memberships(member_id, status);
+            self.disable_memberships(member_id, status, this);
         });
     },
-    disable_memberships: function( member_id, status ) {
+    disable_memberships: function( member_id, status, element ) {
         "use strict";
 
         var self = this;
 
-        jQuery.ajax({
-            url: pmprosm.variables.ajaxurl,
-            type: 'POST',
-            timeout: pmprosm.variables.timeout,
-            dataType: 'JSON',
-            data: {
-                action: 'pmprosm_disable_membership',
-                pmprosm_user: member_id,
-                pmprosm_nonce: jQuery('#pmprosm_nonce').val(),
-                pmprosm_status: status
-            },
-            error: function() {
+        if (0 === status) {
 
-            },
-            success: function() {
+            if ( true === window.confirm(pmprosm.messages.confirmation_1) ) {
 
+                jQuery.ajax({
+                    url: pmprosm.variables.ajaxurl,
+                    type: 'POST',
+                    timeout: pmprosm.variables.timeout,
+                    dataType: 'JSON',
+                    data: {
+                        action: 'pmprosm_disable_membership',
+                        pmprosm_user: member_id,
+                        pmprosm_code: jQuery('#pmprosm_code_id').val(),
+                        pmprosm_nonce: jQuery('#pmprosm_nonce').val(),
+                        pmprosm_status: status
+                    },
+                    error: function( jqXHR, $s, error ) {
+                        console.log("Error: ", $s, $error, jqXHR);
+                        
+                        alert("Error while attempting to update status for user");
+                        
+                        // reset the checkbox value
+                        if (status === 0) {
+                            jQuery(element).prop('checked', true);
+                        }
+
+                        if (status === 1) {
+                            jQuery(element).prop('checked', false);
+                        }
+
+                    },
+                    success: function( response, $status, jqXHR ) {
+
+                        console.log("Response from server: ", response, $status);
+
+                        if (false === response.success) {
+                            window.alert(response.data);
+                            return;
+                        }
+
+                        var row = jQuery(element).closest('div.div-table-row.pmprosm-userlist-row');
+                        var usage_cnt_elem = jQuery('p.pmprosm-usage-heading > span.pmprosm_code_usage');
+                        var usage_cnt = usage_cnt_elem.text();
+
+                        // We've successfully disabled this user.
+                        if (status === 0 && true === response.success ) {
+
+                            // decrement usage counter
+                            usage_cnt--;
+                            row.fadeTo( 500, 0.5);
+                        }
+
+                        if (status === 1 && true === response.success ) {
+                            // increment usage counter
+                            usage_cnt++;
+                            row.fadeTo( 500, 1.0);
+                        }
+                        
+                        usage_cnt_elem.html(usage_cnt);
+                    }
+                });
             }
-        });
+        }
     },
     _collect_member_id: function($checkbox) {
         "use strict";
