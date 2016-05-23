@@ -37,6 +37,28 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 1.0 =
+* BUG: Drop-shadow with unchecked setting
+* BUG: Soften the background coloring for odd rows
+* BUG: Would sometimes crash if PMPro wasn't installed or activated.
+* ENHANCEMENT: Refactor hooks & filters to init function
+* ENHANCEMENT: Add function definitions (docs).
+* ENHANCEMENT: Refactored to be in better compliance w/WP code styles
+* ENHANCEMENT: More error checking & recovery
+* ENHANCEMENT: Support filtered URLs (don't ignore the fact that other plugins exist & may filter when creating URLs for PMPro).
+* ENHANCEMENT: Allow sponsor to remove access for a sponsored user via the sponsor's account page
+* ENHANCEMENT: Can check whether a sponsored user has access to protected content or not
+* ENHANCEMENT: Add proper WordPress enqueue/registration of styles & scripts
+* ENHANCEMENT: Added loading of styles & scripts (no more inline styles/scripts).
+* ENHANCEMENT: Add callback to manage sposor actions against sponsored user(s).
+* ENHANCEMENT: Request confirmation when disabling user(s).
+* ENHANCEMENT: Add error handling for AJAX request
+* ENHANCEMENT: Blur out disabled users (opacity = 0.5)
+* ENHANCEMENT: Update the usage count for the code
+* ENHANCEMENT: Separate JavaScript into own file & process disabling membership for user in discount code list.
+* ENHANCEMENT: Formatting for membership access slider (Yes/No)
+* ENHANCEMENT: Formatting for div based table
+
 = .6.1 =
 * ENHANCEMENT: Moved some code from after checkout method into a pmprosm_createSponsorCode($user_id, $level_id, $uses = "") so it can be used elsewhere.
 * ENHANCEMENT: Added integration with Import Users From CSV so you can set a pmprosm_sponsor column (to a user ID, user email, or user login). If set, a sponsor code will be created for the sponsoring user (if needed) and the sponsored user will be setup as a child account.

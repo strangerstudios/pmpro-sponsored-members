@@ -6,7 +6,7 @@ incomplete_out=tmp.txt
 json_out=json_changelog.txt
 readme_out=readme_changelog.txt
 short_name="pmpro-sponsored-members"
-version=$(egrep "^Version:" ../${short_name}.php | awk '{print $2}')
+version=$(egrep "^Version:" ../${short_name}.php | awk '{gsub(/\n/, "", $2); print $2}')
 json_header="<h3>${version}</h3><ol>"
 json_footer="</ol>"
 readme_header="== ${version} =="
