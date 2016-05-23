@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build script for plugin
 #
-include=(classes css js languages pmpro-sponsored-members.php README.txt)
+include=(classes css js languages includes pmpro-sponsored-members.php README.txt)
 exclude=(*.yml *.phar composer.* vendor)
 build=(classes/plugin-updates/vendor/*.php)
 short_name="pmpro-sponsored-members"
