@@ -54,6 +54,9 @@ if (is_admin())
 
 define('PMPROSM_VER', '1.0');
 
+/**
+ * Load all actions and filters for PMPro Sponsored members add-on
+ */
 function pmprosm_init()
 {
 
