@@ -60,16 +60,8 @@ var pmprosmManager = {
                         console.log("Error: ", $s, $error, jqXHR);
                         
                         alert("Error while attempting to update status for user");
-                        
-                        // reset the checkbox value
-                        if (status === 0) {
-                            jQuery(element).prop('checked', true);
-                        }
 
-                        if (status === 1) {
-                            jQuery(element).prop('checked', false);
-                        }
-
+                        self._resetAccess(element, status);
                     },
                     success: function( response, $status, jqXHR ) {
 
@@ -101,8 +93,23 @@ var pmprosmManager = {
                         usage_cnt_elem.html(usage_cnt);
                     }
                 });
+            } else {
+                self._resetAccess(element, status);
             }
         }
+    },
+    _resetAccess: function(element, status) {
+        "use strict";
+
+        // reset the checkbox value
+        if (status === 0) {
+            jQuery(element).prop('checked', true);
+        }
+
+        if (status === 1) {
+            jQuery(element).prop('checked', false);
+        }
+
     },
     _collect_member_id: function($checkbox) {
         "use strict";
