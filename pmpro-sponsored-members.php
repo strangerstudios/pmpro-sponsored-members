@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Enhanced Sponsored Members Add On
 Plugin URI: https://eighty20results.com/pmpro-sponsored-members-enhanced/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 1.0
+Version: 1.0 
 Author: Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>
 Author URI: https://www.eigthy20results.com
 */
