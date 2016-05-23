@@ -3,9 +3,9 @@
 Plugin Name: Paid Memberships Pro - Enhanced Sponsored Members Add On
 Plugin URI: https://eighty20results.com/pmpro-sponsored-members-enhanced/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 1.0 
+Version: 1.0.1
 Author: Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>
-Author URI: https://www.eigthy20results.com
+Author URI: https://www.eighty20results.com
 */
 
 /*
@@ -1590,7 +1590,12 @@ function pmprosm_the_content_account_page($content)
                             <div
                                 class="div-table-row pmprosm-userlist-row <?php echo($counter++ % 2 == 0 ? 'even' : 'odd'); ?>">
                                 <div class="div-table-col pmprosm-userlist-col1">
-                                    <?php echo "{$member->first_name} {$member->last_name} ({$member->display_name})"; ?>
+                                    <?php
+                                    if (!empty($member->user_firstname) && !empty($member->user_lastname)) {
+                                        echo "{$member->user_firstname} {$member->user_firstname} ({$member->user_login})";
+                                    } else {
+                                        echo "{$member->display_name}";
+                                    } ?>
                                 </div>
                                 <div class="div-table-col pmprosm-userlist-col2">
                                     <?php echo(!is_null($lname) ? $lname : 'Not found;'); ?>
@@ -1779,7 +1784,8 @@ function pmprosm_enqueue()
                     'timeout' => apply_filters('pmprosm_ajax_timeout', 5000),
                 ),
                 'messages' => array(
-                    'confirmation_1' => __("Are you sure you want to disable access for this user?", "pmpro_sponsored_members")
+                    'confirmation_1' => __("Are you sure you want to disable access for this user?", "pmpro_sponsored_members"),
+                    'error_1' => __("Error while attempting to update access for sponsored user. From the web server: ", "pmpro_sponsored_members"),
                 )
             )
         );
@@ -1792,7 +1798,6 @@ function pmprosm_enqueue()
  */
 function pmprosm_disable_membership_callback()
 {
-
     // check AJAX nonce
     check_ajax_referer('pmpro_sponsored_members', 'pmprosm_nonce');
 
