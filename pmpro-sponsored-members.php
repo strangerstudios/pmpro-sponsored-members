@@ -97,6 +97,24 @@ function pmprosm_init()
 
 add_action('plugins_loaded', 'pmprosm_init');
 
+/**
+ * Load and use L18N based text (if available)
+ */
+function pmprosm_load_textdomain() {
+
+    $locale = apply_filters( "plugin_locale", get_locale(), 'pmpro_sponsored_members' );
+
+    $mofile = "pmpro_sponsored_members-{$locale}.mo";
+
+    $mofile_local = dirname(__FILE__) . "/../languages/" . $mofile;
+    $mofile_global = WP_LANG_DIR . "/pmpro-sponsored-members/" . $mofile;
+
+    load_textdomain( "pmpro_sponsored_members", $mofile_global );
+    load_textdomain( "pmpro_sponsored_members", $mofile_local );
+}
+
+add_action('init', 'pmprosm_load_textdomain', 1);
+
 //check if a level id is a "main account" level
 function pmprosm_isMainLevel($level_id)
 {
