@@ -1,9 +1,9 @@
 === Paid Memberships Pro - Sponsored Members Add On ===
-Contributors: strangerstudios
+Contributors: eighty20results strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
-Tested up to: 4.5
-Stable tag: .6
+Tested up to: 4.5.2
+Stable tag: 1.0
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 

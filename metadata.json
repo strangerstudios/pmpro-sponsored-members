@@ -1,0 +1,17 @@
+{
+  "name" : "PMPro Sponsored Members add-on",
+  "slug" : "pmpro-sponsored-members",
+  "download_url" : "https://eighty20results.com/protected-content/pmpro-sponsored-members/pmpro-sponsored-members-1.0.zip",
+  "version" : "1.0",
+  "tested": "4.5.2",
+  "requires": "3.9",
+  "author" : "Thomas Sjolshagen <thomas@eighty20results.com>",
+  "author_homepage": "https://eighty20results.com/thomas-sjolshagen",
+  "last_updated": "2016-05-23 06:00:00",
+  "homepage": "https://strangerstudios.com/pmpro-sponsored-members",
+  "sections" : {
+    "description" : "",
+    "changelog": "<p><strong>Please note</strong>: This is a custom add-on developed for a specific customer & their stated requirements. </p>",
+    "faq": "<h3>I found a bug in the add-on.</h3>Please <a href='https://eighty20results.com/support/' target='_blank'>use the support form at our website</a> and we will work with you to fix your issue as quickly as we can. Or you can email support@eighty20results.zendesk.com"
+    }
+}
