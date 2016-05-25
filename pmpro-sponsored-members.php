@@ -1833,6 +1833,8 @@ function pmprosm_disable_membership_callback()
         error_log("Change membership status for: {$user_id}, to: " . ($status ? 'true' : 'false'));
     }
 
+    pmprosm_safe_ajax();
+
     if (is_null($user_id) || is_null($status)) {
         wp_send_json_error(__('Error: Invalid request received. Please reload the page and try again.', 'pmpro_sponsored_members'));
     }
@@ -1961,6 +1963,34 @@ if (!function_exists('pmpro_getPreviousLevel')) {
 
         return false;
     }
+}
+
+/**
+ *
+ * Clear the buffer to ensure AJAX transmissions do not include PHP Notice & PHP Warning messages.
+ *
+ * @return array|bool - True if the buffer is clean, the contents if the buffer isn't clean (all warning messages).
+ *
+ * @since 1.8.9.2
+ */
+function pmprosm_safe_ajax()
+{
+
+    if (defined('DOING_AJAX') && DOING_AJAX) {
+        $bufferContents = array();
+
+        // Capture nested buffer contents and discard them
+        while (1 < ob_get_level()) {
+            $bufferContents[] = ob_get_clean();
+        }
+
+        // Ensure that a top-level buffer is available to capture any unexpected output
+        if (!ob_get_level()) {
+            ob_start();
+        }
+    }
+
+    return (empty($bufferContents) ? true : $bufferContents);
 }
 
 /**
