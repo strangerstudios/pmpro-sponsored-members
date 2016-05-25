@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Enhanced Sponsored Members Add On
 Plugin URI: https://eighty20results.com/pmpro-sponsored-members-enhanced/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 1.0.1
+Version: 1.1.0
 Author: Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>
 Author URI: https://www.eighty20results.com
 */
@@ -52,7 +52,7 @@ if (!defined(PMPRO_VERSION) && !function_exists('pmpro_getMembershipLevelForUser
 if (is_admin())
     require_once(dirname(__FILE__) . '/includes/import-users-from-csv.php');
 
-define('PMPROSM_VER', '1.0');
+define('PMPROSM_VER', '1.1.0');
 
 /**
  * Load all actions and filters for PMPro Sponsored members add-on
@@ -1799,7 +1799,7 @@ function pmprosm_enqueue()
         wp_localize_script('pmprosm', 'pmprosm', array(
                 'variables' => array(
                     'ajaxurl' => admin_url('admin-ajax.php'),
-                    'timeout' => apply_filters('pmprosm_ajax_timeout', 5000),
+                    'timeout' => apply_filters('pmprosm_ajax_timeout', 10000),
                 ),
                 'messages' => array(
                     'confirmation_1' => __("Are you sure you want to disable access for this user?", "pmpro_sponsored_members"),
@@ -1833,6 +1833,7 @@ function pmprosm_disable_membership_callback()
         error_log("Change membership status for: {$user_id}, to: " . ($status ? 'true' : 'false'));
     }
 
+    // Hide any warnings which may mess with the AJAX response
     pmprosm_safe_ajax();
 
     if (is_null($user_id) || is_null($status)) {
