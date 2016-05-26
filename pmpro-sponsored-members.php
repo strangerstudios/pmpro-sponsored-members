@@ -1389,6 +1389,81 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
 }
 add_action('pmpro_registration_checks', 'pmprosm_pmpro_registration_checks_sponsored_accounts');
 
+//save fields in session for PayPal Express/etc
+function pmprosm_pmpro_paypalexpress_session_vars()
+{
+	//check this one cause it's optional
+	if(!empty($_REQUEST['seats']))
+		$_SESSION['seats'] = $_REQUEST['seats'];
+	else
+		$_SESSION['seats'] = "";
+	//check this one cause it's optional
+	if(!empty($_REQUEST['add_sub_accounts_username']))
+		$_SESSION['add_sub_accounts_username'] = $_REQUEST['add_sub_accounts_username'];
+	else
+		$_SESSION['add_sub_accounts_username'] = "";
+	//check this one cause it's optional
+	if(!empty($_REQUEST['add_sub_accounts_password']))
+		$_SESSION['add_sub_accounts_password'] = $_REQUEST['add_sub_accounts_password'];
+	else
+		$_SESSION['add_sub_accounts_password'] = "";
+	//check this one cause it's optional
+	if(!empty($_REQUEST['add_sub_accounts_email']))
+		$_SESSION['add_sub_accounts_email'] = $_REQUEST['add_sub_accounts_email'];
+	else
+		$_SESSION['add_sub_accounts_password'] = "";
+	//check this one cause it's optional
+	if(!empty($_REQUEST['add_sub_accounts_first_name']))
+		$_SESSION['add_sub_accounts_first_name'] = $_REQUEST['add_sub_accounts_first_name'];
+	else
+		$_SESSION['add_sub_accounts_first_name'] = "";
+	//check this one cause it's optional
+	if(!empty($_REQUEST['add_sub_accounts_last_name']))
+		$_SESSION['add_sub_accounts_last_name'] = $_REQUEST['add_sub_accounts_last_name'];
+	else
+		$_SESSION['add_sub_accounts_last_name'] = "";
+}
+add_action("pmpro_paypalexpress_session_vars", "pmprosm_pmpro_paypalexpress_session_vars");
+add_action("pmpro_before_send_to_twocheckout", "pmprosm_pmpro_paypalexpress_session_vars", 10, 2);
+
+//Load fields from session if available.
+function pmprosm_init_load_session_vars($param)
+{
+	//check that no field values were passed in and that we have some in session
+	if(empty($_REQUEST['seats']) && !empty($_SESSION['seats']))
+	{
+		$_REQUEST['seats'] = $_SESSION['seats'];
+	}
+	//check that no field values were passed in and that we have some in session
+	if(empty($_REQUEST['add_sub_accounts_username']) && !empty($_SESSION['add_sub_accounts_username']))
+	{
+		$_REQUEST['add_sub_accounts_username'] = $_SESSION['add_sub_accounts_username'];
+	}
+	//check that no field values were passed in and that we have some in session
+	if(empty($_REQUEST['add_sub_accounts_password']) && !empty($_SESSION['add_sub_accounts_password']))
+	{
+		$_REQUEST['add_sub_accounts_password'] = $_SESSION['add_sub_accounts_password'];
+	}
+	//check that no field values were passed in and that we have some in session
+	if(empty($_REQUEST['add_sub_accounts_email']) && !empty($_SESSION['add_sub_accounts_email']))
+	{
+		$_REQUEST['add_sub_accounts_email'] = $_SESSION['add_sub_accounts_email'];
+	}
+	//check that no field values were passed in and that we have some in session
+	if(empty($_REQUEST['add_sub_accounts_first_name']) && !empty($_SESSION['add_sub_accounts_first_name']))
+	{
+		$_REQUEST['add_sub_accounts_first_name'] = $_SESSION['add_sub_accounts_first_name'];
+	}
+	//check that no field values were passed in and that we have some in session
+	if(empty($_REQUEST['add_sub_accounts_last_name']) && !empty($_SESSION['add_sub_accounts_last_name']))
+	{
+		$_REQUEST['add_sub_accounts_last_name'] = $_SESSION['add_sub_accounts_last_name'];
+	}
+
+	return $param;
+}
+add_action('init', 'pmprosm_init_load_session_vars', 5);
+
 //add code and seats fields to profile for admins
 function pmprosm_profile_fields_seats($user)
 {
