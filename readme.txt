@@ -3,7 +3,7 @@ Contributors: eighty20results strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
 Tested up to: 4.5.2
-Stable tag: 1.0
+Stable tag: 2.0
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,34 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 2.0 =
+* FIX: Server error message variable caused stop of execution
+* FIX: Use strict for JavaScript
+* FIX: Correctly extract version number for plugin/addon
+* FIX: Didn't include the back-end CSV export functionality in build
+* ENHANCEMENT/FIX: Table didn't fill the full width of the area
+* ENHANCEMENT/FIX: Column size was fixed, is now flexible.
+* ENHANCEMENT: Add .pot file for translators
+* ENHANCEMENT: Add internationalization/translation support
+* ENHANCEMENT: Use translatable string for alert message on error
+* ENHANCEMENT: Version number update & URL fix
+* ENHANCEMENT: Conditionally display sponsored member's identifying information
+* ENHANCEMENT: Add translatable error message for JavaScript
+
+= 1.0.1 =
+* FIX: Server error message variable caused stop of execution
+* FIX: Use strict for JavaScript
+* FIX: Correctly extract version number for plugin/addon
+* FIX: Didn't include the back-end CSV export functionality in build
+* ENHANCEMENT/FIX: Table didn't fill the full width of the area
+* ENHANCEMENT/FIX: Column size was fixed, is now flexible.
+* ENHANCEMENT: Add .pot file for translators
+* ENHANCEMENT: Add internationalization/translation support
+* ENHANCEMENT: Use translatable string for alert message on error
+* ENHANCEMENT: Version number update & URL fix
+* ENHANCEMENT: Conditionally display sponsored member's identifying information
+* ENHANCEMENT: Add translatable error message for JavaScript
+
 = 1.0 =
 * BUG: Drop-shadow with unchecked setting
 * BUG: Soften the background coloring for odd rows
