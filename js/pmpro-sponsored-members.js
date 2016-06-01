@@ -57,9 +57,9 @@ var pmprosmManager = {
                         pmprosm_status: status
                     },
                     error: function( jqXHR, $s, error ) {
-                        console.log("Error: ", $s, $error, jqXHR);
+                        console.log("Error: ", $s, error, jqXHR);
                         
-                        alert("Error while attempting to update status for user");
+                        alert(pmrosm.messages.error_1 + error);
 
                         self._resetAccess(element, status);
                     },
@@ -120,7 +120,8 @@ var pmprosmManager = {
 };
 
 jQuery(document).ready(function() {
-
+    "use strict";
+    
     var sponsored = pmprosmManager;
     sponsored.init();
 });

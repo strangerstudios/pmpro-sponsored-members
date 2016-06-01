@@ -1,14 +1,16 @@
 <?php
 /*
-Plugin Name: Paid Memberships Pro - Enhanced Sponsored Members Add On
+Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: https://eighty20results.com/pmpro-sponsored-members-enhanced/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 1.0 
+Version: 2.0
 Author: Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>
-Author URI: https://www.eigthy20results.com
+Author URI: https://www.eighty20results.com
 */
 
 /*
+ * OBSOLETE: Now has it's own Settings page ("Memberships" -> "Sponsored Members"
+ *
 	Set these to the ids of your main and sponsored levels. 	
 	
 	Now using a global array so you can have multiple main and sponsored levels.	
@@ -33,7 +35,7 @@ Author URI: https://www.eigthy20results.com
 */
 
 /*
-	Set $pmprosm_sponsored_account_levels above here or in a custom plugin.
+	OBSOLETE: Set $pmprosm_sponsored_account_levels above here or in a custom plugin.
 */
 
 //old constant values for reference. not used anymore
@@ -49,16 +51,23 @@ if (!defined(PMPRO_VERSION) && !function_exists('pmpro_getMembershipLevelForUser
 }
 
 //includes
-if (is_admin())
+if (is_admin()) {
     require_once(dirname(__FILE__) . '/includes/import-users-from-csv.php');
+    require_once(dirname(__FILE__) . '/classes/class.pmpro_sponsoredadminpage.php');
+}
 
-define('PMPROSM_VER', '1.0');
+define('PMPROSM_VER', '2.0');
+define('PMPROSM_DIR', trailingslashit(plugin_dir_path(__FILE__)));
+define('PMPROSM_URL', plugin_dir_url(__FILE__));
 
 /**
  * Load all actions and filters for PMPro Sponsored members add-on
  */
 function pmprosm_init()
 {
+    add_action('init', 'pmprosm_init_load_session_vars', 5);
+    add_action('init', 'pmprosm_load_textdomain', 1);
+    add_action('init', 'pmprosm_load_settings', 5);
 
     add_action("admin_head", "pmprosm_admin_head_errors");
     add_action('wp_enqueue_scripts', 'pmprosm_enqueue');
@@ -83,10 +92,13 @@ function pmprosm_init()
     add_action("pmpro_discountcodes_extra_cols_body", "pmprosm_pmpro_discountcodes_extra_cols_body");
     add_action("pmpro_discountcodes_extra_cols_header", "pmprosm_pmpro_discountcodes_extra_cols_header");
 
+    add_action("pmpro_paypalexpress_session_vars", "pmprosm_pmpro_paypalexpress_session_vars", 10, 2);
+    add_action("pmpro_before_send_to_twocheckout", "pmprosm_pmpro_paypalexpress_session_vars", 10, 2);
+
     add_filter("pmpro_registration_checks", "pmprosm_pmpro_registration_checks");
     add_filter("pmpro_confirmation_message", "pmprosm_pmpro_confirmation_message");
     add_filter("pmpro_checkout_level", "pmprosm_pmpro_checkout_levels");
-    
+
     add_filter("the_content", "pmprosm_the_content_account_page", 30);
 
     if (!empty($_REQUEST['lowseats'])) {
@@ -96,6 +108,51 @@ function pmprosm_init()
 }
 
 add_action('plugins_loaded', 'pmprosm_init');
+
+function pmprosm_load_settings() {
+
+    global $pmprosm_sponsored_account_levels;
+
+    $level_map = array();
+
+    if (!empty($pmprosm_sponsored_account_levels)) {
+        $level_map = $pmprosm_sponsored_account_levels;
+    }
+
+    $pmprosm_sponsored_account_levels = array_replace_recursive( $level_map, get_option('pmprosm_level_map', array()));
+}
+
+function pmprosm_array_unique( $array1  ) {
+
+    $result = array_map("unserialize", array_unique(array_map("serialize", $array1)));
+
+    foreach ($result as $key => $value)
+    {
+        if ( is_array($value) )
+        {
+            $result[$key] = pmprosm_array_unique($value);
+        }
+    }
+
+    return $result;
+
+}
+/**
+ * Load and use L18N based text (if available)
+ */
+function pmprosm_load_textdomain()
+{
+
+    $locale = apply_filters("plugin_locale", get_locale(), 'pmpro_sponsored_members');
+
+    $mofile = "pmpro_sponsored_members-{$locale}.mo";
+
+    $mofile_local = dirname(__FILE__) . "/../languages/" . $mofile;
+    $mofile_global = WP_LANG_DIR . "/pmpro-sponsored-members/" . $mofile;
+
+    load_textdomain("pmpro_sponsored_members", $mofile_global);
+    load_textdomain("pmpro_sponsored_members", $mofile_local);
+}
 
 //check if a level id is a "main account" level
 function pmprosm_isMainLevel($level_id)
@@ -1396,6 +1453,71 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
     return $okay;
 }
 
+//save fields in session for PayPal Express/etc
+function pmprosm_pmpro_paypalexpress_session_vars()
+{
+    //check this one cause it's optional
+    if (!empty($_REQUEST['seats']))
+        $_SESSION['seats'] = $_REQUEST['seats'];
+    else
+        $_SESSION['seats'] = "";
+    //check this one cause it's optional
+    if (!empty($_REQUEST['add_sub_accounts_username']))
+        $_SESSION['add_sub_accounts_username'] = $_REQUEST['add_sub_accounts_username'];
+    else
+        $_SESSION['add_sub_accounts_username'] = "";
+    //check this one cause it's optional
+    if (!empty($_REQUEST['add_sub_accounts_password']))
+        $_SESSION['add_sub_accounts_password'] = $_REQUEST['add_sub_accounts_password'];
+    else
+        $_SESSION['add_sub_accounts_password'] = "";
+    //check this one cause it's optional
+    if (!empty($_REQUEST['add_sub_accounts_email']))
+        $_SESSION['add_sub_accounts_email'] = $_REQUEST['add_sub_accounts_email'];
+    else
+        $_SESSION['add_sub_accounts_password'] = "";
+    //check this one cause it's optional
+    if (!empty($_REQUEST['add_sub_accounts_first_name']))
+        $_SESSION['add_sub_accounts_first_name'] = $_REQUEST['add_sub_accounts_first_name'];
+    else
+        $_SESSION['add_sub_accounts_first_name'] = "";
+    //check this one cause it's optional
+    if (!empty($_REQUEST['add_sub_accounts_last_name']))
+        $_SESSION['add_sub_accounts_last_name'] = $_REQUEST['add_sub_accounts_last_name'];
+    else
+        $_SESSION['add_sub_accounts_last_name'] = "";
+}
+
+//Load fields from session if available.
+function pmprosm_init_load_session_vars($param)
+{
+    //check that no field values were passed in and that we have some in session
+    if (empty($_REQUEST['seats']) && !empty($_SESSION['seats'])) {
+        $_REQUEST['seats'] = $_SESSION['seats'];
+    }
+    //check that no field values were passed in and that we have some in session
+    if (empty($_REQUEST['add_sub_accounts_username']) && !empty($_SESSION['add_sub_accounts_username'])) {
+        $_REQUEST['add_sub_accounts_username'] = $_SESSION['add_sub_accounts_username'];
+    }
+    //check that no field values were passed in and that we have some in session
+    if (empty($_REQUEST['add_sub_accounts_password']) && !empty($_SESSION['add_sub_accounts_password'])) {
+        $_REQUEST['add_sub_accounts_password'] = $_SESSION['add_sub_accounts_password'];
+    }
+    //check that no field values were passed in and that we have some in session
+    if (empty($_REQUEST['add_sub_accounts_email']) && !empty($_SESSION['add_sub_accounts_email'])) {
+        $_REQUEST['add_sub_accounts_email'] = $_SESSION['add_sub_accounts_email'];
+    }
+    //check that no field values were passed in and that we have some in session
+    if (empty($_REQUEST['add_sub_accounts_first_name']) && !empty($_SESSION['add_sub_accounts_first_name'])) {
+        $_REQUEST['add_sub_accounts_first_name'] = $_SESSION['add_sub_accounts_first_name'];
+    }
+    //check that no field values were passed in and that we have some in session
+    if (empty($_REQUEST['add_sub_accounts_last_name']) && !empty($_SESSION['add_sub_accounts_last_name'])) {
+        $_REQUEST['add_sub_accounts_last_name'] = $_SESSION['add_sub_accounts_last_name'];
+    }
+    return $param;
+}
+
 //add code and seats fields to profile for admins
 function pmprosm_profile_fields_seats($user)
 {
@@ -1477,7 +1599,7 @@ function pmprosm_profile_update_seats($user_id)
 /**
  * Show seats on the account page and show if they have been claimed.
  *
- * @param       string      $content        HTML being filtered
+ * @param       string $content HTML being filtered
  * @return      mixed
  *
  * @since 1.0 - Add 'disable' button for sponsored user access
@@ -1534,7 +1656,7 @@ function pmprosm_the_content_account_page($content)
             ?>
             <div id="pmpro_account-sponsored" class="pmpro_box">
                 <?php wp_nonce_field('pmpro_sponsored_members', 'pmprosm_nonce'); ?>
-                <input type="hidden" name="pmprosm_code_id" id="pmprosm_code_id" value="<?php echo $code_id; ?>" />
+                <input type="hidden" name="pmprosm_code_id" id="pmprosm_code_id" value="<?php echo $code_id; ?>"/>
                 <h3><?php _e("Sponsored Members", "pmpro_sponsored_members"); ?></h3>
 
                 <p><?php printf(__("Give this code to your sponsored members to use at checkout: <strong>%s</strong></p>", "pmpro_sponsored_members"), $code->code); ?>
@@ -1557,7 +1679,8 @@ function pmprosm_the_content_account_page($content)
                     <?php if (empty($code->uses)) { ?>
                         <?php _e("Unlimited uses.", "pmpro_sponsored_members"); ?>
                     <?php } else { ?>
-                        <span class="pmprosm_code_usage"><?php echo count($member_ids); ?></span><span class="pmprosm_code_total"><?php printf(__(" / %s uses.", "pmpro_sponsored_members"), $code->uses); ?></span>
+                        <span class="pmprosm_code_usage"><?php echo count($member_ids); ?></span><span
+                            class="pmprosm_code_total"><?php printf(__(" / %s uses.", "pmpro_sponsored_members"), $code->uses); ?></span>
                     <?php } ?>
                 </p>
 
@@ -1590,7 +1713,12 @@ function pmprosm_the_content_account_page($content)
                             <div
                                 class="div-table-row pmprosm-userlist-row <?php echo($counter++ % 2 == 0 ? 'even' : 'odd'); ?>">
                                 <div class="div-table-col pmprosm-userlist-col1">
-                                    <?php echo "{$member->first_name} {$member->last_name} ({$member->display_name})"; ?>
+                                    <?php
+                                    if (!empty($member->user_firstname) && !empty($member->user_lastname)) {
+                                        echo "{$member->user_firstname} {$member->user_firstname} ({$member->user_login})";
+                                    } else {
+                                        echo "{$member->display_name}";
+                                    } ?>
                                 </div>
                                 <div class="div-table-col pmprosm-userlist-col2">
                                     <?php echo(!is_null($lname) ? $lname : 'Not found;'); ?>
@@ -1625,8 +1753,8 @@ function pmprosm_the_content_account_page($content)
 /**
  * Check whether the specified User ID is active in the context of the $code_id
  *
- * @param       int     $user_id
- * @param       int     $code_id
+ * @param       int $user_id
+ * @param       int $code_id
  * @return      bool
  */
 function pmprosm_isActive($user_id, $code_id)
@@ -1776,10 +1904,11 @@ function pmprosm_enqueue()
         wp_localize_script('pmprosm', 'pmprosm', array(
                 'variables' => array(
                     'ajaxurl' => admin_url('admin-ajax.php'),
-                    'timeout' => apply_filters('pmprosm_ajax_timeout', 5000),
+                    'timeout' => apply_filters('pmprosm_ajax_timeout', 10000),
                 ),
                 'messages' => array(
-                    'confirmation_1' => __("Are you sure you want to disable access for this user?", "pmpro_sponsored_members")
+                    'confirmation_1' => __("Are you sure you want to disable access for this user?", "pmpro_sponsored_members"),
+                    'error_1' => __("Error while attempting to update access for sponsored user. From the web server: ", "pmpro_sponsored_members"),
                 )
             )
         );
@@ -1792,7 +1921,6 @@ function pmprosm_enqueue()
  */
 function pmprosm_disable_membership_callback()
 {
-
     // check AJAX nonce
     check_ajax_referer('pmpro_sponsored_members', 'pmprosm_nonce');
 
@@ -1810,6 +1938,9 @@ function pmprosm_disable_membership_callback()
         error_log("Change membership status for: {$user_id}, to: " . ($status ? 'true' : 'false'));
     }
 
+    // Hide any warnings which may mess with the AJAX response
+    pmprosm_safe_ajax();
+
     if (is_null($user_id) || is_null($status)) {
         wp_send_json_error(__('Error: Invalid request received. Please reload the page and try again.', 'pmpro_sponsored_members'));
     }
@@ -1822,10 +1953,10 @@ function pmprosm_disable_membership_callback()
     if (!empty($current_level) && true === $status) {
 
         // Is the user's current level one of the levels we have a code for?
-        if ( true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'activate')) ) {
+        if (true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'activate'))) {
             wp_send_json_success();
         } else {
-            if ( -2 == $result ) {
+            if (-2 == $result) {
                 wp_send_json_error(__("Error: Membership Level doesn't match. Can't re-enable access", "pmpro_sponsored_members"));
             }
 
@@ -1833,14 +1964,25 @@ function pmprosm_disable_membership_callback()
         }
     }
 
+    $options = get_option('pmprosm_settings', array());
+
     // change membership level to 0 (no access)
     if (!empty($current_level) && false === $status) {
 
-        if ( true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'deactivate')) ) {
+        if (true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'deactivate'))) {
+
+            // delete the user if the sponsor is allowed to do so.
+            if ( true == $options['sponsor_can_delete'] ) {
+
+                if ( false === wp_delete_user($user_id) ) {
+                    wp_send_json_error(__("ERR10003: Could not remove the user from the system. Please report this to the webmaster", "pmpro_sponsored_members"));
+                }
+            }
+
             wp_send_json_success();
         } else {
-            if ( -1 === $result ) {
-                wp_send_json_error(__( "ERR10001: Could not properly update status for the sponsored user. Please report to the webmaster", "pmpro_sponsored_members"));
+            if (-1 === $result) {
+                wp_send_json_error(__("ERR10001: Could not properly update status for the sponsored user. Please report this to the webmaster", "pmpro_sponsored_members"));
             }
 
             wp_send_json_error(__("Error: Unable to change user access", "pmpro_sponsored_members"));
@@ -1853,9 +1995,9 @@ function pmprosm_disable_membership_callback()
 /**
  * Changes the access to member content
  *
- * @param   int         $user_id      The User ID (valid WP User id)
- * @param   int         $code_id      The ID for the discount code belonging to the sponsor
- * @param   string      $status       The "direction" to set the sponsored user's membership (activate/deactivate)
+ * @param   int $user_id The User ID (valid WP User id)
+ * @param   int $code_id The ID for the discount code belonging to the sponsor
+ * @param   string $status The "direction" to set the sponsored user's membership (activate/deactivate)
  * @return  bool|int                  Error code or true/false
  *
  * @since 1.0
@@ -1872,7 +2014,7 @@ function pmprosm_changeMemberAccess($user_id, $code_id, $status)
         case 'activate':
             $old_level = pmpro_getPreviousLevel($user_id);
 
-            if (false === pmprosm_isSponsoredLevel($old_level) ) {
+            if (false === pmprosm_isSponsoredLevel($old_level)) {
                 return -2;
             }
 
@@ -1889,8 +2031,8 @@ function pmprosm_changeMemberAccess($user_id, $code_id, $status)
 
             // change to the requested membership level
             if (true === pmpro_changeMembershipLevel($level, $user_id, $state)) {
-                
-                if ( true === pmprosm_removeDiscountCodeUse($user_id, $code_id) ) {
+
+                if (true === pmprosm_removeDiscountCodeUse($user_id, $code_id)) {
                     return true;
                 } else {
                     return -1;
@@ -1909,8 +2051,8 @@ if (!function_exists('pmpro_getPreviousLevel')) {
     /**
      *  Get the level ID of the $user_id's most recent inactive membership record
      *
-     * @param       int         $user_id            The user ID
-     * @param       string      $current_status     Ignore
+     * @param       int $user_id The user ID
+     * @param       string $current_status Ignore
      * @return      bool|int    The membership (level) ID
      *
      * @since 1.0
@@ -1938,6 +2080,34 @@ if (!function_exists('pmpro_getPreviousLevel')) {
 
         return false;
     }
+}
+
+/**
+ *
+ * Clear the buffer to ensure AJAX transmissions do not include PHP Notice & PHP Warning messages.
+ *
+ * @return array|bool - True if the buffer is clean, the contents if the buffer isn't clean (all warning messages).
+ *
+ * @since 1.8.9.2
+ */
+function pmprosm_safe_ajax()
+{
+
+    if (defined('DOING_AJAX') && DOING_AJAX) {
+        $bufferContents = array();
+
+        // Capture nested buffer contents and discard them
+        while (1 < ob_get_level()) {
+            $bufferContents[] = ob_get_clean();
+        }
+
+        // Ensure that a top-level buffer is available to capture any unexpected output
+        if (!ob_get_level()) {
+            ob_start();
+        }
+    }
+
+    return (empty($bufferContents) ? true : $bufferContents);
 }
 
 /**

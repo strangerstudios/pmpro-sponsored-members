@@ -1,20 +1,12 @@
-BUG: Drop-shadow with unchecked setting
-BUG: Soften the background coloring for odd rows
-BUG: Would sometimes crash if PMPro wasn't installed or activated.
-ENHANCEMENT: Refactor hooks & filters to init function
-ENHANCEMENT: Add function definitions (docs).
-ENHANCEMENT: Refactored to be in better compliance w/WP code styles
-ENHANCEMENT: More error checking & recovery
-ENHANCEMENT: Support filtered URLs (don't ignore the fact that other plugins exist & may filter when creating URLs for PMPro).
-ENHANCEMENT: Allow sponsor to remove access for a sponsored user via the sponsor's account page
-ENHANCEMENT: Can check whether a sposored user has access to protected content or not
-ENHANCEMENT: Add proper WordPress enqueue/registration of styles & scripts
-ENHANCEMENT: Added loading of styles & scripts (no more inline styles/scripts).
-ENHANCEMENT: Add callback to manage sposor actions against sponsored user(s).
-ENHANCEMENT: Request confirmation when disabling user(s).
-ENHANCEMENT: Add error handling for AJAX request
-ENHANCEMENT: Blur out disabled users (opacity = 0.5) E
-ENHANCEMENT: Update the usage count for the code
-ENHANCEMENT: Separate JavaScript into own file & process disabling membership for user in discount code list.
-ENHANCEMENT: Formatting for membership access slider (Yes/No)
-ENHANCEMENT: Formatting for div based table
+FIX: Server error message variable caused stop of execution
+FIX: Use strict for JavaScript
+FIX: Correctly extract version number for plugin/addon
+FIX: Didn't include the back-end CSV export functionality in build
+ENHANCEMENT/FIX: Table didn't fill the full width of the area
+ENHANCEMENT/FIX: Column size was fixed, is now flexible.
+ENHANCEMENT: Add .pot file for translators
+ENHANCEMENT: Add internationalization/translation support
+ENHANCEMENT: Use translatable string for alert message on error
+ENHANCEMENT: Version number update & URL fix
+ENHANCEMENT: Conditionally display sponsored member's identifying information
+ENHANCEMENT: Add translatable error message for JavaScript

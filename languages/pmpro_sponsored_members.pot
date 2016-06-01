@@ -1,0 +1,369 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"Project-Id-Version: Paid Memberships Pro - Enhanced Sponsored Members Add "
+"On\n"
+"POT-Creation-Date: 2016-05-31 19:43-0600\n"
+"PO-Revision-Date: 2016-05-23 13:01-0600\n"
+"Last-Translator: Thomas Sjolshagen <thomas@eighty20results.com>\n"
+"Language-Team: Thomas Sjolshagen <thomas@eighty20results.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.7\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-WPHeader: pmpro-sponsored-members.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: adminpages/sponsoredmembers.php:4
+msgid ""
+"Warning: Paid Memberships Pro has either not been installed, or needs to be "
+"activated for this add-on to be useful."
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:32
+msgid "Create Main-to-Sponsored Membership Level Map"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:40
+msgid "Main level"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:45
+msgid "Sponsored level"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:50
+msgid "No. of seats"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:55
+msgid "Max seats"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:60
+msgid "Seat cost"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:68
+msgid "Add"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:136
+msgid "Remove"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:148
+msgid "Permissions applied to the Sponsor"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:154
+msgid "May delete their sponsored member's account"
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:155
+msgid ""
+"Enabling this setting will result in the removal of the sponsored user's "
+"WordPress account whenever the Sponsor disables the sponsored member's "
+"access on their \"Accounts\" membership page."
+msgstr ""
+
+#: adminpages/sponsoredmembers.php:171
+msgid "Save Settings"
+msgstr ""
+
+#: classes/class.pmpro_sponsoredadminpage.php:397
+#: classes/class.pmpro_sponsoredadminpage.php:398
+#: pmpro-sponsored-members.php:1658
+msgid "Sponsored Members"
+msgstr ""
+
+#: pmpro-sponsored-members.php:483
+#, php-format
+msgid ""
+"This user has fewer seats than they had sponsored accounts. The sponsored "
+"accounts have been deactivated. The user must have his sponsored accounts "
+"checkout again using the code: %s."
+msgstr ""
+
+#: pmpro-sponsored-members.php:533
+#, php-format
+msgid ""
+"<p><strong>Notice:</strong>Your current membership has fewer seats than you "
+"had sponsored accounts. The accounts have been deactivated. You must have "
+"your sponsored accounts checkout again using your code: %s.</p>"
+msgstr ""
+
+#: pmpro-sponsored-members.php:670 pmpro-sponsored-members.php:672
+msgid "Give this code to your sponsored members to use at checkout:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:670 pmpro-sponsored-members.php:1662
+#: pmpro-sponsored-members.php:1873
+msgid "Or provide one of these direct links to register:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:672 pmpro-sponsored-members.php:1664
+#: pmpro-sponsored-members.php:1875
+msgid "Or provide this direct link to register:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:680
+msgid "This code has unlimited uses."
+msgstr ""
+
+#: pmpro-sponsored-members.php:682
+#, php-format
+msgid "This code has %d uses."
+msgstr ""
+
+#: pmpro-sponsored-members.php:718
+msgid "You must use a valid discount code to register for this level."
+msgstr ""
+
+#: pmpro-sponsored-members.php:742
+msgid "The sponsor for this code is inactive. Ask them to renew their account."
+msgstr ""
+
+#: pmpro-sponsored-members.php:752
+msgid "The maximum number of seats allowed is "
+msgstr ""
+
+#: pmpro-sponsored-members.php:755
+msgid "The minimum number of seats allowed is "
+msgstr ""
+
+#: pmpro-sponsored-members.php:767
+msgid "Parent Account"
+msgstr ""
+
+#: pmpro-sponsored-members.php:794
+msgid "For Sponsored Accounts"
+msgstr ""
+
+#: pmpro-sponsored-members.php:799
+msgid "User ID:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:804
+msgid "The user ID of the main account holder."
+msgstr ""
+
+#: pmpro-sponsored-members.php:854
+msgid "Would you like to purchase extra seats?"
+msgstr ""
+
+#: pmpro-sponsored-members.php:861
+msgid "How many?"
+msgstr ""
+
+#: pmpro-sponsored-members.php:872
+#, php-format
+msgid "Enter a number from %d to %d. %s"
+msgstr ""
+
+#: pmpro-sponsored-members.php:874
+#, php-format
+msgid "Enter a number from %d to %d. +%s per extra seat."
+msgstr ""
+
+#: pmpro-sponsored-members.php:919
+msgid "Keep checked to keep this account active."
+msgstr ""
+
+#: pmpro-sponsored-members.php:921
+msgid "Check to reactivate this account."
+msgstr ""
+
+#: pmpro-sponsored-members.php:984
+msgid "First Name"
+msgstr ""
+
+#: pmpro-sponsored-members.php:988
+msgid "Last Name"
+msgstr ""
+
+#: pmpro-sponsored-members.php:994
+msgid "Username"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1000
+msgid "Email"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1006
+msgid "Password"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1415
+msgid "Please enter details for each new sponsored account."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1418
+msgid "Each sponsored account must have a unique username and email address."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1421
+msgid ""
+"You have more accounts checked than you are purchasing seats. Increase the "
+"number of seats or deactivate some accounts."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1427
+#, php-format
+msgid ""
+"The username <b>%s</b> already exists. Please select a different username"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1436
+#, php-format
+msgid "That email <b>%s</b> already exists. Please select a different email"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1442
+#, php-format
+msgid "<b>%s</b> is not a valid email address. Please select a different email"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1526
+msgid "Sponsored Seats"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1533
+msgid "Sponsor Code"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1546
+msgid "Seats"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1660
+#, php-format
+msgid ""
+"Give this code to your sponsored members to use at checkout: <strong>%s</"
+"strong></p>"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1676
+msgid "This code has:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1678
+msgid "Unlimited uses."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1681
+#, php-format
+msgid " / %s uses."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1686
+msgid "Your Sponsored Members"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1690
+msgid "User"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1692
+msgid "Membership level"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1694
+msgid "Access"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1870
+#, php-format
+msgid "Give this code to your sponsored members to use at checkout: %s"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1908
+msgid "Are you sure you want to disable access for this user?"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1909
+msgid ""
+"Error while attempting to update access for sponsored user. From the web "
+"server: "
+msgstr ""
+
+#: pmpro-sponsored-members.php:1943
+msgid "Error: Invalid request received. Please reload the page and try again."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1947
+msgid "This user has no access to the protected content"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1958
+msgid "Error: Membership Level doesn't match. Can't re-enable access"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1961 pmpro-sponsored-members.php:1986
+msgid "Error: Unable to change user access"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1976
+msgid ""
+"ERR10003: Could not remove the user from the system. Please report this to "
+"the webmaster"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1983
+msgid ""
+"ERR10001: Could not properly update status for the sponsored user. Please "
+"report this to the webmaster"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1990
+msgid "Error: Unknown error. Please reload this page"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2116
+msgid "Error: Permission denied"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2126
+msgid "View Documentation"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2126
+msgid "Docs"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2127
+msgid "Visit Customer Support Forum"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2127
+msgid "Support"
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "Paid Memberships Pro - Enhanced Sponsored Members Add On"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://eighty20results.com/pmpro-sponsored-members-enhanced/"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid ""
+"Generate discount code for a main account holder to distribute to sponsored "
+"members."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://www.eighty20results.com"
+msgstr ""

@@ -1,12 +1,12 @@
 #!/bin/bash
 # Build script for plugin
 #
-include=(classes css js languages pmpro-sponsored-members.php README.txt)
+include=(adminpages classes css js languages includes pmpro-sponsored-members.php README.txt)
 exclude=(*.yml *.phar composer.* vendor)
 build=(classes/plugin-updates/vendor/*.php)
 short_name="pmpro-sponsored-members"
 plugin_path="${short_name}"
-version=$(egrep "^Version:" ../${short_name}.php | awk '{gsub(/ /, "", $2); print $2}')
+version=$(egrep "^Version:" ../${short_name}.php | sed 's/[[:alpha:]|(|[:space:]|\:]//g' | awk -F- '{printf "%s", $1}')
 metadata="../metadata.json"
 src_path="../"
 dst_path="../build/${plugin_path}"
