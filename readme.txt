@@ -20,6 +20,8 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 * Sponsored members will be linked to their sponsor through the pmpro_discount_codes_uses table.
 * If a sponsor's account is cancelled, all of their sponsored members will have their accounts disabled as well.
 * If a sponsor's account is reenabled at a later point, all of their sponsored members will have their accounts reenabled automatically.
+* A sponsor can disable a sponsored members' account
+* With admin permission (setting), the sponsor may or may not also delete the sponsored member's account when disabling access.
 
 == Installation ==
 
