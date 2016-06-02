@@ -45,6 +45,10 @@ Author URI: https://www.eighty20results.com
 //define('PMPROSM_SEAT_COST', 250);
 //define('PMPROSM_MAX_SEATS', 10);
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // exit quietly if PMPro isn't loaded
 if (!defined(PMPRO_VERSION) && !function_exists('pmpro_getMembershipLevelForUser')) {
     return;
@@ -120,6 +124,8 @@ function pmprosm_load_settings() {
     }
 
     $pmprosm_sponsored_account_levels = array_replace_recursive( $level_map, get_option('pmprosm_level_map', array()));
+
+    return $pmprosm_sponsored_account_levels;
 }
 
 function pmprosm_array_unique( $array1  ) {
