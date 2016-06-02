@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: https://eighty20results.com/pmpro-sponsored-members-enhanced/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 2.0
+Version: 2.0.1
 Author: Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>
 Author URI: https://www.eighty20results.com
 */
@@ -45,10 +45,6 @@ Author URI: https://www.eighty20results.com
 //define('PMPROSM_SEAT_COST', 250);
 //define('PMPROSM_MAX_SEATS', 10);
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 // exit quietly if PMPro isn't loaded
 if (!defined(PMPRO_VERSION) && !function_exists('pmpro_getMembershipLevelForUser')) {
     return;
@@ -60,7 +56,7 @@ if (is_admin()) {
     require_once(dirname(__FILE__) . '/classes/class.pmpro_sponsoredadminpage.php');
 }
 
-define('PMPROSM_VER', '2.0');
+define('PMPROSM_VER', '2.0.1');
 define('PMPROSM_DIR', trailingslashit(plugin_dir_path(__FILE__)));
 define('PMPROSM_URL', plugin_dir_url(__FILE__));
 
@@ -1934,7 +1930,7 @@ function pmprosm_disable_membership_callback()
         error_log("Sponsor clicked the 'disable membership' option");
     }
 
-    $status = isset($_REQUEST['pmprosm_status']) ? boolval($_REQUEST['pmprosm_status']) : null;
+    $status = isset($_REQUEST['pmprosm_status']) ? intval($_REQUEST['pmprosm_status']) : null;
     $user_id = isset($_REQUEST['pmprosm_user']) ? intval($_REQUEST['pmprosm_user']) : null;
     $code_id = isset($_REQUEST['pmprosm_code']) ? intval($_REQUEST['pmprosm_code']) : null;
 
@@ -1956,7 +1952,7 @@ function pmprosm_disable_membership_callback()
     }
 
     // Requesting to enable membership status.
-    if (!empty($current_level) && true === $status) {
+    if (!empty($current_level) && true == $status) {
 
         // Is the user's current level one of the levels we have a code for?
         if (true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'activate'))) {
@@ -1973,7 +1969,7 @@ function pmprosm_disable_membership_callback()
     $options = get_option('pmprosm_settings', array());
 
     // change membership level to 0 (no access)
-    if (!empty($current_level) && false === $status) {
+    if (!empty($current_level) && false == $status) {
 
         if (true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'deactivate'))) {
 
