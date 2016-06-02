@@ -7,7 +7,7 @@ if (!function_exists('pmpro_getAllLevels')) {
 
 global $pmprosm_sponsored_account_levels;
 
-$level_map = get_option('pmprosm_level_map', array());
+$level_map = pmprosm_load_settings();
 $settings = get_option('pmprosm_settings', array());
 
 $existing_levels = pmpro_getAllLevels(true);
