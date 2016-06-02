@@ -28,7 +28,6 @@ var pmprosmManager = {
 
             console.log("Clicked on membership checkbox");
 
-
             var member_id = self._collect_member_id(this);
             var status = jQuery(this).is('checked') ? 1 : 0;
 
