@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: https://eighty20results.com/pmpro-sponsored-members-enhanced/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 2.0.2
+Version: 2.0.3
 Author: Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>
 Author URI: https://www.eighty20results.com
 */
@@ -56,7 +56,7 @@ if (is_admin()) {
     require_once(dirname(__FILE__) . '/classes/class.pmpro_sponsoredadminpage.php');
 }
 
-define('PMPROSM_VER', '2.0.2');
+define('PMPROSM_VER', '2.0.3');
 define('PMPROSM_DIR', trailingslashit(plugin_dir_path(__FILE__)));
 define('PMPROSM_URL', plugin_dir_url(__FILE__));
 
@@ -1908,7 +1908,7 @@ function pmprosm_enqueue()
         wp_localize_script('pmprosm', 'pmprosm', array(
                 'variables' => array(
                     'ajaxurl' => admin_url('admin-ajax.php'),
-                    'timeout' => apply_filters('pmprosm_ajax_timeout', 10000),
+                    'timeout' => apply_filters('pmprosm_ajax_timeout', 90000), // long timeout because of payment gateways & stuff
                     'can_delete' => isset($options['sponsor_can_delete']) ? $options['sponsor_can_delete'] : false,
                 ),
                 'messages' => array(
@@ -1984,8 +1984,16 @@ function pmprosm_disable_membership_callback()
 
         if (true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'deactivate'))) {
 
+            if ( WP_DEBUG ) {
+                error_log("Membership was successfully disabled for {$user_id} using {$code_id}");
+            }
+
             // delete the user if the sponsor is allowed to do so.
-            if ( true == $options['sponsor_can_delete'] ) {
+            if ( isset($options['sponsor_can_delete']) && $options['sponsor_can_delete'] == true ) {
+
+                if ( WP_DEBUG ) {
+                    error_log("Sponsor deletes the user account as part of the membership deactivation: {$options['sponsor_can_delete']}");
+                }
 
                 if ( false === wp_delete_user($user_id) ) {
                     wp_send_json_error(__("ERR10003: Could not remove the user from the system. Please report this to the webmaster", "pmpro_sponsored_members"));
