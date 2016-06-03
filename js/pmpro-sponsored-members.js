@@ -58,7 +58,7 @@ var pmprosmManager = {
                     error: function( jqXHR, $s, error ) {
                         console.log("Error: ", $s, error, jqXHR);
                         
-                        alert(pmrosm.messages.error_1 + error);
+                        alert(pmprosm.messages.error_1 + error);
 
                         self._resetAccess(element, status);
                     },
@@ -87,6 +87,12 @@ var pmprosmManager = {
                             // increment usage counter
                             usage_cnt++;
                             row.fadeTo( 500, 1.0);
+
+                            if (pmprosm.variables.can_delete === true) {
+                                setTimeout(function () {
+                                    row.fadeOut(2000);
+                                }, 5000);
+                            }
                         }
                         
                         usage_cnt_elem.html(usage_cnt);
