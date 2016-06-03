@@ -1,12 +1,3 @@
-FIX: Server error message variable caused stop of execution
-FIX: Use strict for JavaScript
-FIX: Correctly extract version number for plugin/addon
-FIX: Didn't include the back-end CSV export functionality in build
-ENHANCEMENT/FIX: Table didn't fill the full width of the area
-ENHANCEMENT/FIX: Column size was fixed, is now flexible.
-ENHANCEMENT: Add .pot file for translators
-ENHANCEMENT: Add internationalization/translation support
-ENHANCEMENT: Use translatable string for alert message on error
-ENHANCEMENT: Version number update & URL fix
-ENHANCEMENT: Conditionally display sponsored member's identifying information
-ENHANCEMENT: Add translatable error message for JavaScript
+FIX: Wouldn't always allow update due to PHP version on server
+ENHANCEMENT: Load the sponsored account levels map from pmprosm_load_settings()
+ENHANCEMENT: Return the sponsored account map from pmprosm_load_settings()

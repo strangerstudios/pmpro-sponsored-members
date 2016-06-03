@@ -28,7 +28,6 @@ var pmprosmManager = {
 
             console.log("Clicked on membership checkbox");
 
-
             var member_id = self._collect_member_id(this);
             var status = jQuery(this).is('checked') ? 1 : 0;
 
@@ -59,7 +58,7 @@ var pmprosmManager = {
                     error: function( jqXHR, $s, error ) {
                         console.log("Error: ", $s, error, jqXHR);
                         
-                        alert(pmrosm.messages.error_1 + error);
+                        alert(pmprosm.messages.error_1 + error);
 
                         self._resetAccess(element, status);
                     },
@@ -82,6 +81,12 @@ var pmprosmManager = {
                             // decrement usage counter
                             usage_cnt--;
                             row.fadeTo( 500, 0.5);
+
+                            if (pmprosm.variables.can_delete === true) {
+                                setTimeout(function () {
+                                    row.fadeOut(2000);
+                                }, 5000);
+                            }
                         }
 
                         if (status === 1 && true === response.success ) {

@@ -39,6 +39,11 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 2.0.1 =
+* FIX: Wouldn't always allow update due to PHP version on server
+* ENHANCEMENT: Load the sponsored account levels map from pmprosm_load_settings()
+* ENHANCEMENT: Return the sponsored account map from pmprosm_load_settings()
+
 = 2.0 =
 * FIX: Server error message variable caused stop of execution
 * FIX: Use strict for JavaScript

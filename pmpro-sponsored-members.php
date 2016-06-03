@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: https://eighty20results.com/pmpro-sponsored-members-enhanced/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 2.0
+Version: 2.0.3
 Author: Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>
 Author URI: https://www.eighty20results.com
 */
@@ -56,7 +56,7 @@ if (is_admin()) {
     require_once(dirname(__FILE__) . '/classes/class.pmpro_sponsoredadminpage.php');
 }
 
-define('PMPROSM_VER', '2.0');
+define('PMPROSM_VER', '2.0.3');
 define('PMPROSM_DIR', trailingslashit(plugin_dir_path(__FILE__)));
 define('PMPROSM_URL', plugin_dir_url(__FILE__));
 
@@ -120,6 +120,8 @@ function pmprosm_load_settings() {
     }
 
     $pmprosm_sponsored_account_levels = array_replace_recursive( $level_map, get_option('pmprosm_level_map', array()));
+
+    return $pmprosm_sponsored_account_levels;
 }
 
 function pmprosm_array_unique( $array1  ) {
@@ -1900,11 +1902,14 @@ function pmprosm_enqueue()
     if (!is_admin()) {
         wp_enqueue_style('pmprosm', plugin_dir_url(__FILE__) . '/css/pmpro-sponsored-members.css', null, PMPROSM_VER);
 
+        $options = get_option('pmprosm_settings', array());
+
         wp_register_script('pmprosm', plugin_dir_url(__FILE__) . "/js/pmpro-sponsored-members.js", array('jquery'), PMPROSM_VER, true);
         wp_localize_script('pmprosm', 'pmprosm', array(
                 'variables' => array(
                     'ajaxurl' => admin_url('admin-ajax.php'),
-                    'timeout' => apply_filters('pmprosm_ajax_timeout', 10000),
+                    'timeout' => apply_filters('pmprosm_ajax_timeout', 90000), // long timeout because of payment gateways & stuff
+                    'can_delete' => isset($options['sponsor_can_delete']) ? $options['sponsor_can_delete'] : false,
                 ),
                 'messages' => array(
                     'confirmation_1' => __("Are you sure you want to disable access for this user?", "pmpro_sponsored_members"),
@@ -1928,7 +1933,7 @@ function pmprosm_disable_membership_callback()
         error_log("Sponsor clicked the 'disable membership' option");
     }
 
-    $status = isset($_REQUEST['pmprosm_status']) ? boolval($_REQUEST['pmprosm_status']) : null;
+    $status = isset($_REQUEST['pmprosm_status']) ? intval($_REQUEST['pmprosm_status']) : null;
     $user_id = isset($_REQUEST['pmprosm_user']) ? intval($_REQUEST['pmprosm_user']) : null;
     $code_id = isset($_REQUEST['pmprosm_code']) ? intval($_REQUEST['pmprosm_code']) : null;
 
@@ -1941,16 +1946,26 @@ function pmprosm_disable_membership_callback()
     // Hide any warnings which may mess with the AJAX response
     pmprosm_safe_ajax();
 
+    $options = get_option('pmprosm_settings', array());
+
     if (is_null($user_id) || is_null($status)) {
         wp_send_json_error(__('Error: Invalid request received. Please reload the page and try again.', 'pmpro_sponsored_members'));
     }
 
     if (empty($current_level)) {
-        wp_send_json_error(__("This user has no access to the protected content", "pmpro_sponsored_members"));
+
+        if (isset($options['sponsor_can_delete']) && $options['sponsor_can_delete'] == true) {
+            $user = get_userdata($user_id);
+
+            if ( false !== $user) {
+                wp_delete_user( $user_id );
+            }
+        }
+        wp_send_json_error(__("This user already had their access to this site revoked. Please refresh the page.", "pmpro_sponsored_members"));
     }
 
     // Requesting to enable membership status.
-    if (!empty($current_level) && true === $status) {
+    if (!empty($current_level) && true == $status) {
 
         // Is the user's current level one of the levels we have a code for?
         if (true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'activate'))) {
@@ -1964,15 +1979,21 @@ function pmprosm_disable_membership_callback()
         }
     }
 
-    $options = get_option('pmprosm_settings', array());
-
     // change membership level to 0 (no access)
-    if (!empty($current_level) && false === $status) {
+    if (!empty($current_level) && false == $status) {
 
         if (true === ($result = pmprosm_changeMemberAccess($user_id, $code_id, 'deactivate'))) {
 
+            if ( WP_DEBUG ) {
+                error_log("Membership was successfully disabled for {$user_id} using {$code_id}");
+            }
+
             // delete the user if the sponsor is allowed to do so.
-            if ( true == $options['sponsor_can_delete'] ) {
+            if ( isset($options['sponsor_can_delete']) && $options['sponsor_can_delete'] == true ) {
+
+                if ( WP_DEBUG ) {
+                    error_log("Sponsor deletes the user account as part of the membership deactivation: {$options['sponsor_can_delete']}");
+                }
 
                 if ( false === wp_delete_user($user_id) ) {
                     wp_send_json_error(__("ERR10003: Could not remove the user from the system. Please report this to the webmaster", "pmpro_sponsored_members"));
