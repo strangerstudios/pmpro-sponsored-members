@@ -81,18 +81,18 @@ var pmprosmManager = {
                             // decrement usage counter
                             usage_cnt--;
                             row.fadeTo( 500, 0.5);
-                        }
-
-                        if (status === 1 && true === response.success ) {
-                            // increment usage counter
-                            usage_cnt++;
-                            row.fadeTo( 500, 1.0);
 
                             if (pmprosm.variables.can_delete === true) {
                                 setTimeout(function () {
                                     row.fadeOut(2000);
                                 }, 5000);
                             }
+                        }
+
+                        if (status === 1 && true === response.success ) {
+                            // increment usage counter
+                            usage_cnt++;
+                            row.fadeTo( 500, 1.0);
                         }
                         
                         usage_cnt_elem.html(usage_cnt);
