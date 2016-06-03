@@ -1,0 +1,3 @@
+FIX: Wouldn't always allow update due to PHP version on server
+ENHANCEMENT: Load the sponsored account levels map from pmprosm_load_settings()
+ENHANCEMENT: Return the sponsored account map from pmprosm_load_settings()

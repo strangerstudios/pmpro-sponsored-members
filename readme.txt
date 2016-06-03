@@ -1,9 +1,9 @@
 === Paid Memberships Pro - Sponsored Members Add On ===
-Contributors: strangerstudios
+Contributors: eighty20results strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
-Tested up to: 4.5
-Stable tag: .6
+Tested up to: 4.5.2
+Stable tag: 2.0
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -20,6 +20,8 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 * Sponsored members will be linked to their sponsor through the pmpro_discount_codes_uses table.
 * If a sponsor's account is cancelled, all of their sponsored members will have their accounts disabled as well.
 * If a sponsor's account is reenabled at a later point, all of their sponsored members will have their accounts reenabled automatically.
+* A sponsor can disable a sponsored members' account
+* With admin permission (setting), the sponsor may or may not also delete the sponsored member's account when disabling access.
 
 == Installation ==
 
@@ -37,6 +39,61 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 2.0.1 =
+* FIX: Wouldn't always allow update due to PHP version on server
+* ENHANCEMENT: Load the sponsored account levels map from pmprosm_load_settings()
+* ENHANCEMENT: Return the sponsored account map from pmprosm_load_settings()
+
+= 2.0 =
+* FIX: Server error message variable caused stop of execution
+* FIX: Use strict for JavaScript
+* FIX: Correctly extract version number for plugin/addon
+* FIX: Didn't include the back-end CSV export functionality in build
+* ENHANCEMENT/FIX: Table didn't fill the full width of the area
+* ENHANCEMENT/FIX: Column size was fixed, is now flexible.
+* ENHANCEMENT: Add .pot file for translators
+* ENHANCEMENT: Add internationalization/translation support
+* ENHANCEMENT: Use translatable string for alert message on error
+* ENHANCEMENT: Version number update & URL fix
+* ENHANCEMENT: Conditionally display sponsored member's identifying information
+* ENHANCEMENT: Add translatable error message for JavaScript
+
+= 1.0.1 =
+* FIX: Server error message variable caused stop of execution
+* FIX: Use strict for JavaScript
+* FIX: Correctly extract version number for plugin/addon
+* FIX: Didn't include the back-end CSV export functionality in build
+* ENHANCEMENT/FIX: Table didn't fill the full width of the area
+* ENHANCEMENT/FIX: Column size was fixed, is now flexible.
+* ENHANCEMENT: Add .pot file for translators
+* ENHANCEMENT: Add internationalization/translation support
+* ENHANCEMENT: Use translatable string for alert message on error
+* ENHANCEMENT: Version number update & URL fix
+* ENHANCEMENT: Conditionally display sponsored member's identifying information
+* ENHANCEMENT: Add translatable error message for JavaScript
+
+= 1.0 =
+* BUG: Drop-shadow with unchecked setting
+* BUG: Soften the background coloring for odd rows
+* BUG: Would sometimes crash if PMPro wasn't installed or activated.
+* ENHANCEMENT: Refactor hooks & filters to init function
+* ENHANCEMENT: Add function definitions (docs).
+* ENHANCEMENT: Refactored to be in better compliance w/WP code styles
+* ENHANCEMENT: More error checking & recovery
+* ENHANCEMENT: Support filtered URLs (don't ignore the fact that other plugins exist & may filter when creating URLs for PMPro).
+* ENHANCEMENT: Allow sponsor to remove access for a sponsored user via the sponsor's account page
+* ENHANCEMENT: Can check whether a sponsored user has access to protected content or not
+* ENHANCEMENT: Add proper WordPress enqueue/registration of styles & scripts
+* ENHANCEMENT: Added loading of styles & scripts (no more inline styles/scripts).
+* ENHANCEMENT: Add callback to manage sposor actions against sponsored user(s).
+* ENHANCEMENT: Request confirmation when disabling user(s).
+* ENHANCEMENT: Add error handling for AJAX request
+* ENHANCEMENT: Blur out disabled users (opacity = 0.5)
+* ENHANCEMENT: Update the usage count for the code
+* ENHANCEMENT: Separate JavaScript into own file & process disabling membership for user in discount code list.
+* ENHANCEMENT: Formatting for membership access slider (Yes/No)
+* ENHANCEMENT: Formatting for div based table
+
 = .6.1 =
 * ENHANCEMENT: Moved some code from after checkout method into a pmprosm_createSponsorCode($user_id, $level_id, $uses = "") so it can be used elsewhere.
 * ENHANCEMENT: Added integration with Import Users From CSV so you can set a pmprosm_sponsor column (to a user ID, user email, or user login). If set, a sponsor code will be created for the sponsoring user (if needed) and the sponsored user will be setup as a child account.
