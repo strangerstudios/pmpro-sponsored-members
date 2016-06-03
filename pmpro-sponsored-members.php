@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: https://eighty20results.com/pmpro-sponsored-members-enhanced/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 2.0.1
+Version: 2.0.2
 Author: Stranger Studios & Eighty / 20 Results <thomas@eighty20results.com>
 Author URI: https://www.eighty20results.com
 */
@@ -56,7 +56,7 @@ if (is_admin()) {
     require_once(dirname(__FILE__) . '/classes/class.pmpro_sponsoredadminpage.php');
 }
 
-define('PMPROSM_VER', '2.0.1');
+define('PMPROSM_VER', '2.0.2');
 define('PMPROSM_DIR', trailingslashit(plugin_dir_path(__FILE__)));
 define('PMPROSM_URL', plugin_dir_url(__FILE__));
 
@@ -1902,11 +1902,14 @@ function pmprosm_enqueue()
     if (!is_admin()) {
         wp_enqueue_style('pmprosm', plugin_dir_url(__FILE__) . '/css/pmpro-sponsored-members.css', null, PMPROSM_VER);
 
+        $options = get_option('pmprosm_settings', array());
+
         wp_register_script('pmprosm', plugin_dir_url(__FILE__) . "/js/pmpro-sponsored-members.js", array('jquery'), PMPROSM_VER, true);
         wp_localize_script('pmprosm', 'pmprosm', array(
                 'variables' => array(
                     'ajaxurl' => admin_url('admin-ajax.php'),
                     'timeout' => apply_filters('pmprosm_ajax_timeout', 10000),
+                    'can_delete' => isset($options['sponsor_can_delete']) ? $options['sponsor_can_delete'] : false,
                 ),
                 'messages' => array(
                     'confirmation_1' => __("Are you sure you want to disable access for this user?", "pmpro_sponsored_members"),
@@ -1943,12 +1946,22 @@ function pmprosm_disable_membership_callback()
     // Hide any warnings which may mess with the AJAX response
     pmprosm_safe_ajax();
 
+    $options = get_option('pmprosm_settings', array());
+
     if (is_null($user_id) || is_null($status)) {
         wp_send_json_error(__('Error: Invalid request received. Please reload the page and try again.', 'pmpro_sponsored_members'));
     }
 
     if (empty($current_level)) {
-        wp_send_json_error(__("This user has no access to the protected content", "pmpro_sponsored_members"));
+
+        if (isset($options['sponsor_can_delete']) && $options['sponsor_can_delete'] == true) {
+            $user = get_userdata($user_id);
+
+            if ( false !== $user) {
+                wp_delete_user( $user_id );
+            }
+        }
+        wp_send_json_error(__("This user already had their access to this site revoked. Please refresh the page.", "pmpro_sponsored_members"));
     }
 
     // Requesting to enable membership status.
@@ -1965,8 +1978,6 @@ function pmprosm_disable_membership_callback()
             wp_send_json_error(__("Error: Unable to change user access", "pmpro_sponsored_members"));
         }
     }
-
-    $options = get_option('pmprosm_settings', array());
 
     // change membership level to 0 (no access)
     if (!empty($current_level) && false == $status) {
