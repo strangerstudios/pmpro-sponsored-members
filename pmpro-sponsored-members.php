@@ -625,7 +625,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 		
 		foreach($pmprosm_values as $pmprosm_value)
 		{
-			if(!$continue_reg && isset($pmprosm_value['discount_code_required']) && empty($pmprosm_value['discount_code_required']))
+			if(!$continue_reg && isset($pmprosm_value['discount_code_required']) && !empty($pmprosm_value['discount_code_required']))
 				$continue_reg = false;
 			
 			else
