@@ -621,15 +621,27 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && empty($discount_code) && !pmprosm_isMainLevel($pmpro_level->id))
 	{
 		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id, false);
-		$continue_reg = false; 
+		$continue_reg = true;
 		
 		foreach($pmprosm_values as $pmprosm_value)
 		{
-			if(!$continue_reg && isset($pmprosm_value['discount_code_required']) && empty($pmprosm_value['discount_code_required']))
-				$continue_reg = false;
+			$check_sponsored_level = false;
 			
-			else
-				$continue_reg = true;
+			//check if array
+			if(is_array($pmprosm_value['sponsored_level_id']))
+			{
+				$check_sponsored_level = in_array($pmpro_level->id, $pmprosm_value);
+			}
+			elseif($pmprosm_value['sponsored_level_id'] == $pmpro_level->id)
+			{
+				$check_sponsored_level = true;
+			}
+			
+			if($continue_reg && isset($pmprosm_value['discount_code_required']) && !empty($pmprosm_value['discount_code_required']) && $check_sponsored_level)
+			{	
+				$continue_reg = false;
+				break;
+			}
 		}
 		
 		if(!$continue_reg)
