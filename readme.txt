@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
-Tested up to: 4.5
-Stable tag: .6
+Tested up to: 4.5.2
+Stable tag: .6.1
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -38,6 +38,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 == Changelog ==
 = .6.1 =
+* BUG: Fixed bug where seats and other information weren't being saved after checking out at offsite gateway like PayPal Express.
 * ENHANCEMENT: Moved some code from after checkout method into a pmprosm_createSponsorCode($user_id, $level_id, $uses = "") so it can be used elsewhere.
 * ENHANCEMENT: Added integration with Import Users From CSV so you can set a pmprosm_sponsor column (to a user ID, user email, or user login). If set, a sponsor code will be created for the sponsoring user (if needed) and the sponsored user will be setup as a child account.
 
