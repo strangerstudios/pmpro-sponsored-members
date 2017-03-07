@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
 Tested up to: 4.5.2
-Stable tag: .6.1
+Stable tag: .6.2
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,9 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .6.2 =
+* ENHANCEMENT: Added list of Sponsored Members (children) to User Profile for Admins-only. 
+
 = .6.1 =
 * BUG: Fixed bug where seats and other information weren't being saved after checking out at offsite gateway like PayPal Express.
 * ENHANCEMENT: Moved some code from after checkout method into a pmprosm_createSponsorCode($user_id, $level_id, $uses = "") so it can be used elsewhere.

@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: http://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .6.1
+Version: .6.2
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -1472,35 +1472,75 @@ function pmprosm_profile_fields_seats($user)
 	if(current_user_can("manage_options"))
 	{
 	?>
+		<hr />
 		<h3><?php _e("Sponsored Seats"); ?></h3>
 		<table class="form-table">
-		<?php
-			$sponsor_code_id = pmprosm_getCodeByUserID($user->ID);
-			if(!empty($sponsor_code_id))
-			{
-		?>
-		<tr>
-			<th><label for="sponsor_code"><?php _e("Sponsor Code"); ?></label></th>
-			<td>
-				<?php echo $wpdb->get_var("SELECT code FROM $wpdb->pmpro_discount_codes WHERE id = '" . $sponsor_code_id . "' LIMIT 1");?>
-			</td>
-		</tr>
-		<?php
-			}
-		?>
-		<tr>
-			<th><label for="seats"><?php _e("Seats"); ?></label></th>
-			<td>
-				<?php
-					$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true));
-				?>
-				<input type="text" id="seats" name="seats" size="5" value="<?php echo esc_attr($seats);?>" />
+			<?php
+				$sponsor_code_id = pmprosm_getCodeByUserID($user->ID);
+				$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($sponsor_code_id) . "' LIMIT 1");
+				if(!empty($code)) {
+					?>
 
-				
-			</td>
-		</tr>
+					<tr>
+						<th><label for="sponsor_code"><?php _e("Sponsor Code"); ?></label></th>
+						<td>
+							<?php echo $code->code; ?>
+						</td>
+					</tr>
+					<?php
+				}
+			?>
+			<tr>
+				<th><label for="seats"><?php _e("Seats"); ?></label></th>
+				<td>
+					<?php
+						$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true));
+					?>
+					<input type="text" id="seats" name="seats" size="5" value="<?php echo esc_attr($seats);?>" />
+				</td>
+			</tr>
 		</table>
-	<?php
+		<?php
+			//get members
+			$member_ids = pmprosm_getChildren($user->ID);
+			if ( !empty( $member_ids) ) {
+				$count = 0;
+				?>
+				<hr />
+				<h3><?php _e("Sponsored Members", "pmpro_sponsored_members");?></h3>
+				<div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
+				<table class="wp-list-table widefat fixed" width="100%" cellpadding="0" cellspacing="0" border="0">
+				<thead>
+					<tr>						
+						<th><?php _e('Date', 'pmpro'); ?></th>
+						<th><?php _e('Name', 'pmpro'); ?></th>
+						<th><?php _e('Membership Level', 'pmpro'); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						foreach($member_ids as $member_id)
+						{
+							$member = get_userdata($member_id);
+							$member->membership_level = pmpro_getMembershipLevelForUser($member_id);
+							if(empty($member)) {
+								continue;
+							}
+							?>
+							<tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
+								<td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
+								<td><a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->display_name; ?></a></td>
+								<td><?php echo $member->membership_level->name; ?></td>
+							</tr>
+							<?php
+						}
+					?>
+				</tbody>
+				</table>
+				</div>
+				<?php 
+			} 
+
 	}
 }
 add_action('show_user_profile', 'pmprosm_profile_fields_seats');
@@ -1592,13 +1632,13 @@ function pmprosm_the_content_account_page($content)
 					<?php } ?>
 				</ul>
 				
-				<p>
+				<div class="pmpro_message pmpro_default">
 					<?php if(empty($code->uses)) { ?>
 						<?php _e("This code has unlimited uses.", "pmpro_sponsored_members");?>
 					<?php } else { ?>
 						<?php printf(__("%s/%s uses.", "pmpro_sponsored_members"), count($member_ids), $code->uses);?>
 					<?php } ?>
-				</p>
+				</div>
 				
 				<?php if(!empty($member_ids)) { ?>
 				<p><strong><?php __("Your Sponsored Members", "pmpro_sponsored_members");?></strong></p>
