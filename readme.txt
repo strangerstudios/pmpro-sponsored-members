@@ -2,7 +2,7 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 3.5
-Tested up to: 4.5.2
+Tested up to: 4.7.3
 Stable tag: .6.2
 
 Generate a discount code for a main account holder to distribute to sponsored members.
@@ -37,7 +37,10 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+
 = .6.2 =
+* BUG/ENHANCEMENT: Now setting the number of seats to the default value when changing a user's level to a parent/main level in the admin.
+* ENHANCEMENT: Added a link to Parent of the child to User Profile for Admins-only. 
 * ENHANCEMENT: Added list of Sponsored Members (children) to User Profile for Admins-only. 
 
 = .6.1 =

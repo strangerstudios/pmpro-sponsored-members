@@ -194,11 +194,16 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 				$uses = intval($_REQUEST['seats']);
 			elseif(!empty($pmprosm_values['seats']))
 				$uses = $pmprosm_values['seats'];
+			elseif(!empty($pmprosm_values['min_seats']))
+				$uses = $pmprosm_values['min_seats'];
 			else
 				$uses = "";
 			
 			//create a new code
 			pmprosm_createSponsorCode($user_id, $level_id, $uses);
+			
+			//make sure seats is correct in user meta
+			update_user_meta($user_id, "pmprosm_seats", $uses);
 		}	
 		elseif(!empty($pmprosm_values['sponsored_level_id']))
 		{
@@ -1468,37 +1473,54 @@ add_action('init', 'pmprosm_init_load_session_vars', 5);
 function pmprosm_profile_fields_seats($user)
 {
 	global $wpdb;
-
-	if(current_user_can("manage_options"))
+	if( current_user_can("manage_options") && !empty($user->membership_level) )
 	{
-	?>
+		?>
 		<hr />
 		<h3><?php _e("Sponsored Seats"); ?></h3>
 		<table class="form-table">
 			<?php
+				//get the user's sponsor code
 				$sponsor_code_id = pmprosm_getCodeByUserID($user->ID);
 				$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($sponsor_code_id) . "' LIMIT 1");
 				if(!empty($code)) {
 					?>
-
 					<tr>
-						<th><label for="sponsor_code"><?php _e("Sponsor Code"); ?></label></th>
+						<th><label for="sponsor_code"><?php _e('Sponsor Code', 'pmpro_sponsored_members'); ?></label></th>
 						<td>
 							<?php echo $code->code; ?>
 						</td>
 					</tr>
+					<tr>
+						<th><label for="seats"><?php _e('Seats', 'pmpro_sponsored_members'); ?></label></th>
+						<td>
+							<?php 
+								$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true)); 
+							?>
+							<input type="text" id="seats" name="seats" size="5" value="<?php echo esc_attr($seats);?>" />
+						</td>
+					</tr>
 					<?php
-				}
-			?>
-			<tr>
-				<th><label for="seats"><?php _e("Seats"); ?></label></th>
-				<td>
-					<?php
-						$seats = intval(get_user_meta($user->ID, "pmprosm_seats", true));
-					?>
-					<input type="text" id="seats" name="seats" size="5" value="<?php echo esc_attr($seats);?>" />
-				</td>
-			</tr>
+					} else { ?>
+					<tr>
+						<th><label for="sponsor_code"><?php _e('Sponsor Code', 'pmpro_sponsored_members'); ?></label></th>
+						<td><em class="muted"><?php _e('This membership level does not include a sponsor code.', 'pmpro_sponsored_members'); ?></em></td>
+					</tr>
+					<?php } ?>
+					
+				<?php
+					//get the user's parent account
+					$parent = pmprosm_getSponsor($user->ID);
+					if( !empty( $parent ) ) 
+					{
+						?>
+						<tr>
+							<th><label for="parent"><?php _e('Parent', 'pmpro_sponsored_members'); ?></label></th>
+							<td><a href="<?php echo get_edit_user_link($parent->ID); ?>"><?php echo $parent->display_name; ?></a></td>
+						</tr>		
+						<?php 
+					} 
+				?>
 		</table>
 		<?php
 			//get members
@@ -1539,8 +1561,7 @@ function pmprosm_profile_fields_seats($user)
 				</table>
 				</div>
 				<?php 
-			} 
-
+			}					
 	}
 }
 add_action('show_user_profile', 'pmprosm_profile_fields_seats');
@@ -1555,7 +1576,7 @@ function pmprosm_profile_update_seats($user_id)
 
 	//only let admin's edit the seats
 	if(current_user_can("manage_options") && isset($_POST['seats']))	
-	{
+	{		
 		//update user meta
 		update_user_meta( $user_id, "pmprosm_seats", intval($_POST['seats']) );			
 		
@@ -1684,7 +1705,7 @@ function pmprosm_getSponsor($user_id, $force = false)
 	
 	//make sure this user has one of the sponsored levels
 	$user_level = pmpro_getMembershipLevelForUser($user_id);
-	if(!pmprosm_isSponsoredLevel($user_level->id))
+	if( !pmprosm_isSponsoredLevel($user_level->id) )
 	{
 		$pmprosm_user_sponsors[$user_id] = false;
 		return $pmprosm_user_sponsors[$user_id];
