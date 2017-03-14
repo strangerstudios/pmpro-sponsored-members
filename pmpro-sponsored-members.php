@@ -47,6 +47,14 @@ Author URI: http://www.strangerstudios.com
 if(is_admin())
 	require_once(dirname(__FILE__) . '/includes/import-users-from-csv.php');
 
+global $pmprosm_initial_payment_fraction;
+
+global $pmprosm_billing_amount_fraction;
+
+$pmprosm_initial_payment_fraction = null;
+
+$pmprosm_billing_amount_fraction = null;
+
 //check if a level id is a "main account" level
 function pmprosm_isMainLevel($level_id)
 {
@@ -774,7 +782,7 @@ add_action("pmpro_save_discount_code", "pmprosm_pmpro_save_discount_code", 5);
 //show existing sponsored accounts and add a dropdown to choose number of seats on checkout page
 function pmprosm_pmpro_checkout_boxes()
 {
-	global $current_user, $pmpro_level, $pmpro_currency_symbol;
+	global $current_user, $pmpro_level, $pmpro_currency_symbol, $pmprosm_initial_payment_fraction, $discount_code;
 
 	//only for PMPROSM_MAIN_ACCOUNT_LEVEL
 	if(empty($pmpro_level) || !pmprosm_isMainLevel($pmpro_level->id))
@@ -786,6 +794,15 @@ function pmprosm_pmpro_checkout_boxes()
 	if(empty($pmprosm_values['max_seats']) || !isset($pmprosm_values['seat_cost']))
 	{
 		return;
+	}
+	
+	if ($pmprosm_initial_payment_fraction === null) {
+		if ((isset($_REQUEST['discount_code'])) && ($discount_code) && (pmpro_checkDiscountCode($discount_code))) {
+			// Let's calculate the initial payment fraction by getting the original level
+			$level_without_discount = pmpro_getLevel($pmpro_level->id);
+			
+			$pmprosm_initial_payment_fraction = $pmpro_level->initial_payment / ($level_without_discount->initial_payment ? $level_without_discount->initial_payment : 1);
+		}
 	}
 	
 	//get seats from submit
@@ -807,7 +824,9 @@ function pmprosm_pmpro_checkout_boxes()
 			<td>
 				<div>
 					<label for="seats"><?php echo __("How many?", "pmpro_sponsored_members");?></label>
-					<input type="text" id="seats" name="seats" value="<?php echo esc_attr($seats);?>" size="10" />
+					<input type="text" id="seats" name="seats" value="<?php echo esc_attr($seats);?>" size="10"
+						data-price-per-seat="<?php echo $pmprosm_values['seat_cost']; ?>"
+					/>
 					<small>
 						<?php							
 							//min seats defaults to 1
@@ -819,9 +838,25 @@ function pmprosm_pmpro_checkout_boxes()
 							if(isset($pmprosm_values['seat_cost_text']))
 								printf(__("Enter a number from %d to %d. %s", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text']);
 							else
-								printf(__("Enter a number from %d to %d. +%s per extra seat.", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost']);
+								printf(__("Enter a number from %d to %d. +%s<span id=\"pmpro_seat_cost\">%s</span> per extra seat.", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol, number_format($pmprosm_values['seat_cost'] * ($pmprosm_initial_payment_fraction !== null ? $pmprosm_initial_payment_fraction : 1), 2));
 						?>						
 					</small>					
+					
+					<script>
+						jQuery(document).ready(function($) {
+							$(document).on('pmpro.applied_discount_code', function(event) {
+								var fraction = event.initialPaymentFraction;
+
+								var price_per_seat = parseFloat($('#seats').data('price-per-seat'));
+
+								// Update price per seat 	
+								price_per_seat *= fraction;
+
+								// Now update the text
+								$('#pmpro_seat_cost').html(price_per_seat.toFixed(2));
+							});
+						});
+					</script>
 					
 					<?php
 					//adding sub accounts at checkout?
@@ -1077,6 +1112,8 @@ add_action("pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes");
 //adjust price based on seats
 function pmprosm_pmpro_checkout_levels($level)
 {	
+	global $pmprosm_initial_payment_fraction, $pmprosm_billing_amount_fraction;
+	
 	//get seats from submit
 	if(isset($_REQUEST['seats']))
 		$seats = intval($_REQUEST['seats']);
@@ -1085,7 +1122,14 @@ function pmprosm_pmpro_checkout_levels($level)
 		
 	if(!empty($seats))
 	{
-		$pmprosm_values = pmprosm_getValuesByMainLevel($level->id);						
+		$pmprosm_values = pmprosm_getValuesByMainLevel($level->id);
+		
+		$original_level = pmpro_getLevel($level->id);
+		
+		$pmprosm_initial_payment_fraction = $level->initial_payment / ($original_level->initial_payment ? $original_level->initial_payment : 1);
+		
+		$pmprosm_billing_amount_fraction = $level->billing_amount / ($original_level->billing_amount ? $original_level->billing_amount : 1);
+								
 		if(!empty($pmprosm_values['seat_cost']))
 		{		
 			if((!isset($pmprosm_values['apply_seat_cost_to_initial_payment']) && $level->initial_payment > 0) || !empty($pmprosm_values['apply_seat_cost_to_initial_payment']))
@@ -1093,10 +1137,10 @@ function pmprosm_pmpro_checkout_levels($level)
 				if(!empty($pmprosm_values['apply_seat_cost_to_initial_payment']) && $pmprosm_values['apply_seat_cost_to_initial_payment'] === "sponsored_level")
 				{
 					$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
-					$level->initial_payment += $sponsored_level->initial_payment * $seats;
+					$level->initial_payment += $sponsored_level->initial_payment * $seats * $pmprosm_initial_payment_fraction;
 				}
 				else				
-					$level->initial_payment += $pmprosm_values['seat_cost'] * $seats;					
+					$level->initial_payment += $pmprosm_values['seat_cost'] * $seats * $pmprosm_initial_payment_fraction;					
 			}
 			
 			if((!isset($pmprosm_values['apply_seat_cost_to_billing_amount']) && $level->billing_amount > 0) || !empty($pmprosm_values['apply_seat_cost_to_billing_amount']))
@@ -1104,13 +1148,13 @@ function pmprosm_pmpro_checkout_levels($level)
 				if(!empty($pmprosm_values['apply_seat_cost_to_billing_amount']) && $pmprosm_values['apply_seat_cost_to_billing_amount'] === "sponsored_level")
 				{
 					$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
-					$level->billing_amount += $sponsored_level->billing_amount * $seats;
+					$level->billing_amount += $sponsored_level->billing_amount * $seats * $pmprosm_billing_amount_fraction;
 					$level->cycle_number = $sponsored_level->cycle_number;
 					$level->cycle_period = $sponsored_level->cycle_period;
 				}
 				else
 				{				
-					$level->billing_amount += $pmprosm_values['seat_cost'] * $seats;
+					$level->billing_amount += $pmprosm_values['seat_cost'] * $seats * $pmprosm_billing_amount_fraction;
 					
 					if(!empty($pmprosm_values['seat_cost_cycle_number']))
 						$level->cycle_number = $pmprosm_values['seat_cost_cycle_number'];
