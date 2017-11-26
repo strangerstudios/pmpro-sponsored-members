@@ -318,11 +318,13 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 	//activate/deactivate old accounts
 	if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))
 	{
-		if(isset($_REQUEST['old_sub_accounts_active']))
+		// cannot rely on old_sub_accounts_active to be set.  May have old accounts, but may only create new ones
+		// so we need to deactivate old accounts.
+		$children = pmprosm_getChildren($user_id);
+		if($children)
 		{		
 			$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];						
-			$children = pmprosm_getChildren($user_id);
-						
+
 			for($i = 0; $i < count($children); $i++)
 			{
 				if(in_array($children[$i], $old_sub_accounts_active))
@@ -486,6 +488,14 @@ function pmprosm_getChildren($user_id = NULL) {
     if(!empty($code_id))
         $children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = $code_id AND status = 'active'");
 
+	// if sponsor account is expired or cancelled then children accounts are no longer active.
+	//
+	//  So we can get a list of old children accounts by getting all the uses of the discount code
+
+	if (empty($children)) {
+		$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
+		$children = $wpdb->get_col($sqlQuery);
+	}
     return $children;
 }
 
@@ -844,16 +854,19 @@ function pmprosm_pmpro_checkout_boxes()
 							<?php 
 								//get user
 								$child = get_userdata($child_id);
+                                if ($child === false)
+                                   continue;  //user does not exist, so skip it.
 
-								//acive?
+							//acive?
 								if(pmpro_hasMembershipLevel(NULL, $child_id))
 									$active = true;
 								else
 									$active = false;
 
 								//checked?
-								if(isset($old_sub_accounts_active[$i]))
-									$checked = $old_sub_accounts_active[$i];
+                            // can't assume order of old_sub_accounts_active
+							if(in_array($child_id, $old_sub_accounts_active))
+									$checked = true;
 								else
 									$checked = $active;
 							?>
