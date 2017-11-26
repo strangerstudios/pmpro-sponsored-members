@@ -796,8 +796,13 @@ function pmprosm_pmpro_checkout_boxes()
 		$seats = intval($_REQUEST['seats']);
 	elseif(!empty($current_user->ID))
 		$seats = get_user_meta($current_user->ID, "pmprosm_seats", true);
-	else
-		$seats = "0";	// leaving blank ('') causes this to be unlimited.
+    else
+        $seats = "";
+
+    if(isset($pmprosm_values['seats']) && $seats == "")
+        $seats = $pmprosm_values['seats'];
+
+	if ($seats == "") $seats = 0; 	// leaving blank ('') causes this to be unlimited.
 
 	$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
 	?>
@@ -818,12 +823,12 @@ function pmprosm_pmpro_checkout_boxes()
 				<label for="seats"><?php echo __('Number of Seats', 'pmpro_sponsored_members');?></label>
 				<input type="text" id="seats" name="seats" value="<?php echo esc_attr($seats);?>" size="10" />
 				<p class="pmpro_small">
-					<?php							
-						//min seats defaults to 1
-						if(!empty($pmprosm_values['min_seats']))
-							$min_seats = $pmprosm_values['min_seats'];
-						else
-							$min_seats = 1;
+					<?php
+                        //min seats defaults to 1
+                        if(!empty($pmprosm_values['min_seats']))
+                            $min_seats = $pmprosm_values['min_seats'];
+                        else
+                            $min_seats = 1;
 
                         if ($max_seats > 1) {
                             if ( isset( $pmprosm_values['seat_cost_text'] ) ) {
@@ -841,7 +846,7 @@ function pmprosm_pmpro_checkout_boxes()
 				{
 					// add extra_seat_prompt_text
 					if(!empty($pmprosm_values['extra_seat_prompt_text'])) {
-						echo '<div class="pmpro_extra_seat_prompt">';
+						echo '<div id="pmpro_extra_seat_prompt">';
 						echo  $pmprosm_values['extra_seat_prompt_text'];
 						echo '</div>';
 					}
@@ -1039,7 +1044,13 @@ function pmprosm_pmpro_checkout_boxes()
 							//how many child seats are shown now (if sponsored_accounts_at_checkout is set)							
 							if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))		
 							{
+
 							?>
+                            if( seats > 0) {
+                                jQuery('#pmpro_extra_seat_prompt').show();
+                            } else {
+                                jQuery('#pmpro_extra_seat_prompt').hide();
+                            }
 							if(jQuery('#sponsored_accounts'))
 							{
 								children = jQuery('#sponsored_accounts').children();											
