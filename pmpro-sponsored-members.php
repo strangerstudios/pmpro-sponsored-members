@@ -607,20 +607,13 @@ function pmprosm_pmpro_confirmation_message($message)
 
 			$message .= "</div>";
 		}
-		$member_ids = pmprosm_getChildren($current_user->ID);
-		$message .= "<div>";
-		$message .= __("Here are the current sponsored members","pmpro_sponsored_members");
-		$message .= "<ul>";
-
-		foreach($member_ids as $member_id)
-		{
-			$member = get_userdata($member_id);
-			if(empty($member))
-				continue;
-			$message .= "<li>".$member->display_name . " ( ".$member->user_email." )</li>";
+        $member_ids = pmprosm_getChildren( $current_user->ID );
+		if (isset($pmprosm_values['list_sponsored_accounts']) && $pmprosm_values['list_sponsored_accounts'] === true) {
+			if ( ! empty( $member_ids ) ) {
+				$message .= "<hr />";
+				$message .= pmprosm_display_sponsored_accounts( $member_ids );
+			}
 		}
-		$message .= "</ul>";
-		$message .= "</div>";
 	}
 	return $message;
 }
@@ -1541,47 +1534,59 @@ function pmprosm_profile_fields_seats($user)
 			//get members
 			$member_ids = pmprosm_getChildren($user->ID);
 			if ( !empty( $member_ids) ) {
-				$count = 0;
-				?>
-				<hr />
-				<h3><?php _e("Sponsored Members", "pmpro_sponsored_members");?></h3>
-				<div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
-				<table class="wp-list-table widefat fixed" width="100%" cellpadding="0" cellspacing="0" border="0">
-				<thead>
-					<tr>						
-						<th><?php _e('Date', 'pmpro'); ?></th>
-						<th><?php _e('Name', 'pmpro'); ?></th>
-						<th><?php _e('Membership Level', 'pmpro'); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-						foreach($member_ids as $member_id)
-						{
-							$member = get_userdata($member_id);
-							$member->membership_level = pmpro_getMembershipLevelForUser($member_id);
-							if(empty($member)) {
-								continue;
-							}
-							?>
-							<tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
-								<td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
-								<td><a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->display_name; ?></a></td>
-								<td><?php echo $member->membership_level->name; ?></td>
-							</tr>
-							<?php
-						}
-					?>
-				</tbody>
-				</table>
-				</div>
-				<?php 
-			}					
+            // this was already in profile so don't restrict by 'list_sponsored_accounts' - Keep backward compatability
+                echo "<hr />";
+                echo pmprosm_display_sponsored_accounts($member_ids);
+			}
 	}
 }
 add_action('show_user_profile', 'pmprosm_profile_fields_seats');
 add_action('edit_user_profile', 'pmprosm_profile_fields_seats');
 
+function pmprosm_display_sponsored_accounts($member_ids) {
+
+    //make sure we have something to display
+	if ( empty( $member_ids) ) return '';
+	$count = 0;
+	ob_start();
+    ?>
+
+    <h3><?php _e("Sponsored Members", "pmpro_sponsored_members");?></h3>
+    <div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
+        <table class="wp-list-table widefat fixed" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <thead>
+            <tr>
+                <th><?php _e('Date', 'pmpro'); ?></th>
+                <th><?php _e('Name', 'pmpro'); ?></th>
+                <th><?php _e('Membership Level', 'pmpro'); ?></th>
+            </tr>
+            </thead>
+            <tbody>
+			<?php
+			foreach($member_ids as $member_id)
+			{
+				$member = get_userdata($member_id);
+				$member->membership_level = pmpro_getMembershipLevelForUser($member_id);
+				if(empty($member)) {
+					continue;
+				}
+				?>
+                <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
+                    <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
+                    <td><a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->display_name; ?></a></td>
+                    <td><?php echo $member->membership_level->name; ?></td>
+                </tr>
+				<?php
+			}
+			?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+	$content = ob_get_contents();
+	ob_end_clean();
+	return $content;
+}
 //save seats on profile save
 function pmprosm_profile_update_seats($user_id)
 {
@@ -1676,24 +1681,13 @@ function pmprosm_the_content_account_page($content)
 						<?php printf(__("%s/%s uses.", "pmpro_sponsored_members"), count($member_ids), $code->uses);?>
 					<?php } ?>
 				</div>
-				
-				<?php if(!empty($member_ids)) { ?>
-				<p><strong><?php __("Your Sponsored Members", "pmpro_sponsored_members");?></strong></p>
-				<ul>
 				<?php
-					
-					foreach($member_ids as $member_id)
-					{
-						$member = get_userdata($member_id);
-						if(empty($member))
-							continue;
-						?>
-						<li><?php echo $member->display_name;?></li>
-						<?php
-					}
-				?>
-				</ul>
-				<?php } ?>
+                    // use same account display as in admin
+                        if ( ! empty( $member_ids ) ) {
+                            echo "<hr />";
+                            echo pmprosm_display_sponsored_accounts( $member_ids );
+                        }
+                ?>
 			</div> <!-- end pmpro_account-sponsored -->
 			<?php
 			
