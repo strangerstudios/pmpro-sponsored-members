@@ -787,19 +787,31 @@ function pmprosm_pmpro_checkout_boxes()
 	{
 		return;
 	}
-	
+
+	$seat_cost = $pmprosm_values['seat_cost'];
+	$max_seats = $pmprosm_values['max_seats'];
+
 	//get seats from submit
 	if(isset($_REQUEST['seats']))
 		$seats = intval($_REQUEST['seats']);
 	elseif(!empty($current_user->ID))
 		$seats = get_user_meta($current_user->ID, "pmprosm_seats", true);
 	else
-		$seats = "";			
+		$seats = "0";	// leaving blank ('') causes this to be unlimited.
+
+	$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
 	?>
 	<div id="pmpro_extra_seats" class="pmpro_checkout">
 		<hr />
 		<h3>
-			<span class="pmpro_checkout-h3-name"><?php _e("Would you like to purchase extra seats?", "pmpro_sponsored_members");?></span>
+			<span class="pmpro_checkout-h3-name">
+                <?php if ($seat_cost > 0) {
+					_e("Would you like to purchase extra seat(s)?", "pmpro_sponsored_members");
+				} else {
+					_e("Would you like to create extra account(s)?", "pmpro_sponsored_members");
+				}
+				?>
+            </span>
 		</h3>
 		<div class="pmpro_checkout-fields">
 			<div class="pmpro_checkout-field class="pmpro_checkout-field-seats"">
@@ -813,10 +825,13 @@ function pmprosm_pmpro_checkout_boxes()
 						else
 							$min_seats = 1;
 
-						if(isset($pmprosm_values['seat_cost_text']))
-							printf(__("Enter a number from %d to %d. %s", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text']);
-						else
-							printf(__("Enter a number from %d to %d. +%s per extra seat.", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost']);
+                        if ($max_seats > 1) {
+                            if ( isset( $pmprosm_values['seat_cost_text'] ) ) {
+                                printf( __( "Enter a number from %d to %d. %s", "pmpro_sponsored_members" ), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text'] );
+                            } else {
+                                printf( __( "Enter a number from %d to %d. +%s per extra seat.", "pmpro_sponsored_members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost'] );
+                            }
+                        }
 					?>						
 				</p>					
 
@@ -824,7 +839,13 @@ function pmprosm_pmpro_checkout_boxes()
 				//adding sub accounts at checkout?
 				if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))
 				{
-					//look for existing sponsored accounts	
+					// add extra_seat_prompt_text
+					if(!empty($pmprosm_values['extra_seat_prompt_text'])) {
+						echo '<div class="pmpro_extra_seat_prompt">';
+						echo  $pmprosm_values['extra_seat_prompt_text'];
+						echo '</div>';
+					}
+					//look for existing sponsored accounts
 					$children = pmprosm_getChildren($current_user->ID);	
 					if(!empty($children))
 					{
@@ -926,7 +947,14 @@ function pmprosm_pmpro_checkout_boxes()
 					?>										
 					<div id="sponsored_account_<?php echo $i;?>">
 						<hr />
-						<?php if(!empty($pmprosm_values['children_get_name'])) { ?>
+                        <div><h3><?php echo $sponsored_level->name; _e(' account information.', 'pmprosm'); ?> </h3>
+                            <h4><?php if (isset($pmprosm_values['sponsored_header_text']))
+									echo $pmprosm_values['sponsored_header_text'];
+								else
+									_e('Please fill in following information and account(s) will be created.', 'pmprosm');
+								?></h4>
+                        </div>
+                        <?php if(!empty($pmprosm_values['children_get_name'])) { ?>
 							<label><?php echo __("First Name", "pmpro_sponsored_members");?></label>
 							<input type="text" name="add_sub_accounts_first_name[]" value="<?php echo esc_attr($child_first_name);?>" size="20" />
 							<br>
@@ -1033,9 +1061,10 @@ function pmprosm_pmpro_checkout_boxes()
 									i = children.length;
 
 									while (i < newseats)
-									{																
-										jQuery('#sponsored_accounts').append('<div id = "sponsored_account_'+i+'"><hr /><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])) { ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>');
-										i++;
+									{
+                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo $sponsored_level->name; _e(" account information # XXXX", "pmprosm"); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else _e("Please fill in following information and account(s) will be created.", "pmprosm");?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>';
+                                        newdiv = div.replace(/XXXX/g,i);
+                                        jQuery('#sponsored_accounts').append(newdiv);										i++;
 									}
 								}
 							}
