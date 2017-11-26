@@ -585,21 +585,41 @@ function pmprosm_pmpro_confirmation_message($message)
 			
 	if(!empty($code))
 	{
-		if(count($code_urls) > 1)
-			$message .= "<div class=\"pmpro_content_message\"><p>" . __("Give this code to your sponsored members to use at checkout:", "pmpro_sponsored_members") . " <strong>" . $code->code . "</strong></p><p>" . __("Or provide one of these direct links to register:", "pmpro_sponsored_members") . "<br /></p>";
-		else
-			$message .= "<div class=\"pmpro_content_message\"><p>" . __("Give this code to your sponsored members to use at checkout:", "pmpro_sponsored_members") . " <strong>" . $code->code . "</strong></p><p>" . __("Or provide this direct link to register:", "pmpro_sponsored_members") . "<br /></p>";
-			
-		$message .= "<ul>";
-			foreach($code_urls as $code_url)
+		if (empty($pmprosm_values['hide_display_discount_code']) || $pmprosm_values['hide_display_discount_code'] === false ) {
+
+			if ( count( $code_urls ) > 1 ) {
+				$message .= "<div class=\"pmpro_content_message\"><p>" . __( "Give this code to your sponsored members to use at checkout:", "pmpro_sponsored_members" ) . " <strong>" . $code->code . "</strong></p><p>" . __( "Or provide one of these direct links to register:", "pmpro_sponsored_members" ) . "<br /></p>";
+			} else {
+				$message .= "<div class=\"pmpro_content_message\"><p>" . __( "Give this code to your sponsored members to use at checkout:", "pmpro_sponsored_members" ) . " <strong>" . $code->code . "</strong></p><p>" . __( "Or provide this direct link to register:", "pmpro_sponsored_members" ) . "<br /></p>";
+			}
+
+			$message .= "<ul>";
+			foreach ( $code_urls as $code_url ) {
 				$message .= "<li>" . $code_url['name'] . ":<strong> " . $code_url['url'] . "</strong></li>";
+			}
+			$message .= "</ul>";
+
+			if ( empty( $code->uses ) ) {
+				$message .= __( "This code has unlimited uses.", "pmpro_sponsored_members" );
+			} else {
+				$message .= sprintf( __( "This code has %d uses.", "pmpro_sponsored_members" ), $code->uses );
+			}
+
+			$message .= "</div>";
+		}
+		$member_ids = pmprosm_getChildren($current_user->ID);
+		$message .= "<div>";
+		$message .= __("Here are the current sponsored members","pmpro_sponsored_members");
+		$message .= "<ul>";
+
+		foreach($member_ids as $member_id)
+		{
+			$member = get_userdata($member_id);
+			if(empty($member))
+				continue;
+			$message .= "<li>".$member->display_name . " ( ".$member->user_email." )</li>";
+		}
 		$message .= "</ul>";
-		
-		if(empty($code->uses))
-			$message .= __("This code has unlimited uses.", "pmpro_sponsored_members");
-		else
-			$message .= sprintf(__("This code has %d uses.", "pmpro_sponsored_members"), $code->uses);
-		
 		$message .= "</div>";
 	}
 	return $message;
@@ -1634,21 +1654,22 @@ function pmprosm_the_content_account_page($content)
 			<div id="pmpro_account-sponsored" class="pmpro_box">	
 				 
 				<h3><?php _e("Sponsored Members", "pmpro_sponsored_members");?></h3>
-				
-				<p><?php printf(__("Give this code to your sponsored members to use at checkout: <strong>%s</strong></p>", "pmpro_sponsored_members"), $code->code);?>
-				<?php if(count($code_urls) > 1) { ?>
-					<p><?php _e("Or provide one of these direct links to register:", "pmpro_sponsored_members");?></p>
-				<?php } else { ?>
-					<p><?php _e("Or provide this direct link to register:", "pmpro_sponsored_members");?></p>
-				<?php } ?>
-				
-				<ul>
-					<?php foreach($code_urls as $code_url) { ?>
-						<li><?php echo $code_url['name'];?>: <strong><a target="_blank" href="<?php echo $code_url['url'];?>"><?php echo $code_url['url'];?></a></strong></li>
-					<?php } ?>
-				</ul>
-				
-				<div class="pmpro_message pmpro_default">
+                <?php if (empty($pmprosm_values['hide_display_discount_code']) || $pmprosm_values['hide_display_discount_code'] === false ) { ?>
+                    <p><?php printf(__("Give this code to your sponsored members to use at checkout: <strong>%s</strong></p>", "pmpro_sponsored_members"), $code->code);?>
+                    <?php if(count($code_urls) > 1) { ?>
+                        <p><?php _e("Or provide one of these direct links to register:", "pmpro_sponsored_members");?></p>
+                    <?php } else { ?>
+                        <p><?php _e("Or provide this direct link to register:", "pmpro_sponsored_members");?></p>
+                    <?php } ?>
+
+                    <ul>
+                        <?php foreach($code_urls as $code_url) { ?>
+                            <li><?php echo $code_url['name'];?>: <strong><a target="_blank" href="<?php echo $code_url['url'];?>"><?php echo $code_url['url'];?></a></strong></li>
+                        <?php } ?>
+                    </ul>
+                <?php } // hide_display_discount_code ?>
+
+                <div class="pmpro_message pmpro_default">
 					<?php if(empty($code->uses)) { ?>
 						<?php _e("This code has unlimited uses.", "pmpro_sponsored_members");?>
 					<?php } else { ?>
@@ -1758,7 +1779,26 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 			//no uses for this code
 			if(empty($code->uses))
 				return $body;
-			
+
+			if(isset($pmprosm_values['add_created_accounts_to_confirmation_email']) && $pmprosm_values['add_created_accounts_to_confirmation_email'] === true) {
+				$children = pmprosm_getChildren($user_id);
+				if(!empty($children)) {
+					$message = "<p>" . __( "Accounts created at checkout:", "pmpro_sponsored_members" ) . "<br />";
+					$message .= "<ul>";
+					foreach ( $children as $child_id ) {
+						$child = get_userdata($child_id);
+						$message .= "<li>" . $child->display_name . " ( " . $child->user_email . " ) </li>";
+					}
+					$message .= "</ul>";
+
+					$body = $message . "<hr />" . $body;
+				}
+			}
+
+			//check if we should update confirmation email
+			if (isset($pmprosm_values['hide_display_discount_code']) && $pmprosm_values['hide_display_discount_code'] === true )
+				return $body;
+
 			//check if we should update confirmation email
 			if(isset($pmprosm_values['add_code_to_confirmation_email']) && $pmprosm_values['add_code_to_confirmation_email'] === false)
 				return $body;
