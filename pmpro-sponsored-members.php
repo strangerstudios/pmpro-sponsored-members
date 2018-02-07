@@ -1468,7 +1468,7 @@ add_action('init', 'pmprosm_init_load_session_vars', 5);
 function pmprosm_profile_fields_seats($user)
 {
 	global $wpdb;
-	if( current_user_can("manage_options") && !empty($user->membership_level) )
+	if( current_user_can("edit_users") && !empty($user->membership_level) )
 	{
 		?>
 		<hr />
