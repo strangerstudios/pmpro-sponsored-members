@@ -192,13 +192,15 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			//check for seats
 			if(isset($_REQUEST['seats']))
 				$uses = intval($_REQUEST['seats']);
+			elseif(isset($_SESSION['seats']))
+				$uses = intval($_SESSION['seats']);
 			elseif(!empty($pmprosm_values['seats']))
 				$uses = $pmprosm_values['seats'];
 			elseif(!empty($pmprosm_values['min_seats']))
 				$uses = $pmprosm_values['min_seats'];
 			else
 				$uses = "";
-			
+
 			//create a new code
 			pmprosm_createSponsorCode($user_id, $level_id, $uses);
 			
@@ -307,6 +309,8 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 	//update seats for code
 	if(isset($_REQUEST['seats']))			
 		$seats = intval($_REQUEST['seats']);
+	elseif(isset($_SESSION['seats']))
+		$seats = intval($_SESSION['seats']);
 	elseif(!empty($pmprosm_values['seats']))
 		$seats = $pmprosm_values['seats'];
 	else
