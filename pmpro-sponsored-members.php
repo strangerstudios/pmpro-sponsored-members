@@ -1600,7 +1600,7 @@ function pmprosm_the_content_account_page($content)
 		if(!empty($code_id) && !empty($pmprosm_values))
 		{			
 			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
-			
+		
 			if(!is_array($pmprosm_values['sponsored_level_id']))
 				$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
 			else
@@ -1615,11 +1615,13 @@ function pmprosm_the_content_account_page($content)
 				return $content;
 			
 			$code_urls = array();
-			$pmpro_levels = pmpro_getAllLevels(false, true);
-			foreach($sponsored_level_ids as $sponsored_level_id)
-			{
-				$level_name = $pmpro_levels[$sponsored_level_id]->name;
-				$code_urls[] = array("name"=>$level_name, "url"=>pmpro_url("checkout", "?level=" . $sponsored_level_id . "&discount_code=" . $code->code));
+
+			$sql_code = "SELECT level_id, name FROM $wpdb->pmpro_discount_codes_levels c INNER JOIN $wpdb->pmpro_membership_levels l ON c.level_id = l.id WHERE c.code_id =" . esc_sql( $code->id );
+
+			$levels_id = $wpdb->get_results( $sql_code );
+		
+			foreach ($levels_id as $value ) {
+				$code_urls[] = array( "name"=> $value->name, "url"=>pmpro_url("checkout", "?level=" . $value->level_id . "&discount_code=" . $code->code ) );
 			}
 					
 			ob_start();
