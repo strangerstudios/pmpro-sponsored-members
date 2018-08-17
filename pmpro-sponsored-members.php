@@ -318,11 +318,13 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 	//activate/deactivate old accounts
 	if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))
 	{
-		if(isset($_REQUEST['old_sub_accounts_active']))
+		// cannot rely on old_sub_accounts_active to be set.  May have old accounts, but may only create new ones
+		// so we need to deactivate old accounts.
+		$children = pmprosm_getChildren($user_id);
+		if($children)
 		{		
 			$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];						
-			$children = pmprosm_getChildren($user_id);
-						
+
 			for($i = 0; $i < count($children); $i++)
 			{
 				if(in_array($children[$i], $old_sub_accounts_active))
@@ -363,10 +365,20 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 					
 					//okay give them that level back
 					if(in_array($last_level_id, $pmprosm_values['sponsored_level_id']))
-						pmprosm_changeMembershipLevelWithCode($last_level_id, $sub_user_id, $code_id);
+						if(pmprosm_changeMembershipLevelWithCode( $last_level_id, $sub_user_id, $code_id ))
+						{
+							//  update code Use with new order
+							pmprosm_removeDiscountCodeUse($sub_user_id, $code_id);
+							pmprosm_addDiscountCodeUse($sub_user_id, $last_level_id, $code_id);
+						}
 				}
 				else
-					pmprosm_changeMembershipLevelWithCode($pmprosm_values['sponsored_level_id'], $sub_user_id, $code_id);
+					if(pmprosm_changeMembershipLevelWithCode( $pmprosm_values['sponsored_level_id'], $sub_user_id, $code_id ))
+					{
+						// update code Use with new order
+						pmprosm_removeDiscountCodeUse($sub_user_id, $code_id);
+						pmprosm_addDiscountCodeUse($sub_user_id, $pmprosm_values['sponsored_level_id'], $code_id);
+					}
 			}
 		}
 		else
@@ -486,6 +498,14 @@ function pmprosm_getChildren($user_id = NULL) {
     if(!empty($code_id))
         $children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = $code_id AND status = 'active'");
 
+	// if sponsor account is expired or cancelled then children accounts are no longer active.
+	//
+	//  So we can get a list of old children accounts by getting all the uses of the discount code
+
+	if (empty($children)) {
+		$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
+		$children = $wpdb->get_col($sqlQuery);
+	}
     return $children;
 }
 
@@ -883,16 +903,19 @@ function pmprosm_pmpro_checkout_boxes()
 							<?php 
 								//get user
 								$child = get_userdata($child_id);
+                                if ($child === false)
+                                   continue;  //user does not exist, so skip it.
 
-								//acive?
+							//acive?
 								if(pmpro_hasMembershipLevel(NULL, $child_id))
 									$active = true;
 								else
 									$active = false;
 
 								//checked?
-								if(isset($old_sub_accounts_active[$i]))
-									$checked = $old_sub_accounts_active[$i];
+                            // can't assume order of old_sub_accounts_active
+							if(in_array($child_id, $old_sub_accounts_active))
+									$checked = true;
 								else
 									$checked = $active;
 							?>
@@ -1284,6 +1307,69 @@ function pmprosm_pmpro_after_checkout($user_id)
 	}
 }
 add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout");
+function pmprosm_after_checkout_children_updated($user_id) {
+	global $current_user, $pmprosm_sponsored_account_levels, $pmpro_level;
+
+	if(!empty($pmpro_level))
+		$level_id = $pmpro_level->id;
+    elseif(!empty($_REQUEST['level']))
+		$level_id = intval($_REQUEST['level']);
+	else
+		$level_id = false;
+
+	if(empty($level_id))
+		return;
+
+	$parent_level = pmprosm_getValuesByMainLevel($level_id);
+
+	if(!empty($parent_level['sponsored_accounts_at_checkout'])) {
+		$children = pmprosm_getChildren($user_id);
+		if ($children) {
+			//get last order
+			$parentOrder = new MemberOrder();
+			$parentOrder->getLastMemberOrder( $user_id, "success" );
+
+			$sponsor_code_id = pmprosm_getCodeByUserID( $user_id );
+			foreach ($children as $child_user_id) {
+
+				$order_id = pmprosm_getOrderByCodeUser( $sponsor_code_id, $child_user_id );
+
+				if ( ! empty( $order_id ) ) {
+					$invoice = new MemberOrder( $order_id );
+
+					//set some child order fields to match parents
+					$invoice->billing->name    = $parentOrder->billing->name;
+					$invoice->billing->street  = $parentOrder->billing->street;
+					$invoice->billing->city    = $parentOrder->billing->city;
+					$invoice->billing->state   = $parentOrder->billing->state;
+					$invoice->billing->zip     = $parentOrder->billing->zip;
+					$invoice->billing->country = $parentOrder->billing->country;
+					$invoice->billing->phone   = $parentOrder->billing->phone;
+					$invoice->status           = $parentOrder->status;
+					$invoice->saveOrder();
+				} else {
+					$invoice = null;
+				}
+
+				$sendemails = apply_filters( "pmpro_send_checkout_emails", true );
+
+				if ( $sendemails ) { // Send the e-mails only if the flag is set to true
+					$child_user                   = get_userdata( $child_user_id );
+					$child_user->membership_level = pmpro_getMembershipLevelForUser( $child_user_id );
+
+					//send email to member
+					$pmproemail = new PMProEmail();
+					$pmproemail->sendCheckoutEmail( $child_user, $invoice );
+
+					//send email to admin
+					$pmproemail = new PMProEmail();
+					$pmproemail->sendCheckoutAdminEmail( $child_user, $invoice );
+				}
+			}
+		}
+	}
+}
+add_action("pmpro_after_checkout", "pmprosm_after_checkout_children_updated",30,1);
 
 //change a user's level and also set the code_id
 function pmprosm_changeMembershipLevelWithCode($level_id, $user_id, $code_id)
@@ -1310,7 +1396,15 @@ function pmprosm_changeMembershipLevelWithCode($level_id, $user_id, $code_id)
 		
 	return pmpro_changeMembershipLevel($custom_level, $user_id);
 }
+// get order_id from code_id & user_id
+function pmprosm_getOrderByCodeUser($code_id, $user_id) {
+	global $wpdb;
 
+	$sqlQuery = "SELECT order_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . $user_id . "' AND code_id = '".$code_id."' ";
+	$order_id = $wpdb->get_var($sqlQuery);
+	return $order_id;
+
+}
 //add a row to pmpro_discount_codes_uses with a blank order
 function pmprosm_addDiscountCodeUse($user_id, $level_id, $code_id)
 {
