@@ -192,13 +192,15 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			//check for seats
 			if(isset($_REQUEST['seats']))
 				$uses = intval($_REQUEST['seats']);
+			elseif(isset($_SESSION['seats']))
+				$uses = intval($_SESSION['seats']);
 			elseif(!empty($pmprosm_values['seats']))
 				$uses = $pmprosm_values['seats'];
 			elseif(!empty($pmprosm_values['min_seats']))
 				$uses = $pmprosm_values['min_seats'];
 			else
 				$uses = "";
-			
+
 			//create a new code
 			pmprosm_createSponsorCode($user_id, $level_id, $uses);
 			
@@ -307,6 +309,8 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 	//update seats for code
 	if(isset($_REQUEST['seats']))			
 		$seats = intval($_REQUEST['seats']);
+	elseif(isset($_SESSION['seats']))
+		$seats = intval($_SESSION['seats']);
 	elseif(!empty($pmprosm_values['seats']))
 		$seats = $pmprosm_values['seats'];
 	else
@@ -318,11 +322,13 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 	//activate/deactivate old accounts
 	if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))
 	{
-		if(isset($_REQUEST['old_sub_accounts_active']))
+		// cannot rely on old_sub_accounts_active to be set.  May have old accounts, but may only create new ones
+		// so we need to deactivate old accounts.
+		$children = pmprosm_getChildren($user_id);
+		if($children)
 		{		
 			$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];						
-			$children = pmprosm_getChildren($user_id);
-						
+
 			for($i = 0; $i < count($children); $i++)
 			{
 				if(in_array($children[$i], $old_sub_accounts_active))
@@ -340,7 +346,10 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 			}			
 		}
 	}
-	
+
+	// if old sub accounts cancelled above from user request and "sponsored_accounts_at_checkout"
+	//   then old accounts to deactivate should be gone so ok to drop into this code.
+	// if not sponsored_accounts_at_checkout then
 	//see if we should enable some accounts
 	$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
 	$sub_user_ids = $wpdb->get_col($sqlQuery);
@@ -363,10 +372,20 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 					
 					//okay give them that level back
 					if(in_array($last_level_id, $pmprosm_values['sponsored_level_id']))
-						pmprosm_changeMembershipLevelWithCode($last_level_id, $sub_user_id, $code_id);
+						if(pmprosm_changeMembershipLevelWithCode( $last_level_id, $sub_user_id, $code_id ))
+						{
+							//  update code Use with new order
+							pmprosm_removeDiscountCodeUse($sub_user_id, $code_id);
+							pmprosm_addDiscountCodeUse($sub_user_id, $last_level_id, $code_id);
+						}
 				}
 				else
-					pmprosm_changeMembershipLevelWithCode($pmprosm_values['sponsored_level_id'], $sub_user_id, $code_id);
+					if(pmprosm_changeMembershipLevelWithCode( $pmprosm_values['sponsored_level_id'], $sub_user_id, $code_id ))
+					{
+						// update code Use with new order
+						pmprosm_removeDiscountCodeUse($sub_user_id, $code_id);
+						pmprosm_addDiscountCodeUse($sub_user_id, $pmprosm_values['sponsored_level_id'], $code_id);
+					}
 			}
 		}
 		else
@@ -486,6 +505,14 @@ function pmprosm_getChildren($user_id = NULL) {
     if(!empty($code_id))
         $children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = $code_id AND status = 'active'");
 
+	// if sponsor account is expired or cancelled then children accounts are no longer active.
+	//
+	//  So we can get a list of old children accounts by getting all the uses of the discount code
+
+	if (empty($children)) {
+		$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
+		$children = $wpdb->get_col($sqlQuery);
+	}
     return $children;
 }
 
@@ -585,22 +612,35 @@ function pmprosm_pmpro_confirmation_message($message)
 			
 	if(!empty($code))
 	{
-		if(count($code_urls) > 1)
-			$message .= "<div class=\"pmpro_content_message\"><p>" . __("Give this code to your sponsored members to use at checkout:", "pmpro_sponsored_members") . " <strong>" . $code->code . "</strong></p><p>" . __("Or provide one of these direct links to register:", "pmpro_sponsored_members") . "<br /></p>";
-		else
-			$message .= "<div class=\"pmpro_content_message\"><p>" . __("Give this code to your sponsored members to use at checkout:", "pmpro_sponsored_members") . " <strong>" . $code->code . "</strong></p><p>" . __("Or provide this direct link to register:", "pmpro_sponsored_members") . "<br /></p>";
-			
-		$message .= "<ul>";
-			foreach($code_urls as $code_url)
+		if (empty($pmprosm_values['hide_display_discount_code']) || $pmprosm_values['hide_display_discount_code'] === false ) {
+
+			if ( count( $code_urls ) > 1 ) {
+				$message .= "<div class=\"pmpro_content_message\"><p>" . __( "Give this code to your sponsored members to use at checkout:", "pmpro_sponsored_members" ) . " <strong>" . $code->code . "</strong></p><p>" . __( "Or provide one of these direct links to register:", "pmpro_sponsored_members" ) . "<br /></p>";
+			} else {
+				$message .= "<div class=\"pmpro_content_message\"><p>" . __( "Give this code to your sponsored members to use at checkout:", "pmpro_sponsored_members" ) . " <strong>" . $code->code . "</strong></p><p>" . __( "Or provide this direct link to register:", "pmpro_sponsored_members" ) . "<br /></p>";
+			}
+
+			$message .= "<ul>";
+			foreach ( $code_urls as $code_url ) {
 				$message .= "<li>" . $code_url['name'] . ":<strong> " . $code_url['url'] . "</strong></li>";
-		$message .= "</ul>";
-		
-		if(empty($code->uses))
-			$message .= __("This code has unlimited uses.", "pmpro_sponsored_members");
-		else
-			$message .= sprintf(__("This code has %d uses.", "pmpro_sponsored_members"), $code->uses);
-		
-		$message .= "</div>";
+			}
+			$message .= "</ul>";
+
+			if ( empty( $code->uses ) ) {
+				$message .= __( "This code has unlimited uses.", "pmpro_sponsored_members" );
+			} else {
+				$message .= sprintf( __( "This code has %d uses.", "pmpro_sponsored_members" ), $code->uses );
+			}
+
+			$message .= "</div>";
+		}
+        $member_ids = pmprosm_getChildren( $current_user->ID );
+		if (isset($pmprosm_values['list_sponsored_accounts']) && $pmprosm_values['list_sponsored_accounts'] === true) {
+			if ( ! empty( $member_ids ) ) {
+				$message .= "<hr />";
+				$message .= pmprosm_display_sponsored_accounts( $member_ids );
+			}
+		}
 	}
 	return $message;
 }
@@ -787,36 +827,56 @@ function pmprosm_pmpro_checkout_boxes()
 	{
 		return;
 	}
-	
+
+	$seat_cost = $pmprosm_values['seat_cost'];
+	$max_seats = $pmprosm_values['max_seats'];
+
 	//get seats from submit
 	if(isset($_REQUEST['seats']))
 		$seats = intval($_REQUEST['seats']);
 	elseif(!empty($current_user->ID))
 		$seats = get_user_meta($current_user->ID, "pmprosm_seats", true);
-	else
-		$seats = "";			
+    else
+        $seats = "";
+
+    if(isset($pmprosm_values['seats']) && $seats == "")
+        $seats = $pmprosm_values['seats'];
+
+	if ($seats == "") $seats = 0; 	// leaving blank ('') causes this to be unlimited.
+
+	$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
 	?>
 	<div id="pmpro_extra_seats" class="pmpro_checkout">
 		<hr />
 		<h3>
-			<span class="pmpro_checkout-h3-name"><?php _e("Would you like to purchase extra seats?", "pmpro_sponsored_members");?></span>
+			<span class="pmpro_checkout-h3-name">
+                <?php if ($seat_cost > 0) {
+					_e("Would you like to purchase extra seat(s)?", "pmpro_sponsored_members");
+				} else {
+					_e("Would you like to create extra account(s)?", "pmpro_sponsored_members");
+				}
+				?>
+            </span>
 		</h3>
 		<div class="pmpro_checkout-fields">
 			<div class="pmpro_checkout-field class="pmpro_checkout-field-seats"">
 				<label for="seats"><?php echo __('Number of Seats', 'pmpro_sponsored_members');?></label>
 				<input type="text" id="seats" name="seats" value="<?php echo esc_attr($seats);?>" size="10" />
 				<p class="pmpro_small">
-					<?php							
-						//min seats defaults to 1
-						if(!empty($pmprosm_values['min_seats']))
-							$min_seats = $pmprosm_values['min_seats'];
-						else
-							$min_seats = 1;
+					<?php
+                        //min seats defaults to 1
+                        if(!empty($pmprosm_values['min_seats']))
+                            $min_seats = $pmprosm_values['min_seats'];
+                        else
+                            $min_seats = 1;
 
-						if(isset($pmprosm_values['seat_cost_text']))
-							printf(__("Enter a number from %d to %d. %s", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text']);
-						else
-							printf(__("Enter a number from %d to %d. +%s per extra seat.", "pmpro_sponsored_members"), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost']);
+                        if ($max_seats > 1) {
+                            if ( isset( $pmprosm_values['seat_cost_text'] ) ) {
+                                printf( __( "Enter a number from %d to %d. %s", "pmpro_sponsored_members" ), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text'] );
+                            } else {
+                                printf( __( "Enter a number from %d to %d. +%s per extra seat.", "pmpro_sponsored_members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost'] );
+                            }
+                        }
 					?>						
 				</p>					
 
@@ -824,7 +884,13 @@ function pmprosm_pmpro_checkout_boxes()
 				//adding sub accounts at checkout?
 				if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))
 				{
-					//look for existing sponsored accounts	
+					// add extra_seat_prompt_text
+					if(!empty($pmprosm_values['extra_seat_prompt_text'])) {
+						echo '<div id="pmpro_extra_seat_prompt">';
+						echo  $pmprosm_values['extra_seat_prompt_text'];
+						echo '</div>';
+					}
+					//look for existing sponsored accounts
 					$children = pmprosm_getChildren($current_user->ID);	
 					if(!empty($children))
 					{
@@ -844,16 +910,19 @@ function pmprosm_pmpro_checkout_boxes()
 							<?php 
 								//get user
 								$child = get_userdata($child_id);
+                                if ($child === false)
+                                   continue;  //user does not exist, so skip it.
 
-								//acive?
+							//acive?
 								if(pmpro_hasMembershipLevel(NULL, $child_id))
 									$active = true;
 								else
 									$active = false;
 
 								//checked?
-								if(isset($old_sub_accounts_active[$i]))
-									$checked = $old_sub_accounts_active[$i];
+                            // can't assume order of old_sub_accounts_active
+							if(in_array($child_id, $old_sub_accounts_active))
+									$checked = true;
 								else
 									$checked = $active;
 							?>
@@ -926,7 +995,14 @@ function pmprosm_pmpro_checkout_boxes()
 					?>										
 					<div id="sponsored_account_<?php echo $i;?>">
 						<hr />
-						<?php if(!empty($pmprosm_values['children_get_name'])) { ?>
+                        <div><h3><?php echo $sponsored_level->name; _e(' account information.', 'pmprosm'); ?> </h3>
+                            <h4><?php if (isset($pmprosm_values['sponsored_header_text']))
+									echo $pmprosm_values['sponsored_header_text'];
+								else
+									_e('Please fill in following information and account(s) will be created.', 'pmprosm');
+								?></h4>
+                        </div>
+                        <?php if(!empty($pmprosm_values['children_get_name'])) { ?>
 							<label><?php echo __("First Name", "pmpro_sponsored_members");?></label>
 							<input type="text" name="add_sub_accounts_first_name[]" value="<?php echo esc_attr($child_first_name);?>" size="20" />
 							<br>
@@ -1011,7 +1087,13 @@ function pmprosm_pmpro_checkout_boxes()
 							//how many child seats are shown now (if sponsored_accounts_at_checkout is set)							
 							if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))		
 							{
+
 							?>
+                            if( seats > 0) {
+                                jQuery('#pmpro_extra_seat_prompt').show();
+                            } else {
+                                jQuery('#pmpro_extra_seat_prompt').hide();
+                            }
 							if(jQuery('#sponsored_accounts'))
 							{
 								children = jQuery('#sponsored_accounts').children();											
@@ -1033,9 +1115,10 @@ function pmprosm_pmpro_checkout_boxes()
 									i = children.length;
 
 									while (i < newseats)
-									{																
-										jQuery('#sponsored_accounts').append('<div id = "sponsored_account_'+i+'"><hr /><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])) { ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>');
-										i++;
+									{
+                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo $sponsored_level->name; _e(" account information # XXXX", "pmprosm"); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else _e("Please fill in following information and account(s) will be created.", "pmprosm");?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>';
+                                        newdiv = div.replace(/XXXX/g,i);
+                                        jQuery('#sponsored_accounts').append(newdiv);										i++;
 									}
 								}
 							}
@@ -1231,6 +1314,69 @@ function pmprosm_pmpro_after_checkout($user_id)
 	}
 }
 add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout");
+function pmprosm_after_checkout_children_updated($user_id) {
+	global $current_user, $pmprosm_sponsored_account_levels, $pmpro_level;
+
+	if(!empty($pmpro_level))
+		$level_id = $pmpro_level->id;
+    elseif(!empty($_REQUEST['level']))
+		$level_id = intval($_REQUEST['level']);
+	else
+		$level_id = false;
+
+	if(empty($level_id))
+		return;
+
+	$parent_level = pmprosm_getValuesByMainLevel($level_id);
+
+	if(!empty($parent_level['sponsored_accounts_at_checkout'])) {
+		$children = pmprosm_getChildren($user_id);
+		if ($children) {
+			//get last order
+			$parentOrder = new MemberOrder();
+			$parentOrder->getLastMemberOrder( $user_id, "success" );
+
+			$sponsor_code_id = pmprosm_getCodeByUserID( $user_id );
+			foreach ($children as $child_user_id) {
+
+				$order_id = pmprosm_getOrderByCodeUser( $sponsor_code_id, $child_user_id );
+
+				if ( ! empty( $order_id ) ) {
+					$invoice = new MemberOrder( $order_id );
+
+					//set some child order fields to match parents
+					$invoice->billing->name    = $parentOrder->billing->name;
+					$invoice->billing->street  = $parentOrder->billing->street;
+					$invoice->billing->city    = $parentOrder->billing->city;
+					$invoice->billing->state   = $parentOrder->billing->state;
+					$invoice->billing->zip     = $parentOrder->billing->zip;
+					$invoice->billing->country = $parentOrder->billing->country;
+					$invoice->billing->phone   = $parentOrder->billing->phone;
+					$invoice->status           = $parentOrder->status;
+					$invoice->saveOrder();
+				} else {
+					$invoice = null;
+				}
+
+				$sendemails = apply_filters( "pmpro_send_checkout_emails", true );
+
+				if ( $sendemails ) { // Send the e-mails only if the flag is set to true
+					$child_user                   = get_userdata( $child_user_id );
+					$child_user->membership_level = pmpro_getMembershipLevelForUser( $child_user_id );
+
+					//send email to member
+					$pmproemail = new PMProEmail();
+					$pmproemail->sendCheckoutEmail( $child_user, $invoice );
+
+					//send email to admin
+					$pmproemail = new PMProEmail();
+					$pmproemail->sendCheckoutAdminEmail( $child_user, $invoice );
+				}
+			}
+		}
+	}
+}
+add_action("pmpro_after_checkout", "pmprosm_after_checkout_children_updated",30,1);
 
 //change a user's level and also set the code_id
 function pmprosm_changeMembershipLevelWithCode($level_id, $user_id, $code_id)
@@ -1257,7 +1403,15 @@ function pmprosm_changeMembershipLevelWithCode($level_id, $user_id, $code_id)
 		
 	return pmpro_changeMembershipLevel($custom_level, $user_id);
 }
+// get order_id from code_id & user_id
+function pmprosm_getOrderByCodeUser($code_id, $user_id) {
+	global $wpdb;
 
+	$sqlQuery = "SELECT order_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . $user_id . "' AND code_id = '".$code_id."' ";
+	$order_id = $wpdb->get_var($sqlQuery);
+	return $order_id;
+
+}
 //add a row to pmpro_discount_codes_uses with a blank order
 function pmprosm_addDiscountCodeUse($user_id, $level_id, $code_id)
 {
@@ -1362,6 +1516,16 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
 		pmpro_setMessage(__("You have more accounts checked than you are purchasing seats. Increase the number of seats or deactivate some accounts."),"pmpro_error");
 		$okay = false;
 	}
+    elseif(isset($_REQUEST['username']) && in_array($_REQUEST['username'],$child_usernames))
+	{
+		pmpro_setMessage(__("A sponsored account must have a different username than the main account."),"pmpro_error");
+		$okay = false;
+	}
+    elseif(isset($_REQUEST['bemail']) && in_array($_REQUEST['bemail'],$child_emails))
+	{
+		pmpro_setMessage(__("A sponsored account must have a different email than the main account."),"pmpro_error");
+		$okay = false;
+	}
 	else
 	{	
 		foreach($child_usernames as $child_username)
@@ -1428,6 +1592,10 @@ function pmprosm_pmpro_paypalexpress_session_vars()
 		$_SESSION['add_sub_accounts_last_name'] = $_REQUEST['add_sub_accounts_last_name'];
 	else
 		$_SESSION['add_sub_accounts_last_name'] = "";
+	if(!empty($_REQUEST['old_sub_accounts_active']))
+		$_SESSION['old_sub_accounts_active'] = $_REQUEST['old_sub_accounts_active'];
+	else
+		$_SESSION['old_sub_accounts_active'] = "";
 }
 add_action("pmpro_paypalexpress_session_vars", "pmprosm_pmpro_paypalexpress_session_vars");
 add_action("pmpro_before_send_to_twocheckout", "pmprosm_pmpro_paypalexpress_session_vars", 10, 2);
@@ -1438,26 +1606,37 @@ function pmprosm_init_load_session_vars($param)
 	if(empty($_REQUEST['seats']) && !empty($_SESSION['seats']))
 	{
 		$_REQUEST['seats'] = $_SESSION['seats'];
+		unset($_SESSION['seats']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_username']) && !empty($_SESSION['add_sub_accounts_username']))
 	{
 		$_REQUEST['add_sub_accounts_username'] = $_SESSION['add_sub_accounts_username'];
+		unset($_SESSION['add_sub_accounts_username']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_password']) && !empty($_SESSION['add_sub_accounts_password']))
 	{
 		$_REQUEST['add_sub_accounts_password'] = $_SESSION['add_sub_accounts_password'];
+		unset($_SESSION['add_sub_accounts_password']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_email']) && !empty($_SESSION['add_sub_accounts_email']))
 	{
 		$_REQUEST['add_sub_accounts_email'] = $_SESSION['add_sub_accounts_email'];
+		unset($_SESSION['add_sub_accounts_email']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_first_name']) && !empty($_SESSION['add_sub_accounts_first_name']))
 	{
 		$_REQUEST['add_sub_accounts_first_name'] = $_SESSION['add_sub_accounts_first_name'];
+		unset($_SESSION['add_sub_accounts_first_name']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_last_name']) && !empty($_SESSION['add_sub_accounts_last_name']))
 	{
 		$_REQUEST['add_sub_accounts_last_name'] = $_SESSION['add_sub_accounts_last_name'];
+		unset($_SESSION['add_sub_accounts_last_name']);
+	}
+	if(empty($_REQUEST['old_sub_accounts_active']) && !empty($_SESSION['old_sub_accounts_active']))
+	{
+		$_REQUEST['old_sub_accounts_active'] = $_SESSION['old_sub_accounts_active'];
+		unset($_SESSION['old_sub_accounts_active']);
 	}
 
 	return $param;
@@ -1468,7 +1647,7 @@ add_action('init', 'pmprosm_init_load_session_vars', 5);
 function pmprosm_profile_fields_seats($user)
 {
 	global $wpdb;
-	if( current_user_can("manage_options") && !empty($user->membership_level) )
+	if( current_user_can("edit_users") && !empty($user->membership_level) )
 	{
 		?>
 		<hr />
@@ -1521,47 +1700,61 @@ function pmprosm_profile_fields_seats($user)
 			//get members
 			$member_ids = pmprosm_getChildren($user->ID);
 			if ( !empty( $member_ids) ) {
-				$count = 0;
-				?>
-				<hr />
-				<h3><?php _e("Sponsored Members", "pmpro_sponsored_members");?></h3>
-				<div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
-				<table class="wp-list-table widefat fixed" width="100%" cellpadding="0" cellspacing="0" border="0">
-				<thead>
-					<tr>						
-						<th><?php _e('Date', 'pmpro'); ?></th>
-						<th><?php _e('Name', 'pmpro'); ?></th>
-						<th><?php _e('Membership Level', 'pmpro'); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-						foreach($member_ids as $member_id)
-						{
-							$member = get_userdata($member_id);
-							$member->membership_level = pmpro_getMembershipLevelForUser($member_id);
-							if(empty($member)) {
-								continue;
-							}
-							?>
-							<tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
-								<td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
-								<td><a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->display_name; ?></a></td>
-								<td><?php echo $member->membership_level->name; ?></td>
-							</tr>
-							<?php
-						}
-					?>
-				</tbody>
-				</table>
-				</div>
-				<?php 
-			}					
+            // this was already in profile so don't restrict by 'list_sponsored_accounts' - Keep backward compatability
+                echo "<hr />";
+                echo pmprosm_display_sponsored_accounts($member_ids);
+			}
 	}
 }
 add_action('show_user_profile', 'pmprosm_profile_fields_seats');
 add_action('edit_user_profile', 'pmprosm_profile_fields_seats');
 
+function pmprosm_display_sponsored_accounts($member_ids) {
+
+    //make sure we have something to display
+	if ( empty( $member_ids) ) return '';
+	$count = 0;
+	ob_start();
+    ?>
+
+    <h3><?php _e("Sponsored Members", "pmpro_sponsored_members");?></h3>
+    <div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
+        <table class="wp-list-table widefat fixed" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <thead>
+            <tr>
+                <th><?php _e('Date', 'pmpro'); ?></th>
+                <th><?php _e('Name', 'pmpro'); ?></th>
+                <th><?php _e('Email', 'pmpro'); ?></th>
+                <th><?php _e('Membership Level', 'pmpro'); ?></th>
+            </tr>
+            </thead>
+            <tbody>
+			<?php
+			foreach($member_ids as $member_id)
+			{
+				$member = get_userdata($member_id);
+				$member->membership_level = pmpro_getMembershipLevelForUser($member_id);
+				if(empty($member)) {
+					continue;
+				}
+				?>
+                <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
+                    <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
+                    <td><a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->display_name; ?></a></td>
+                    <td><?php echo $member->user_email; ?></td>
+                    <td><?php echo $member->membership_level->name; ?></td>
+                </tr>
+				<?php
+			}
+			?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+	$content = ob_get_contents();
+	ob_end_clean();
+	return $content;
+}
 //save seats on profile save
 function pmprosm_profile_update_seats($user_id)
 {
@@ -1629,45 +1822,35 @@ function pmprosm_the_content_account_page($content)
 			<div id="pmpro_account-sponsored" class="pmpro_box">	
 				 
 				<h3><?php _e("Sponsored Members", "pmpro_sponsored_members");?></h3>
-				
-				<p><?php printf(__("Give this code to your sponsored members to use at checkout: <strong>%s</strong></p>", "pmpro_sponsored_members"), $code->code);?>
-				<?php if(count($code_urls) > 1) { ?>
-					<p><?php _e("Or provide one of these direct links to register:", "pmpro_sponsored_members");?></p>
-				<?php } else { ?>
-					<p><?php _e("Or provide this direct link to register:", "pmpro_sponsored_members");?></p>
-				<?php } ?>
-				
-				<ul>
-					<?php foreach($code_urls as $code_url) { ?>
-						<li><?php echo $code_url['name'];?>: <strong><a target="_blank" href="<?php echo $code_url['url'];?>"><?php echo $code_url['url'];?></a></strong></li>
-					<?php } ?>
-				</ul>
-				
-				<div class="pmpro_message pmpro_default">
+                <?php if (empty($pmprosm_values['hide_display_discount_code']) || $pmprosm_values['hide_display_discount_code'] === false ) { ?>
+                    <p><?php printf(__("Give this code to your sponsored members to use at checkout: <strong>%s</strong></p>", "pmpro_sponsored_members"), $code->code);?>
+                    <?php if(count($code_urls) > 1) { ?>
+                        <p><?php _e("Or provide one of these direct links to register:", "pmpro_sponsored_members");?></p>
+                    <?php } else { ?>
+                        <p><?php _e("Or provide this direct link to register:", "pmpro_sponsored_members");?></p>
+                    <?php } ?>
+
+                    <ul>
+                        <?php foreach($code_urls as $code_url) { ?>
+                            <li><?php echo $code_url['name'];?>: <strong><a target="_blank" href="<?php echo $code_url['url'];?>"><?php echo $code_url['url'];?></a></strong></li>
+                        <?php } ?>
+                    </ul>
+                <?php } // hide_display_discount_code ?>
+
+                <div class="pmpro_message pmpro_default">
 					<?php if(empty($code->uses)) { ?>
 						<?php _e("This code has unlimited uses.", "pmpro_sponsored_members");?>
 					<?php } else { ?>
 						<?php printf(__("%s/%s uses.", "pmpro_sponsored_members"), count($member_ids), $code->uses);?>
 					<?php } ?>
 				</div>
-				
-				<?php if(!empty($member_ids)) { ?>
-				<p><strong><?php __("Your Sponsored Members", "pmpro_sponsored_members");?></strong></p>
-				<ul>
 				<?php
-					
-					foreach($member_ids as $member_id)
-					{
-						$member = get_userdata($member_id);
-						if(empty($member))
-							continue;
-						?>
-						<li><?php echo $member->display_name;?></li>
-						<?php
-					}
-				?>
-				</ul>
-				<?php } ?>
+                    // use same account display as in admin
+                        if ( ! empty( $member_ids ) ) {
+                            echo "<hr />";
+                            echo pmprosm_display_sponsored_accounts( $member_ids );
+                        }
+                ?>
 			</div> <!-- end pmpro_account-sponsored -->
 			<?php
 			
@@ -1753,7 +1936,26 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 			//no uses for this code
 			if(empty($code->uses))
 				return $body;
-			
+
+			if(isset($pmprosm_values['add_created_accounts_to_confirmation_email']) && $pmprosm_values['add_created_accounts_to_confirmation_email'] === true) {
+				$children = pmprosm_getChildren($user_id);
+				if(!empty($children)) {
+					$message = "<p>" . __( "Accounts created at checkout:", "pmpro_sponsored_members" ) . "<br />";
+					$message .= "<ul>";
+					foreach ( $children as $child_id ) {
+						$child = get_userdata($child_id);
+						$message .= "<li>" . $child->display_name . " ( " . $child->user_email . " ) </li>";
+					}
+					$message .= "</ul>";
+
+					$body = $message . "<hr />" . $body;
+				}
+			}
+
+			//check if we should update confirmation email
+			if (isset($pmprosm_values['hide_display_discount_code']) && $pmprosm_values['hide_display_discount_code'] === true )
+				return $body;
+
 			//check if we should update confirmation email
 			if(isset($pmprosm_values['add_code_to_confirmation_email']) && $pmprosm_values['add_code_to_confirmation_email'] === false)
 				return $body;
@@ -1804,7 +2006,6 @@ function pmprosm_plugin_row_meta($links, $file) {
 	return $links;
 }
 add_filter('plugin_row_meta', 'pmprosm_plugin_row_meta', 10, 2);
-
 
 /**
  * This function generates direct checkout links from a discount code for future uses.
