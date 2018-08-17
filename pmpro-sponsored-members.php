@@ -1793,7 +1793,7 @@ function pmprosm_the_content_account_page($content)
 		if(!empty($code_id) && !empty($pmprosm_values))
 		{			
 			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
-			
+		
 			if(!is_array($pmprosm_values['sponsored_level_id']))
 				$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
 			else
@@ -1807,14 +1807,9 @@ function pmprosm_the_content_account_page($content)
 			if(empty($code->uses))
 				return $content;
 			
-			$code_urls = array();
-			$pmpro_levels = pmpro_getAllLevels(false, true);
-			foreach($sponsored_level_ids as $sponsored_level_id)
-			{
-				$level_name = $pmpro_levels[$sponsored_level_id]->name;
-				$code_urls[] = array("name"=>$level_name, "url"=>pmpro_url("checkout", "?level=" . $sponsored_level_id . "&discount_code=" . $code->code));
-			}
-					
+
+			$code_urls = pmprosm_get_checkout_urls( $code );
+				
 			ob_start();
 			
 			$limit = 1;
@@ -2011,3 +2006,31 @@ function pmprosm_plugin_row_meta($links, $file) {
 	return $links;
 }
 add_filter('plugin_row_meta', 'pmprosm_plugin_row_meta', 10, 2);
+
+/**
+ * This function generates direct checkout links from a discount code for future uses.
+ * @param object $code This is the discount code object.
+ * @since
+ * @return array.
+ */
+function pmprosm_get_checkout_urls( $code ) {
+	global $wpdb;
+
+	$checkout_urls = array();
+
+	if ( ! empty( $code ) && is_object( $code ) ) {
+		$code_id = $code->id;
+	} else {
+		return;
+	}
+
+	$sql_code = "SELECT level_id, name FROM $wpdb->pmpro_discount_codes_levels c INNER JOIN $wpdb->pmpro_membership_levels l ON c.level_id = l.id WHERE c.code_id =" . esc_sql( $code_id );
+
+	$levels_id = $wpdb->get_results( $sql_code );
+		
+	foreach ( $levels_id as $value ) {
+		$checkout_urls[] = array( "name" => $value->name, "url" => pmpro_url( "checkout", "?level=" . $value->level_id . "&discount_code=" . $code->code ) );
+	}
+
+	return $checkout_urls;
+}
