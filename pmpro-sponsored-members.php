@@ -1415,6 +1415,16 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts($okay)
 		pmpro_setMessage(__("You have more accounts checked than you are purchasing seats. Increase the number of seats or deactivate some accounts."),"pmpro_error");
 		$okay = false;
 	}
+    elseif(isset($_REQUEST['username']) && in_array($_REQUEST['username'],$child_usernames))
+	{
+		pmpro_setMessage(__("A sponsored account must have a different username than the main account."),"pmpro_error");
+		$okay = false;
+	}
+    elseif(isset($_REQUEST['bemail']) && in_array($_REQUEST['bemail'],$child_emails))
+	{
+		pmpro_setMessage(__("A sponsored account must have a different email than the main account."),"pmpro_error");
+		$okay = false;
+	}
 	else
 	{	
 		foreach($child_usernames as $child_username)
