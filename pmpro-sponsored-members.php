@@ -342,7 +342,10 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 			}			
 		}
 	}
-	
+
+	// if old sub accounts cancelled above from user request and "sponsored_accounts_at_checkout"
+	//   then old accounts to deactivate should be gone so ok to drop into this code.
+	// if not sponsored_accounts_at_checkout then
 	//see if we should enable some accounts
 	$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
 	$sub_user_ids = $wpdb->get_col($sqlQuery);
@@ -1585,6 +1588,10 @@ function pmprosm_pmpro_paypalexpress_session_vars()
 		$_SESSION['add_sub_accounts_last_name'] = $_REQUEST['add_sub_accounts_last_name'];
 	else
 		$_SESSION['add_sub_accounts_last_name'] = "";
+	if(!empty($_REQUEST['old_sub_accounts_active']))
+		$_SESSION['old_sub_accounts_active'] = $_REQUEST['old_sub_accounts_active'];
+	else
+		$_SESSION['old_sub_accounts_active'] = "";
 }
 add_action("pmpro_paypalexpress_session_vars", "pmprosm_pmpro_paypalexpress_session_vars");
 add_action("pmpro_before_send_to_twocheckout", "pmprosm_pmpro_paypalexpress_session_vars", 10, 2);
@@ -1595,26 +1602,37 @@ function pmprosm_init_load_session_vars($param)
 	if(empty($_REQUEST['seats']) && !empty($_SESSION['seats']))
 	{
 		$_REQUEST['seats'] = $_SESSION['seats'];
+		unset($_SESSION['seats']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_username']) && !empty($_SESSION['add_sub_accounts_username']))
 	{
 		$_REQUEST['add_sub_accounts_username'] = $_SESSION['add_sub_accounts_username'];
+		unset($_SESSION['add_sub_accounts_username']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_password']) && !empty($_SESSION['add_sub_accounts_password']))
 	{
 		$_REQUEST['add_sub_accounts_password'] = $_SESSION['add_sub_accounts_password'];
+		unset($_SESSION['add_sub_accounts_password']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_email']) && !empty($_SESSION['add_sub_accounts_email']))
 	{
 		$_REQUEST['add_sub_accounts_email'] = $_SESSION['add_sub_accounts_email'];
+		unset($_SESSION['add_sub_accounts_email']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_first_name']) && !empty($_SESSION['add_sub_accounts_first_name']))
 	{
 		$_REQUEST['add_sub_accounts_first_name'] = $_SESSION['add_sub_accounts_first_name'];
+		unset($_SESSION['add_sub_accounts_first_name']);
 	}
 	if(empty($_REQUEST['add_sub_accounts_last_name']) && !empty($_SESSION['add_sub_accounts_last_name']))
 	{
 		$_REQUEST['add_sub_accounts_last_name'] = $_SESSION['add_sub_accounts_last_name'];
+		unset($_SESSION['add_sub_accounts_last_name']);
+	}
+	if(empty($_REQUEST['old_sub_accounts_active']) && !empty($_SESSION['old_sub_accounts_active']))
+	{
+		$_REQUEST['old_sub_accounts_active'] = $_SESSION['old_sub_accounts_active'];
+		unset($_SESSION['old_sub_accounts_active']);
 	}
 
 	return $param;
