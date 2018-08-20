@@ -38,6 +38,15 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 == Changelog ==
 = .7 =
+* BUG FIX: Fixed bug where discount codes were not being saved when using PayPal Express. Fixed other PayPal Express-related bugs.
+* BUG FIX: Fixed bugs with the checkout URL generated for the sponsor code.
+* BUG FIX: Added check in case you use the same email address for thes sponsor and a child account when creating child accounts at checkout. (Thanks, Bill Stoltz)
+* BUG FIX/ENHANCEMENT: Fixed pmprosm_getChildren to work when the sponsoring account is expired. (Thanks, Bill Stoltz)
+* ENHANCEMENT: Adding blank orders and sending confirmation emails to sponsored accounts created at checkout. (Thanks, Bill Stoltz)
+* ENHANCEMENT: Added a new option hide_display_discount_code if you don't want sponsors to be able to see their sponsor code. (Thanks, Bill Stoltz)
+* ENHANCEMENT: Tweaked seat text for cases where seats don't cost extra. (Thanks, Bill Stoltz)
+* ENHNACEMENT: Improved display of sponsor or sponsored children on the edit user page in the WP dashboard. (Thanks, Bill Stoltz)
+* ENHANCEMENT: Giving Membership Manager role access to view and edit # of seats.
 * ENHANCEMENT: Added pmprosm_getDiscountCodeByCodeID( $code_id ) function to help with getting the code and other details from a code id.
 * ENHANCEMENT: Added a "Sponsor/Code" column to the Members List showing a link to the sponsoring user or the sponsor code if applicable.
 * ENHANCEMENT: Added a "sponsorcode" column to the Members List CSV export.
