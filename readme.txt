@@ -1,9 +1,9 @@
 === Paid Memberships Pro - Sponsored Members Add On ===
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
-Requires at least: 3.5
-Tested up to: 4.7.3
-Stable tag: .6.3
+Requires at least: 4.0
+Tested up to: 4.9.8
+Stable tag: .7
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,11 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= .7 =
+* ENHANCEMENT: Added pmprosm_getDiscountCodeByCodeID( $code_id ) function to help with getting the code and other details from a code id.
+* ENHANCEMENT: Added a "Sponsor/Code" column to the Members List showing a link to the sponsoring user or the sponsor code if applicable.
+* ENHANCEMENT: Added a "sponsorcode" column to the Members List CSV export.
+
 = .6.3 = 
 * ENHANCEMENT: Improved fields display on membership checkout page to use no tables
 

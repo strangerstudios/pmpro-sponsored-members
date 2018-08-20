@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: .6.3
+Version: .7
 Author: Paid Memberships Pro
 Author URI: https://www.paidmembershipspro.com
 */
@@ -575,6 +575,18 @@ function pmprosm_getUserByCodeID($needle)
 	return false;
 }
 
+//get a discount code object from a code_id
+function pmprosm_getDiscountCodeByCodeID( $code_id ) {
+	static $discount_codes;
+
+	if( !isset( $discount_codes[$code_id] ) ) {
+		global $wpdb;
+		$discount_codes[$code_id] = $wpdb->get_row( "SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql( $code_id ) . "' LIMIT 1");
+	}
+
+	return $discount_codes[$code_id];
+}
+
 //show a user's discount code on the confirmation page
 function pmprosm_pmpro_confirmation_message($message)
 {
@@ -585,7 +597,7 @@ function pmprosm_pmpro_confirmation_message($message)
 	if(!empty($code_id))
 	{
 		$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
-		$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
+		$code = pmprosm_getDiscountCodeByCodeID( $code_id );
 		
 		if(!is_array($pmprosm_values['sponsored_level_id']))
 			$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
@@ -1656,7 +1668,7 @@ function pmprosm_profile_fields_seats($user)
 			<?php
 				//get the user's sponsor code
 				$sponsor_code_id = pmprosm_getCodeByUserID($user->ID);
-				$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($sponsor_code_id) . "' LIMIT 1");
+				$code = pmprosm_getDiscountCodeByCodeID( $sponsor_code_id );
 				if(!empty($code)) {
 					?>
 					<tr>
@@ -1792,7 +1804,8 @@ function pmprosm_the_content_account_page($content)
 		
 		if(!empty($code_id) && !empty($pmprosm_values))
 		{			
-			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
+			$code = pmprosm_getDiscountCodeByCodeID( $code_id );
+
 		
 			if(!is_array($pmprosm_values['sponsored_level_id']))
 				$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
@@ -1920,7 +1933,7 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 		if(!empty($user_id) && !empty($code_id) && pmprosm_isMainLevel($level_id))
 		{
 			//get code
-			$code = $wpdb->get_row("SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql($code_id) . "' LIMIT 1");
+			$code = pmprosm_getDiscountCodeByCodeID( $code_id );
 			
 			//get sponsored levels
 			$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
@@ -2034,3 +2047,61 @@ function pmprosm_get_checkout_urls( $code ) {
 
 	return $checkout_urls;
 }
+
+/**
+ * Add sponsor's code to memberslist CSV export
+ */
+function pmprosm_pmpro_members_list_csv_extra_columns( $columns ) {
+	$columns['sponsorcode'] = 'pmprosm_pmpro_members_list_csv_sponsorcode';
+	
+	return $columns;
+}
+add_filter( 'pmpro_members_list_csv_extra_columns', 'pmprosm_pmpro_members_list_csv_extra_columns' );
+
+/**
+ * Call back to get the sponsor code
+ */
+function pmprosm_pmpro_members_list_csv_sponsorcode( $user ) {
+	$sponsor_code_id = pmprosm_getCodeByUserID( $user->ID );
+	$sponsor_code = pmprosm_getDiscountCodeByCodeID( $sponsor_code_id );
+	if( !empty( $sponsor_code ) ) {
+		return $sponsor_code->code;
+	} else {
+		return '';
+	}
+}
+
+/**
+ * Add Sponsor or Sponsor Code to the Member's List Table
+ * Add Header
+ */
+function pmprosm_pmpro_memberslist_extra_cols_header() {
+?>
+<th><?php _e( 'Sponsor/Code', 'pmprosm' ); ?></th>
+<?php
+}
+add_action( 'pmpro_memberslist_extra_cols_header', 'pmprosm_pmpro_memberslist_extra_cols_header' );
+
+/**
+ * Add Sponsor or Sponsor Code to the Member's List Table
+ * Add Column Content
+ */
+function pmprosm_pmpro_memberslist_extra_cols_body( $theuser ) {
+	$sponsor_code_id = pmprosm_getCodeByUserID( $theuser->ID );
+	$sponsor_code = pmprosm_getDiscountCodeByCodeID( $sponsor_code_id );
+	$sponsor = pmprosm_getSponsor( $theuser->ID );
+?>
+<td>
+	<?php
+		if( !empty( $sponsor) ) {
+			$user_link = '<a href="' . add_query_arg('user_id', $sponsor->ID, admin_url('user-edit.php') ) . '">' . $sponsor->user_login . '</a>';
+			printf( __( 'Sponsored by %s', 'pmprosm' ), $user_link );
+		}
+		if( !empty( $sponsor_code ) ) {
+			echo '<a href="' . add_query_arg( array( 'page' => 'pmpro-discountcodes', 'edit' => $sponsor_code_id ), admin_url( 'admin.php' ) ) . '">' . $sponsor_code->code . '</a>';
+		}
+	?>
+</td>
+<?php
+}
+add_action( 'pmpro_memberslist_extra_cols_body', 'pmprosm_pmpro_memberslist_extra_cols_body' );
