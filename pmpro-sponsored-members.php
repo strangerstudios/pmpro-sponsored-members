@@ -211,7 +211,7 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			pmprosm_sponsored_account_change($level_id, $user_id);
 			
 			//make sure we only do it once
-			remove_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout_sponsor_account_change", 10, 2);
+			remove_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout_sponsor_account_change", 10 );
 		}	
 	}
 }
