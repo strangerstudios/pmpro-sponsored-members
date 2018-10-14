@@ -161,6 +161,11 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 					pmpro_changeMembershipLevel(0, $sub_user_id);
 				}
 			}
+			
+			/**
+			 * @since v.6.3+ - BUG FIX: Didn't disallow discount code use after sponsor cancels account
+			 */
+			$wpdb->delete( $wpdb->pmpro_discount_codes, array( 'id' => $code_id ) );
 		}
 		
 		//remove seats from meta
