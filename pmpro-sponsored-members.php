@@ -871,7 +871,7 @@ function pmprosm_pmpro_checkout_boxes()
             </span>
 		</h3>
 		<div class="pmpro_checkout-fields">
-			<div class="pmpro_checkout-field class="pmpro_checkout-field-seats"">
+			<div class="pmpro_checkout-field pmpro_checkout-field-seats">
 				<label for="seats"><?php echo __('Number of Seats', 'pmpro_sponsored_members');?></label>
 				<input type="text" id="seats" name="seats" value="<?php echo esc_attr($seats);?>" size="10" />
 				<p class="pmpro_small">
