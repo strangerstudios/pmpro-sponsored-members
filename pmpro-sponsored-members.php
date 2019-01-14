@@ -771,7 +771,7 @@ function pmprosm_pmpro_discountcodes_extra_cols_body($code)
 	$code_user_id = pmprosm_getCodeUserID($code->id);
 	$code_user = get_userdata($code_user_id);
 	?>
-	<th><?php if(!empty($code_user_id) && !empty($code_user)) { ?><a href="<?php echo get_edit_user_link($code_user_id); ?>"><?php echo $code_user->user_login; ?></a><?php } elseif(!empty($code_user_id) && empty($code_user)) { ?><em>Missing User</em><?php } else { ?><?php } ?></th>
+	<td><?php if(!empty($code_user_id) && !empty($code_user)) { ?><a href="<?php echo get_edit_user_link($code_user_id); ?>"><?php echo $code_user->user_login; ?></a><?php } elseif(!empty($code_user_id) && empty($code_user)) { ?><em>Missing User</em><?php } else { ?><?php } ?></td>
 	<?php
 }
 add_action("pmpro_discountcodes_extra_cols_body", "pmprosm_pmpro_discountcodes_extra_cols_body");
