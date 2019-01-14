@@ -1752,7 +1752,7 @@ function pmprosm_display_sponsored_accounts($member_ids) {
 				?>
                 <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
                     <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
-                    <td><a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->display_name; ?></a></td>
+                    <td><?php echo $member->display_name; ?></td>
                     <td><?php echo $member->user_email; ?></td>
                     <td><?php echo $member->membership_level->name; ?></td>
                 </tr>
