@@ -1,0 +1,329 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Paid Memberships Pro - Sponsored Members Add On\n"
+"POT-Creation-Date: 2019-04-25 23:30+0200\n"
+"PO-Revision-Date: 2019-04-25 23:32+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: af_ZA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.2\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: pmpro-sponsored-members.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: pmpro-sponsored-members.php:418
+#, php-format
+msgid ""
+"This user has fewer seats than they had sponsored accounts. The sponsored "
+"accounts have been deactivated. The user must have his sponsored accounts "
+"checkout again using the code: %s."
+msgstr ""
+"Hierdie gebruiker het minder sitplekke as wat hul geborde rekeninge gehad "
+"het. Die geborgde rekening is gedeaktiveer. Die gebruiker moet sy geborgde "
+"rekeninge weer laat uitteken met hierdie kode: %s."
+
+#: pmpro-sponsored-members.php:470
+msgid "Notice"
+msgstr "Kennisgewing"
+
+#: pmpro-sponsored-members.php:470
+msgid "Your current membership has fewer seats than you had sponsored accounts"
+msgstr ""
+"Jou huidige lidmaatskap het minder sitplekke as wat jy geborgde rekeninge het"
+
+#: pmpro-sponsored-members.php:470
+msgid "The accounts have been deactivated"
+msgstr "Die rekeninge is gedeaktiveer"
+
+#: pmpro-sponsored-members.php:470
+msgid "You must have your sponsored accounts checkout again using your code"
+msgstr ""
+"U moet u gebordgde rekeninge weer laat uitteken met die gebruik van u kode"
+
+#: pmpro-sponsored-members.php:637 pmpro-sponsored-members.php:639
+msgid "Give this code to your sponsored members to use at checkout:"
+msgstr "Gee hierdie kode aan u geborgde lede om te gebruik met uittekening:"
+
+#: pmpro-sponsored-members.php:637 pmpro-sponsored-members.php:1848
+#: pmpro-sponsored-members.php:1996
+msgid "Or provide one of these direct links to register:"
+msgstr "Of gee een van hierdie direkte skakels om te registreer:"
+
+#: pmpro-sponsored-members.php:639 pmpro-sponsored-members.php:1850
+#: pmpro-sponsored-members.php:1998
+msgid "Or provide this direct link to register:"
+msgstr "Of verskaf hierdie direkte skakel om te registreer:"
+
+#: pmpro-sponsored-members.php:649 pmpro-sponsored-members.php:1862
+msgid "This code has unlimited uses."
+msgstr "Hierdie kode het onbeperkte bruikbaarheid."
+
+#: pmpro-sponsored-members.php:651
+#, php-format
+msgid "This code has %d uses."
+msgstr "Hierdie kode kan %d maal gebruik word."
+
+#: pmpro-sponsored-members.php:713
+msgid "You must use a valid discount code to register for this level."
+msgstr "U moet 'n waardige afslag kode om te registreer vir hierdie vlak."
+
+#: pmpro-sponsored-members.php:741
+msgid "The sponsor for this code is inactive. Ask them to renew their account."
+msgstr ""
+"Die borg vir hierdie kode is onaktief. Versoek hul om hul rekening te hernu."
+
+#: pmpro-sponsored-members.php:753
+msgid "The maximum number of seats allowed is "
+msgstr "Die maksimum toelaatbare sitplekke is "
+
+#: pmpro-sponsored-members.php:758
+msgid "The minimum number of seats allowed is "
+msgstr "Die minimum toelaatbare sitplekke is "
+
+#: pmpro-sponsored-members.php:771
+msgid "Parent Account"
+msgstr "Ouerrekening"
+
+#: pmpro-sponsored-members.php:781
+msgid "Missing User"
+msgstr "Onopspoorbare Gebruiker"
+
+#: pmpro-sponsored-members.php:799
+msgid "For Sponsored Accounts"
+msgstr "Vir Geborgde Rekeninge"
+
+#: pmpro-sponsored-members.php:803
+msgid "User ID:"
+msgstr "Gebruiker ID:"
+
+#: pmpro-sponsored-members.php:806
+msgid "The user ID of the main account holder."
+msgstr "Die gebruiker ID van die hoof rekening houer."
+
+#: pmpro-sponsored-members.php:873
+msgid "Would you like to purchase extra seat(s)?"
+msgstr "Wil u ekstra sitplekke aankoop?"
+
+#: pmpro-sponsored-members.php:875
+msgid "Would you like to create extra account(s)?"
+msgstr "Wil u ekstra rekeneninge skep?"
+
+#: pmpro-sponsored-members.php:882
+msgid "Number of Seats"
+msgstr "Hoeveelheid Sitplekke"
+
+#: pmpro-sponsored-members.php:894
+#, php-format
+msgid "Enter a number from %d to %d. %s"
+msgstr "Sleutel in 'n nommer vanaf %d tot %d. %s"
+
+#: pmpro-sponsored-members.php:896
+#, php-format
+msgid "Enter a number from %d to %d. +%s per extra seat."
+msgstr "Sleutel in 'n nommer vanaf %d tot %d. +%s per addisionele sitplek."
+
+#: pmpro-sponsored-members.php:952
+msgid "Keep checked to keep this account active."
+msgstr "Hou afgemerk om hierde rekening aktief te behou."
+
+#: pmpro-sponsored-members.php:954
+msgid "Check to reactivate this account."
+msgstr "Merk af om hierdie rekening weer te aktiveer."
+
+#: pmpro-sponsored-members.php:1017
+msgid " account information."
+msgstr " rekening informasie."
+
+#: pmpro-sponsored-members.php:1021 pmpro-sponsored-members.php:1138
+msgid "Please fill in following information and account(s) will be created."
+msgstr ""
+"Voltooi asseblief die volgende besonderhede en 'n rekening/rekeninge sal "
+"geskep word."
+
+#: pmpro-sponsored-members.php:1025 pmpro-sponsored-members.php:1138
+msgid "First Name"
+msgstr "Noemnaam"
+
+#: pmpro-sponsored-members.php:1028 pmpro-sponsored-members.php:1138
+msgid "Last Name"
+msgstr "Van"
+
+#: pmpro-sponsored-members.php:1033 pmpro-sponsored-members.php:1138
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+#: pmpro-sponsored-members.php:1038 pmpro-sponsored-members.php:1138
+#: pmpro-sponsored-members.php:1746
+msgid "Email"
+msgstr "E-pos"
+
+#: pmpro-sponsored-members.php:1043 pmpro-sponsored-members.php:1138
+msgid "Password"
+msgstr "Wagwoord"
+
+#: pmpro-sponsored-members.php:1138
+msgid " account information # XXXX"
+msgstr " rekening informasie # XXXX"
+
+#: pmpro-sponsored-members.php:1525
+msgid "Please enter details for each new sponsored account."
+msgstr "Verskaf asseblief besonderhede vir elke nuwe geborgde rekening."
+
+#: pmpro-sponsored-members.php:1530
+msgid "Each sponsored account must have a unique username and email address."
+msgstr "Elke geborgde rekening moet 'n unieke gebruikersnaam en epos hê."
+
+#: pmpro-sponsored-members.php:1535
+msgid ""
+"You have more accounts checked than you are purchasing seats. Increase the "
+"number of seats or deactivate some accounts."
+msgstr ""
+"U het meer rekening afgemerk as sitplekke wat u aankoop. Vermeerder die "
+"hoeveelheidvan sitplekke of deaktiveer 'n paar rekeninge."
+
+#: pmpro-sponsored-members.php:1540
+msgid ""
+"A sponsored account must have a different username than the main account."
+msgstr ""
+"'n Geborgde rekening moet 'n ander gebruikersnaam hê as die hoof rekening."
+
+#: pmpro-sponsored-members.php:1545
+msgid "A sponsored account must have a different email than the main account."
+msgstr "'n Geborgde rekening moet 'n ander e-pos hê as die hoof rekening."
+
+#: pmpro-sponsored-members.php:1555
+#, php-format
+msgid ""
+"The username <b>%s</b> already exists. Please select a different username"
+msgstr ""
+"Die gebruikersnaam <b>%s</b> bestaan alreeds. Kies asseblief 'n ander "
+"gebruikersnaam"
+
+#: pmpro-sponsored-members.php:1566
+#, php-format
+msgid "That email <b>%s</b> already exists. Please select a different email"
+msgstr ""
+"Daardie eposadres <b>%s</b> bestaan alreeds. Kies asseblief 'n ander e-pos"
+
+#: pmpro-sponsored-members.php:1574
+#, php-format
+msgid "<b>%s</b> is not a valid email address. Please select a different email"
+msgstr "<b>%s</b> is 'n ongeldige e-pos adres. Kies asseblief 'n ander e-pos"
+
+#: pmpro-sponsored-members.php:1673
+msgid "Sponsored Seats"
+msgstr "Geborgde Sitplekke"
+
+#: pmpro-sponsored-members.php:1682 pmpro-sponsored-members.php:1699
+msgid "Sponsor Code"
+msgstr "Borg Kode"
+
+#: pmpro-sponsored-members.php:1688
+msgid "Seats"
+msgstr "Sitplekke"
+
+#: pmpro-sponsored-members.php:1700
+msgid "This membership level does not include a sponsor code."
+msgstr "Hierdie lidmaatskap vlak sluit nie 'n borg kode in nie."
+
+#: pmpro-sponsored-members.php:1711
+msgid "Parent"
+msgstr "Ouer"
+
+#: pmpro-sponsored-members.php:1739 pmpro-sponsored-members.php:1844
+msgid "Sponsored Members"
+msgstr "Geborgde Lede"
+
+#: pmpro-sponsored-members.php:1744
+msgid "Date"
+msgstr "Datum"
+
+#: pmpro-sponsored-members.php:1745
+msgid "Name"
+msgstr "Naam"
+
+#: pmpro-sponsored-members.php:1747
+msgid "Membership Level"
+msgstr "Lidmaatskap Vlak"
+
+#: pmpro-sponsored-members.php:1846
+#, php-format
+msgid ""
+"Give this code to your sponsored members to use at checkout: <strong>%s</"
+"strong></p>"
+msgstr ""
+"Give this code to your sponsored members to use at checkout: <strong>%s</"
+"strong></p>"
+
+#: pmpro-sponsored-members.php:1864
+#, php-format
+msgid "%s/%s uses."
+msgstr "%s/%s gebruike."
+
+#: pmpro-sponsored-members.php:1963
+msgid "Accounts created at checkout:"
+msgstr "Rekeninge geskep tydens uittekening:"
+
+#: pmpro-sponsored-members.php:1993
+#, php-format
+msgid "Give this code to your sponsored members to use at checkout: %s"
+msgstr "Verskaf hierde kode aan u geborgde lede om mee uit te teken: %s"
+
+#: pmpro-sponsored-members.php:2021
+msgid "View Documentation"
+msgstr "Kyk Na Dokumentasie"
+
+#: pmpro-sponsored-members.php:2021
+msgid "Docs"
+msgstr "Dokumentasie"
+
+#: pmpro-sponsored-members.php:2022
+msgid "Visit Customer Support Forum"
+msgstr "Besoek Kliënte Ondersteunings Forum"
+
+#: pmpro-sponsored-members.php:2022
+msgid "Support"
+msgstr "Ondersteuning"
+
+#: pmpro-sponsored-members.php:2087
+msgid "Sponsor/Code"
+msgstr "Borg/Kode"
+
+#: pmpro-sponsored-members.php:2105
+#, php-format
+msgid "Sponsored by %s"
+msgstr "Geborg deur %s"
+
+#. Plugin Name of the plugin/theme
+msgid "Paid Memberships Pro - Sponsored Members Add On"
+msgstr "Paid Memberships Pro - Sponsored Members Add On"
+
+#. Plugin URI of the plugin/theme
+msgid "https://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/"
+msgstr "https://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/"
+
+#. Description of the plugin/theme
+msgid ""
+"Generate discount code for a main account holder to distribute to sponsored "
+"members."
+msgstr ""
+"Genereer afslag kode(s) vir 'n hoof rekening houer om te verskaf aan "
+"geborgde lede."
+
+#. Author of the plugin/theme
+msgid "Paid Memberships Pro"
+msgstr "Paid Memberships Pro"
+
+#. Author URI of the plugin/theme
+msgid "https://www.paidmembershipspro.com"
+msgstr "https://www.paidmembershipspro.com"
