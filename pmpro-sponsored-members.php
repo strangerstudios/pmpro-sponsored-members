@@ -712,7 +712,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && !empty($discount_code))
 	{
 		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id, false);
-		
+	
 		$code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql($discount_code) . "' LIMIT 1");
 		if(!empty($code_id))
 		{
@@ -732,6 +732,12 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 			if(!$continue_reg)
 			{
 				pmpro_setMessage(__("The sponsor for this code is inactive. Ask them to renew their account.", "pmpro_sponsored_members"), "pmpro_error");
+				return false;
+			}
+			
+			if($code_user_id == get_current_user_id())
+			{
+				pmpro_setMessage(__("Sponsors are not permitted to sign up for sponsored levels. This is most likely a mistake.", "pmpro_sponsored_members"), "pmpro_error");
 				return false;
 			}
 		}
