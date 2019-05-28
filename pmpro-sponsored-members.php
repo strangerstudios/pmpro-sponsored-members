@@ -192,10 +192,10 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 			//check for seats
 			if(isset($_REQUEST['seats']))
 				$uses = intval($_REQUEST['seats']);
+			elseif(!empty($pmprosm_values['seats']))
+					$uses = $pmprosm_values['seats'];
 			elseif(isset($_SESSION['seats']))
 				$uses = intval($_SESSION['seats']);
-			elseif(!empty($pmprosm_values['seats']))
-				$uses = $pmprosm_values['seats'];
 			elseif(!empty($pmprosm_values['min_seats']))
 				$uses = $pmprosm_values['min_seats'];
 			else
@@ -309,10 +309,10 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 	//update seats for code
 	if(isset($_REQUEST['seats']))			
 		$seats = intval($_REQUEST['seats']);
+	elseif(!empty($pmprosm_values['seats']))
+			$seats = $pmprosm_values['seats'];
 	elseif(isset($_SESSION['seats']))
 		$seats = intval($_SESSION['seats']);
-	elseif(!empty($pmprosm_values['seats']))
-		$seats = $pmprosm_values['seats'];
 	else
 		$seats = "";
 			
@@ -1653,7 +1653,7 @@ function pmprosm_init_load_session_vars($param)
 
 	return $param;
 }
-add_action('init', 'pmprosm_init_load_session_vars', 5);
+add_action('pmpro_checkout_preheader', 'pmprosm_init_load_session_vars', 5);
 
 //add code and seats fields to profile for admins
 function pmprosm_profile_fields_seats($user)
