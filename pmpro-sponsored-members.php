@@ -48,7 +48,7 @@ Domain Path: /languages
 function pmprosm_load_textdomain() {
 	load_plugin_textdomain( 'pmpro-sponsored-members', false, basename( dirname( __FILE__ ) ) . '/languages' ); 
   }
-  add_action( 'plugins_loaded', 'pmprosm_load_textdomain' );
+  add_action( 'init', 'pmprosm_load_textdomain' );
 
 //includes
 if(is_admin())
