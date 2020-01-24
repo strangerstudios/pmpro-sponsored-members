@@ -1722,29 +1722,38 @@ add_action('show_user_profile', 'pmprosm_profile_fields_seats');
 add_action('edit_user_profile', 'pmprosm_profile_fields_seats');
 
 function pmprosm_display_sponsored_accounts($member_ids) {
-        $request = $_REQUEST;
+        /*
+         * 
+         * Method variables
+         * 
+         */
+        $content = '';
+        $member_ids;
+        $reponse = false;
+	$count = 0;
+        
         /*
          * Get the current logged in user for the front end
          * or
          * Get user id for editing the user-edit.php page backend
          */
         $user_id = get_current_user_id();
-        if(isset($request['user_id'])){
-            $user_id = $request['user_id'];
+        if(isset($_REQUEST['user_id'])){
+            $user_id = intval($_REQUEST['user_id']);
         }
         
         /*
          * For removing members from seats
          */
-        if(isset($request['member_id']) && isset($request['levelstocancel']) && isset($request['action'])){
+        if(isset($_REQUEST['member_id']) && isset($_REQUEST['levelstocancel']) && isset($_REQUEST['action'])){
             /*
              * check nonce for security
              */
-            if(wp_verify_nonce($request['action'], 'remove-member')){
+            if(wp_verify_nonce($_REQUEST['action'], 'remove-member')){
                 /*
                  * Removes member from seat
                  */
-                $reponse = pmprosm_remove_member_from_seat($request['member_id'], $request['levelstocancel'], $user_id);
+                $reponse = pmprosm_remove_member_from_seat(intval($_REQUEST['member_id']), intval($_REQUEST['levelstocancel']), $user_id);
                 if($reponse){
                     /*
                      * Get updated member_ids
@@ -1756,7 +1765,7 @@ function pmprosm_display_sponsored_accounts($member_ids) {
         /*
          * 
          */
-        if(!isset($request['user_id'])){
+        if(!isset($_REQUEST['user_id'])){
             /*
              * Display on the front end - on membership account page
              */
@@ -1768,7 +1777,6 @@ function pmprosm_display_sponsored_accounts($member_ids) {
          */
         if ( empty( $member_ids) ) {return '';}
         
-	$count = 0;
 	ob_start();
     ?>
 
@@ -1804,7 +1812,7 @@ function pmprosm_display_sponsored_accounts($member_ids) {
                     <td><a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->display_name; ?></a></td>
                     <td><?php echo $member->user_email; ?></td>
                     <td><?php echo $member->membership_level->name; ?></td>
-                    <td><a href="<?php echo $nonce_url; ?>">Remove</a></td>
+                    <td><a href="<?php echo esc_url($nonce_url); ?>">Remove</a></td>
                 </tr>
 				<?php
 			}
@@ -1819,9 +1827,17 @@ function pmprosm_display_sponsored_accounts($member_ids) {
 }
 function pmprosm_remove_member_from_seat($member_id, $levelstocancel, $user_id){ 
     /*
+     * 
+     * Method variable(s)
+     * 
+     */
+    $response = false;
+    
+    /*
      * Double checking user_id is a sponsor
      */
     $user_level = pmpro_getMembershipLevelForUser($user_id);
+    
     if( pmprosm_isSponsoredLevel($user_level->id) )
     {
         /*
@@ -1834,7 +1850,13 @@ function pmprosm_remove_member_from_seat($member_id, $levelstocancel, $user_id){
          */
         if($response){        
             $member = get_userdata($member_id);
-            echo '<div style="margin: 0 auto 15px; padding: 20px; color: #f00; border: solid 1px #f00;">Sponsored User: '.$member->display_name.' was removed. (Membership Level: '.$levelstocancel.')</div>';
+        ?>
+        <div class="pmpro_message pmpro_success">
+            <?php
+                _e(sprintf('Sponsored User: %s was removed. (Membership Level: %s)',$member->display_name, $levelstocancel ));
+            ?>
+        </div>
+        <?php
             return true;
         }
     }
@@ -1965,10 +1987,8 @@ function pmprosm_the_content_account_page($content)
                 <?php } // hide_display_discount_code 
 
                     // use same account display as in admin
-                        //if ( ! empty( $member_ids ) ) {
                             echo "<hr />";
                             echo pmprosm_display_sponsored_accounts( $member_ids );
-                        //}
                 ?>
 			</div> <!-- end pmpro_account-sponsored -->
 			<?php
