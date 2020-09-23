@@ -1133,7 +1133,7 @@ function pmprosm_pmpro_checkout_boxes()
 									while (i < newseats)
 									{
                                         var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo $sponsored_level->name; _e(" account information # XXXX", "pmprosm"); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else _e("Please fill in following information and account(s) will be created.", "pmprosm");?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>';
-                                        newdiv = div.replace(/XXXX/g,i);
+                                        newdiv = div.replace(/XXXX/g,i+1);
                                         jQuery('#sponsored_accounts').append(newdiv);										i++;
 									}
 								}
