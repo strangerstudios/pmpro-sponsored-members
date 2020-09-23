@@ -1659,6 +1659,7 @@ add_action('init', 'pmprosm_init_load_session_vars', 5);
 function pmprosm_profile_fields_seats($user)
 {
 	global $wpdb;
+	$user->membership_level = pmpro_getMembershipLevelForUser($user->ID);
 	if( current_user_can("edit_users") && !empty($user->membership_level) )
 	{
 		?>
