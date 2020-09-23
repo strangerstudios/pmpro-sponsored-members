@@ -855,8 +855,12 @@ function pmprosm_pmpro_checkout_boxes()
         $seats = $pmprosm_values['seats'];
 
 	if ($seats == "") $seats = 0; 	// leaving blank ('') causes this to be unlimited.
-
-	$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
+	
+	if(is_array($pmprosm_values['sponsored_level_id']))
+		$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id'][0]);
+	else
+		$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
+		
 	?>
 	<div id="pmpro_extra_seats" class="pmpro_checkout">
 		<hr />
