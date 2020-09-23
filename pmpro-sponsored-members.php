@@ -1662,7 +1662,18 @@ function pmprosm_init_load_session_vars($param)
 
 	return $param;
 }
-add_action('init', 'pmprosm_init_load_session_vars', 5);
+add_action('pmpro_checkout_preheader', 'pmprosm_init_load_session_vars', 5);
+
+// add the 'seats' parameter to the Paypal Express return url so we charge the correct amount
+function pmprosm_paypal_express_return_url_parameters( $params )
+{
+	if(isset( $_REQUEST['seats'] ))
+	{
+		$params['seats'] = intval($_REQUEST['seats']);
+	}
+	return $params;
+}
+add_filter("pmpro_paypal_express_return_url_parameters", "pmprosm_paypal_express_return_url_parameters" );
 
 //add code and seats fields to profile for admins
 function pmprosm_profile_fields_seats($user)
