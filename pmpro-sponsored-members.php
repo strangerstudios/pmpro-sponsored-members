@@ -1796,7 +1796,7 @@ function pmprosm_the_content_account_page($content)
 {
 	global $post, $pmpro_pages, $current_user, $wpdb;
 			
-	if(!is_admin() && $post->ID == $pmpro_pages['account'])
+	if( ! is_admin() && isset( $post->ID ) && $post->ID == $pmpro_pages['account'] )
 	{
 		//what's their code?
 		$code_id = pmprosm_getCodeByUserID($current_user->ID);
