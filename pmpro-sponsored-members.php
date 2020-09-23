@@ -1800,8 +1800,13 @@ function pmprosm_the_content_account_page($content)
 	{
 		//what's their code?
 		$code_id = pmprosm_getCodeByUserID($current_user->ID);
-		$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
 		
+		if ( isset( $current_user->membership_level->ID ) ) {
+			$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
+		} else {
+			$pmprosm_values = '';
+		}
+
 		if(!empty($code_id) && !empty($pmprosm_values))
 		{			
 			$code = pmprosm_getDiscountCodeByCodeID( $code_id );
