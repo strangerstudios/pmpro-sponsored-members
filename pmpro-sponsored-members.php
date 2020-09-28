@@ -240,9 +240,11 @@ function pmprosm_createSponsorCode($user_id, $level_id, $uses = "") {
 		$code = "S" . pmpro_getDiscountCode();
 	$starts = date("Y-m-d", current_time("timestamp"));
 	$expires = date("Y-m-d", strtotime("+1 year", current_time("timestamp")));
-			
-	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql($code) . "', '" . $starts . "', '" . $expires . "', '" . intval($uses) . "')";
 	
+	$sponsored_code_settings = array('code' => $code, 'starts' => $starts, 'expires' => $expires, 'uses' => $uses);
+	$sponsored_code_settings = apply_filters( 'pmprosm_sponsored_code_settings', $sponsored_code_settings);	
+			
+	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql($sponsored_code_settings[code]) . "', '" . $sponsored_code_settings[starts] . "', '" . $sponsored_code_settings[expires] . "', '(intval)$sponsored_code_settings[uses]')";
 	if($wpdb->query($sqlQuery) !== false)
 	{
 		//set code in user meta
