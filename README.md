@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg?style=flat-square)
 
 ### Welcome to the Paid Memberships Pro - Sponsored/Group Members GitHub Repository
-Add a description of the product here.
+For groups or institutions that allow a member to purchase a block of linked accounts. The Add On provides the primary member’s with a code to distribute to their team for use during registration. The primary member can also automatically register the child accounts during checkout.
 
 For more information please visit [www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/)](https://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/)
 
