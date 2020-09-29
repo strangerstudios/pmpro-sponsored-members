@@ -1,0 +1,96 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
+"POT-Creation-Date: 2020-09-29 14:20+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: pmpro-sponsored-members.php:424
+#, php-format
+msgid ""
+"This user has fewer seats than they had sponsored accounts. The sponsored "
+"accounts have been deactivated. The user must have his sponsored accounts "
+"checkout again using the code: %s."
+msgstr ""
+
+#: pmpro-sponsored-members.php:476
+#, php-format
+msgid ""
+"<p><strong>Notice:</strong>Your current membership has fewer seats than you "
+"had sponsored accounts. The accounts have been deactivated. You must have "
+"your sponsored accounts checkout again using your code: %s.</p>"
+msgstr ""
+
+#: pmpro-sponsored-members.php:643 pmpro-sponsored-members.php:645
+msgid "Give this code to your sponsored members to use at checkout:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:643
+msgid "Or provide one of these direct links to register:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:645
+msgid "Or provide this direct link to register:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:655
+msgid "This code has unlimited uses."
+msgstr ""
+
+#: pmpro-sponsored-members.php:657
+#, php-format
+msgid "This code has %d uses."
+msgstr ""
+
+#: pmpro-sponsored-members.php:719
+msgid "You must use a valid discount code to register for this level."
+msgstr ""
+
+#: pmpro-sponsored-members.php:747
+msgid "The sponsor for this code is inactive. Ask them to renew their account."
+msgstr ""
+
+#: pmpro-sponsored-members.php:753
+msgid ""
+"Sponsors are not permitted to sign up for sponsored levels. This is most "
+"likely a mistake."
+msgstr ""
+
+#: pmpro-sponsored-members.php:765
+msgid "The maximum number of seats allowed is "
+msgstr ""
+
+#: pmpro-sponsored-members.php:770
+msgid "The minimum number of seats allowed is "
+msgstr ""
+
+#: pmpro-sponsored-members.php:898
+msgid "Number of Seats"
+msgstr ""
+
+#: pmpro-sponsored-members.php:910
+#, php-format
+msgid "Enter a number from %d to %d. %s"
+msgstr ""
+
+#: pmpro-sponsored-members.php:912
+#, php-format
+msgid "Enter a number from %d to %d. +%s per extra seat."
+msgstr ""
+
+#: pmpro-sponsored-members.php:2138
+#, php-format
+msgid "Sponsored by %s"
+msgstr ""
