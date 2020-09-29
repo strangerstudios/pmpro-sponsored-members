@@ -178,6 +178,7 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 					pmpro_changeMembershipLevel(0, $sub_user_id);
 				}
 			}
+
 		}
 		
 		//remove seats from meta
@@ -252,9 +253,10 @@ function pmprosm_createSponsorCode($user_id, $level_id, $uses = "") {
 		$code = "S" . pmpro_getDiscountCode();
 	$starts = date("Y-m-d", current_time("timestamp"));
 	$expires = date("Y-m-d", strtotime("+1 year", current_time("timestamp")));
-			
-	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql($code) . "', '" . $starts . "', '" . $expires . "', '" . intval($uses) . "')";
 	
+	$sponsored_code_settings = apply_filters( 'pmprosm_sponsored_code_settings', array('code' => $code, 'starts' => $starts, 'expires' => $expires, 'uses' => $uses ) );
+			
+	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql($sponsored_code_settings[code]) . "', '" . $sponsored_code_settings[starts] . "', '" . $sponsored_code_settings[expires] . "', '(intval)$sponsored_code_settings[uses]')";
 	if($wpdb->query($sqlQuery) !== false)
 	{
 		//set code in user meta
@@ -729,7 +731,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 	if(pmprosm_isSponsoredLevel($pmpro_level->id) && !empty($discount_code))
 	{
 		$pmprosm_values = pmprosm_getValuesBySponsoredLevel($pmpro_level->id, false);
-		
+	
 		$code_id = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql($discount_code) . "' LIMIT 1");
 		if(!empty($code_id))
 		{
@@ -751,13 +753,13 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 				pmpro_setMessage(__("The sponsor for this code is inactive. Ask them to renew their account.", "pmpro-sponsored-members"), "pmpro_error");
 				return false;
 			}
-//manually edit by sbeausoleil 20191023
+
+			//end of manually edit	
 			if($code_user_id == get_current_user_id())
 			{
-				pmpro_setMessage(__("Sponsors are not permitted to sign up for sponsored levels. This is most likely a mistake.", "pmpro-sponsored-members"), "pmpro_error");
+				pmpro_setMessage(__("Sponsors are not permitted to sign up for sponsored levels. This is most likely a mistake.", "pmpro_sponsored_members"), "pmpro_error");
 				return false;
 			}
-			//end of manually edit
 		}
 	}
 	
@@ -879,8 +881,12 @@ function pmprosm_pmpro_checkout_boxes()
         $seats = $pmprosm_values['seats'];
 
 	if ($seats == "") $seats = 0; 	// leaving blank ('') causes this to be unlimited.
-
-	$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
+	
+	if(is_array($pmprosm_values['sponsored_level_id']))
+		$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id'][0]);
+	else
+		$sponsored_level = pmpro_getLevel($pmprosm_values['sponsored_level_id']);
+		
 	?>
 	<div id="pmpro_extra_seats" class="pmpro_checkout">
 		<hr />
@@ -1153,7 +1159,7 @@ function pmprosm_pmpro_checkout_boxes()
 									while (i < newseats)
 									{
                                         var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo $sponsored_level->name; _e(" account information # XXXX", "pmprosm"); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else _e("Please fill in following information and account(s) will be created.", "pmprosm");?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>';
-                                        newdiv = div.replace(/XXXX/g,i);
+                                        newdiv = div.replace(/XXXX/g,i+1);
                                         jQuery('#sponsored_accounts').append(newdiv);										i++;
 									}
 								}
@@ -1679,10 +1685,23 @@ function pmprosm_init_load_session_vars($param)
 }
 add_action('pmpro_checkout_preheader', 'pmprosm_init_load_session_vars', 5);
 
+
+// add the 'seats' parameter to the Paypal Express return url so we charge the correct amount
+function pmprosm_paypal_express_return_url_parameters( $params )
+{
+	if(isset( $_REQUEST['seats'] ))
+	{
+		$params['seats'] = intval($_REQUEST['seats']);
+	}
+	return $params;
+}
+add_filter("pmpro_paypal_express_return_url_parameters", "pmprosm_paypal_express_return_url_parameters" );
+
 //add code and seats fields to profile for admins
 function pmprosm_profile_fields_seats($user)
 {
 	global $wpdb;
+	$user->membership_level = pmpro_getMembershipLevelForUser($user->ID);
 	if( current_user_can("edit_users") && !empty($user->membership_level) )
 	{
 		?>
@@ -1820,12 +1839,17 @@ function pmprosm_the_content_account_page($content)
 {
 	global $post, $pmpro_pages, $current_user, $wpdb;
 			
-	if(!is_admin() && $post->ID == $pmpro_pages['account'])
+	if( ! is_admin() && isset( $post->ID ) && $post->ID == $pmpro_pages['account'] )
 	{
 		//what's their code?
 		$code_id = pmprosm_getCodeByUserID($current_user->ID);
-		$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
 		
+		if ( isset( $current_user->membership_level->ID ) ) {
+			$pmprosm_values = pmprosm_getValuesByMainLevel($current_user->membership_level->ID);
+		} else {
+			$pmprosm_values = '';
+		}
+
 		if(!empty($code_id) && !empty($pmprosm_values))
 		{			
 			$code = pmprosm_getDiscountCodeByCodeID( $code_id );
@@ -2130,13 +2154,5 @@ function pmprosm_pmpro_memberslist_extra_cols_body( $theuser ) {
 }
 add_action( 'pmpro_memberslist_extra_cols_body', 'pmprosm_pmpro_memberslist_extra_cols_body' );
 
-// add the 'seats' parameter to the Paypal Express return url so we charge the correct amount
-function pmprosm_paypal_express_return_url_parameters( $params )
-{
-	if(isset( $_REQUEST['seats'] ))
-	{
-		$params['seats'] = intval($_REQUEST['seats']);
-	}
-	return $params;
-}
-add_filter("pmpro_paypal_express_return_url_parameters", "pmprosm_paypal_express_return_url_parameters" );
+
+
