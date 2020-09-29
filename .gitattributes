@@ -4,3 +4,4 @@
 .gitignore export-ignore
 readme.md export-ignore
 sponsored-members-banner.jpg export-ignore
+languages/gettext.sh export-ignore
