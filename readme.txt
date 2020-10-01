@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 4.0
-Tested up to: 4.9.8
-Stable tag: .7
+Tested up to: 5.5
+Stable tag: 0.8
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,15 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 0.8 - 30-09-2020 =
+* BUG FIX: Fixed bug where PayPal Express wasn't saving the number of 'child' seats correctly.
+* BUG FIX: Fixed a PHP warning when editing non-members in the WordPress dashboard. Thanks @cipriantepes
+* BUG FIX: Fixed a warning when child level ID's was an array and tried to output a string value during checkout.
+* BUG FIX: Fixed child account heading (numbering) when creating child accounts during checkout. This was out by 1.
+* BUG FIX/ENHANCEMENT: Prevent sponsored members for signing up with their own discount codes.
+* ENHANCEMENT: New filter added to allow dynamic changes done to code created - 'pmprosm_sponsored_code_settings'
+* ENHANCEMENT: Localization and escaping of text on the front-end. Thanks @sebthesun
+
 = .7 =
 * BUG FIX: Fixed bug where discount codes were not being saved when using PayPal Express. Fixed other PayPal Express-related bugs.
 * BUG FIX: Fixed bugs with the checkout URL generated for the sponsor code.
@@ -45,7 +54,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * ENHANCEMENT: Adding blank orders and sending confirmation emails to sponsored accounts created at checkout. (Thanks, Bill Stoltz)
 * ENHANCEMENT: Added a new option hide_display_discount_code if you don't want sponsors to be able to see their sponsor code. (Thanks, Bill Stoltz)
 * ENHANCEMENT: Tweaked seat text for cases where seats don't cost extra. (Thanks, Bill Stoltz)
-* ENHNACEMENT: Improved display of sponsor or sponsored children on the edit user page in the WP dashboard. (Thanks, Bill Stoltz)
+* ENHANCEMENT: Improved display of sponsor or sponsored children on the edit user page in the WP dashboard. (Thanks, Bill Stoltz)
 * ENHANCEMENT: Giving Membership Manager role access to view and edit # of seats.
 * ENHANCEMENT: Added pmprosm_getDiscountCodeByCodeID( $code_id ) function to help with getting the code and other details from a code id.
 * ENHANCEMENT: Added a "Sponsor/Code" column to the Members List showing a link to the sponsoring user or the sponsor code if applicable.

@@ -1,0 +1,7 @@
+# Items to ignore when downloading a zip
+.gitattributes export-ignore
+.github export-ignore
+.gitignore export-ignore
+readme.md export-ignore
+sponsored-members-banner.jpg export-ignore
+languages/gettext.sh export-ignore
