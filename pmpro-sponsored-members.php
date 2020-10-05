@@ -790,7 +790,7 @@ function pmprosm_pmpro_discountcodes_extra_cols_body($code)
 	$code_user_id = pmprosm_getCodeUserID($code->id);
 	$code_user = get_userdata($code_user_id);
 	?>
-	<th><?php if(!empty($code_user_id) && !empty($code_user)) { ?><a href="<?php echo get_edit_user_link($code_user_id); ?>"><?php echo $code_user->user_login; ?></a><?php } elseif(!empty($code_user_id) && empty($code_user)) { ?><em>Missing User</em><?php } else { ?><?php } ?></th>
+	<td><?php if(!empty($code_user_id) && !empty($code_user)) { ?><a href="<?php echo get_edit_user_link($code_user_id); ?>"><?php echo $code_user->user_login; ?></a><?php } elseif(!empty($code_user_id) && empty($code_user)) { ?><em>Missing User</em><?php } else { ?><?php } ?></td>
 	<?php
 }
 add_action("pmpro_discountcodes_extra_cols_body", "pmprosm_pmpro_discountcodes_extra_cols_body");
@@ -1787,8 +1787,14 @@ function pmprosm_display_sponsored_accounts($member_ids) {
 				?>
                 <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
                     <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
-                    <td><a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->display_name; ?></a></td>
-                    <td><?php echo $member->user_email; ?></td>
+                    <td><?php echo $member->display_name; ?></td>
+                    <td>
+						<?php if ( current_user_can( 'edit_users' ) ) { ?>
+							<a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo $member->user_email; ?></a>
+						<?php } else { ?>
+							<?php echo $member->user_email; ?>
+						<?php } ?>
+                    </td>
                     <td><?php echo $member->membership_level->name; ?></td>
                 </tr>
 				<?php
@@ -1876,7 +1882,7 @@ function pmprosm_the_content_account_page($content)
 				 
 				<h3><?php esc_html_e("Sponsored Members", "pmpro-sponsored-members");?></h3>
                 <?php if (empty($pmprosm_values['hide_display_discount_code']) || $pmprosm_values['hide_display_discount_code'] === false ) { ?>
-                    <p><?php printf(esc_html__("Give this code to your sponsored members to use at checkout: <strong>%s</strong></p>", "pmpro-sponsored-members"), $code->code);?>
+                    <p><?php printf(esc_html__("Give this code to your sponsored members to use at checkout: %s", "pmpro-sponsored-members"), '<strong>' . $code->code . '</strong>');?></p>
                     <?php if(count($code_urls) > 1) { ?>
                         <p><?php esc_html_e("Or provide one of these direct links to register:", "pmpro-sponsored-members");?></p>
                     <?php } else { ?>
