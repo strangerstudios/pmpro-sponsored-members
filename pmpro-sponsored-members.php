@@ -254,7 +254,7 @@ function pmprosm_createSponsorCode($user_id, $level_id, $uses = "") {
 	$code_starts = $sponsored_code_settings['starts'];
 	$code_expires = $sponsored_code_settings['expires'];
 	$code_uses = intval( $sponsored_code_settings['uses'] );
-			
+
 	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql( $sponsored_code ) . "', '" . esc_sql( $code_starts ) . "', '" . esc_sql( $code_expires ) . "', '$code_uses')";
 
 	if($wpdb->query($sqlQuery) !== false)
@@ -377,7 +377,7 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 	{
 		//check if they have enough seats				
 		if($seats >= count($sub_user_ids))
-		{				
+		{	
 			$count = 0;
 			foreach($sub_user_ids as $sub_user_id)
 			{
@@ -393,6 +393,7 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 					if(in_array($last_level_id, $pmprosm_values['sponsored_level_id']))
 						if(pmprosm_changeMembershipLevelWithCode( $last_level_id, $sub_user_id, $code_id ))
 						{
+							
 							//  update code Use with new order
 							pmprosm_removeDiscountCodeUse($sub_user_id, $code_id);
 							pmprosm_addDiscountCodeUse($sub_user_id, $last_level_id, $code_id);
@@ -401,6 +402,7 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 				else
 					if(pmprosm_changeMembershipLevelWithCode( $pmprosm_values['sponsored_level_id'], $sub_user_id, $code_id ))
 					{
+			
 						// update code Use with new order
 						pmprosm_removeDiscountCodeUse($sub_user_id, $code_id);
 						pmprosm_addDiscountCodeUse($sub_user_id, $pmprosm_values['sponsored_level_id'], $code_id);
@@ -1289,9 +1291,14 @@ function pmprosm_pmpro_after_checkout($user_id)
 		else
 			$child_last_name = array();
 			
-		$child_password = $_REQUEST['add_sub_accounts_password'];
-		$child_email = $_REQUEST['add_sub_accounts_email'];
-					
+		$child_password = isset( $_REQUEST['add_sub_accounts_password'] ) ? $_REQUEST['add_sub_accounts_password'] : '';
+		$child_email = isset( $_REQUEST['add_sub_accounts_email'] ) ? $_REQUEST['add_sub_accounts_email'] : '';
+		
+		// Bail if the child accounts aren't set.
+		if ( ! is_array( $child_email ) && empty( $child_email ) ) {
+			return;
+		}
+
 		$sponsored_code = pmprosm_getCodeByUserID($user_id);
 		
 		if($parent_level)
@@ -1355,6 +1362,7 @@ function pmprosm_pmpro_after_checkout($user_id)
 	}
 }
 add_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout");
+
 function pmprosm_after_checkout_children_updated($user_id) {
 	global $current_user, $pmprosm_sponsored_account_levels, $pmpro_level;
 
@@ -1384,16 +1392,15 @@ function pmprosm_after_checkout_children_updated($user_id) {
 
 				if ( ! empty( $order_id ) ) {
 					$invoice = new MemberOrder( $order_id );
-
 					//set some child order fields to match parents
-					$invoice->billing->name    = $parentOrder->billing->name;
-					$invoice->billing->street  = $parentOrder->billing->street;
-					$invoice->billing->city    = $parentOrder->billing->city;
-					$invoice->billing->state   = $parentOrder->billing->state;
-					$invoice->billing->zip     = $parentOrder->billing->zip;
-					$invoice->billing->country = $parentOrder->billing->country;
-					$invoice->billing->phone   = $parentOrder->billing->phone;
-					$invoice->status           = $parentOrder->status;
+					$invoice->billing->name    = isset( $parentOrder->billing->name ) ? $parentOrder->billing->name : '';
+					$invoice->billing->street  = isset( $parentOrder->billing->street ) ? $parentOrder->billing->street : '';
+					$invoice->billing->city    = isset( $parentOrder->billing->city ) ? $parentOrder->billing->city : '';
+					$invoice->billing->state   = isset( $parentOrder->billing->state ) ? $parentOrder->billing->state : '';
+					$invoice->billing->zip     = isset( $parentOrder->billing->zip ) ? $parentOrder->billing->zip : '';
+					$invoice->billing->country = isset( $parentOrder->billing->country ) ? $parentOrder->billing->country : '';
+					$invoice->billing->phone   = isset( $parentOrder->billing->phone ) ? $parentOrder->billing->phone : '';
+					$invoice->status           = isset( $parentOrder->status ) ? $parentOrder->status : '';
 					$invoice->saveOrder();
 				} else {
 					$invoice = null;
@@ -1425,7 +1432,12 @@ function pmprosm_changeMembershipLevelWithCode($level_id, $user_id, $code_id)
 	$child_level = pmpro_getLevel($level_id);
 	
 	//set the start date to NOW() but allow filters
-	$startdate = apply_filters("pmpro_checkout_start_date", "NOW()", $user_id, $child_level);	
+	$startdate = apply_filters("pmpro_checkout_start_date", 'NOW()', $user_id, $child_level);
+
+	// If the startdate is empty, be sure to update it and force it to be today's date and assign it as a new filter.
+	if ( $startdate === "'0000-00-00 00:00:00'" || empty( $startdate ) ) {
+		$startdate = apply_filters("pmprosm_checkout_start_date", date( 'Y-m-d H:i:s' ), $user_id, $child_level );
+	}
 	
 	$custom_level = array(
 		'user_id' => $user_id,
@@ -1453,6 +1465,7 @@ function pmprosm_getOrderByCodeUser($code_id, $user_id) {
 	return $order_id;
 
 }
+
 //add a row to pmpro_discount_codes_uses with a blank order
 function pmprosm_addDiscountCodeUse($user_id, $level_id, $code_id)
 {
@@ -1461,13 +1474,15 @@ function pmprosm_addDiscountCodeUse($user_id, $level_id, $code_id)
 	$user = get_userdata($user_id);
 	
 	//add blank order
-	$morder = new MemberOrder();						
+	$morder = new MemberOrder();
+	$morder->code = $morder->getRandomCode();
 	$morder->InitialPayment = 0;	
 	$morder->Email = $user->user_email;
 	$morder->gateway = "free";	//sponsored
-
 	$morder->user_id = $user_id;
-	$morder->membership_id = $level_id;					
+	$morder->membership_id = $level_id;	
+	$morder->status = 'success';
+	$morder->notes = __( 'Child account created during checkout of sponsored member.', 'pmpro-sponsored-members' );	
 	$morder->saveOrder();
 
 	if(!empty($morder->id))
