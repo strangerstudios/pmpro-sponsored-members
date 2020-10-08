@@ -402,7 +402,6 @@ function pmprosm_sponsored_account_change($level_id, $user_id)
 				else
 					if(pmprosm_changeMembershipLevelWithCode( $pmprosm_values['sponsored_level_id'], $sub_user_id, $code_id ))
 					{
-			
 						// update code Use with new order
 						pmprosm_removeDiscountCodeUse($sub_user_id, $code_id);
 						pmprosm_addDiscountCodeUse($sub_user_id, $pmprosm_values['sponsored_level_id'], $code_id);
@@ -1432,12 +1431,7 @@ function pmprosm_changeMembershipLevelWithCode($level_id, $user_id, $code_id)
 	$child_level = pmpro_getLevel($level_id);
 	
 	//set the start date to NOW() but allow filters
-	$startdate = apply_filters("pmpro_checkout_start_date", 'NOW()', $user_id, $child_level);
-
-	// If the startdate is empty, be sure to update it and force it to be today's date and assign it as a new filter.
-	if ( $startdate === "'0000-00-00 00:00:00'" || empty( $startdate ) ) {
-		$startdate = apply_filters("pmprosm_checkout_start_date", date( 'Y-m-d H:i:s' ), $user_id, $child_level );
-	}
+	$startdate = apply_filters("pmprosm_checkout_start_date", date( 'Y-m-d H:i:s' ), $user_id, $child_level);	
 	
 	$custom_level = array(
 		'user_id' => $user_id,
@@ -1472,15 +1466,15 @@ function pmprosm_addDiscountCodeUse($user_id, $level_id, $code_id)
 	global $wpdb;
 	
 	$user = get_userdata($user_id);
-	
+
 	//add blank order
 	$morder = new MemberOrder();
-	$morder->code = $morder->getRandomCode();
+	$morder->code = pmpro_getDiscountCode();
 	$morder->InitialPayment = 0;	
 	$morder->Email = $user->user_email;
 	$morder->gateway = "free";	//sponsored
 	$morder->user_id = $user_id;
-	$morder->membership_id = $level_id;	
+	$morder->membership_id = $level_id;
 	$morder->status = 'success';
 	$morder->notes = __( 'Child account created during checkout of sponsored member.', 'pmpro-sponsored-members' );	
 	$morder->saveOrder();
