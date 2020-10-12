@@ -861,13 +861,16 @@ function pmprosm_pmpro_checkout_boxes()
 	//make sure options are defined for this
 	$pmprosm_values = pmprosm_getValuesByMainLevel($pmpro_level->id);
 		
-	if(empty($pmprosm_values['max_seats']) || !isset($pmprosm_values['seat_cost']))
-	{
+	if (
+		( empty( $pmprosm_values['seats'] ) && empty( $pmprosm_values['max_seats'] ) ) ||
+		! isset( $pmprosm_values['seat_cost'] )
+	){
 		return;
 	}
 
+	$can_edit_seats = empty( $pmprosm_values['max_seats'] ) && empty( $pmprosm_values['min_seats'] );
 	$seat_cost = $pmprosm_values['seat_cost'];
-	$max_seats = $pmprosm_values['max_seats'];
+	$max_seats = empty( $pmprosm_values['max_seats'] ) ? null : $pmprosm_values['max_seats'];
 
 	//get seats from submit
 	if(isset($_REQUEST['seats']))
@@ -889,39 +892,56 @@ function pmprosm_pmpro_checkout_boxes()
 		
 	?>
 	<div id="pmpro_extra_seats" class="pmpro_checkout">
-		<hr />
-		<h3>
-			<span class="pmpro_checkout-h3-name">
-                <?php if ($seat_cost > 0) {
-					esc_html_e("Would you like to purchase extra seat(s)?", "pmpro-sponsored-members");
-				} else {
-					esc_html_e("Would you like to create extra account(s)?", "pmpro-sponsored-members");
-				}
+		<?php
+			if ( $can_edit_seats ) {
+		?>
+			<hr />
+			<h3>
+				<span class="pmpro_checkout-h3-name">
+				<?php
+					if ( $seat_cost >  0) {
+						esc_html_e( "Would you like to purchase extra seat(s)?", "pmpro-sponsored-members" );
+					} else {
+						esc_html_e( "Would you like to create extra account(s)?", "pmpro-sponsored-members" );
+					}
 				?>
-            </span>
-		</h3>
+				</span>
+			</h3>
+		<?php } ?>
 		<div class="pmpro_checkout-fields">
 			<div class="pmpro_checkout-field pmpro_checkout-field-seats">
-				<label for="seats"><?php echo __('Number of Seats', 'pmpro-sponsored-members');?></label>
-				<input type="text" id="seats" name="seats" value="<?php echo esc_attr($seats);?>" size="10" />
-				<p class="pmpro_small">
-					<?php
-                        //min seats defaults to 1
-                        if(!empty($pmprosm_values['min_seats']))
-                            $min_seats = $pmprosm_values['min_seats'];
-                        else
-                            $min_seats = 1;
 
-                        if ($max_seats > 1) {
-                            if ( isset( $pmprosm_values['seat_cost_text'] ) ) {
-                                printf( esc_html__( "Enter a number from %d to %d. %s", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text'] );
-                            } else {
-                                printf( esc_html__( "Enter a number from %d to %d. +%s per extra seat.", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost'] );
-                            }
-                        }
-					?>						
-				</p>					
+				<?php
+					if ( $can_edit_seats ) {
+				?>
+						<label for="seats"><?php echo __( 'Number of Seats', 'pmpro-sponsored-members' );?></label>
+						<input type="text" id="seats" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
+				<?php } else { ?>
+						<input type="hidden" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
+				<?php } ?>
 
+				<?php
+					if ( $can_edit_seats ) {
+				?>
+						<p class="pmpro_small">
+							<?php
+								//min seats defaults to 1
+								if( ! empty( $pmprosm_values['min_seats'] ) ) {
+									$min_seats = $pmprosm_values['min_seats'];
+								} else {
+									$min_seats = 1;
+								}
+
+								if ( $max_seats > 1 ) {
+									if ( isset( $pmprosm_values['seat_cost_text'] ) ) {
+										printf( esc_html__( "Enter a number from %d to %d. %s", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text'] );
+									} else {
+										printf( esc_html__( "Enter a number from %d to %d. +%s per extra seat.", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost'] );
+									}
+								}
+							?>
+						</p>
+				<?php } ?>
 				<?php
 				//adding sub accounts at checkout?
 				if(!empty($pmprosm_values['sponsored_accounts_at_checkout']))
