@@ -868,7 +868,7 @@ function pmprosm_pmpro_checkout_boxes()
 		return;
 	}
 
-	$can_edit_seats = empty( $pmprosm_values['max_seats'] ) && empty( $pmprosm_values['min_seats'] );
+	$can_edit_seats = ! empty( $pmprosm_values['max_seats'] ) || ! empty( $pmprosm_values['min_seats'] );
 	$seat_cost = $pmprosm_values['seat_cost'];
 	$max_seats = empty( $pmprosm_values['max_seats'] ) ? null : $pmprosm_values['max_seats'];
 
