@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 4.0
 Tested up to: 5.5
-Stable tag: 0.8
+Stable tag: 0.9
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,7 +37,15 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
-= 0.8 - 30-09-2020 =
+= 0.9 - 2020-10-15 =
+* BUG FIX: Fixed warning of undefined constant when creating child accounts at checkout.
+* BUG FIX: Fixed incorrect escaping of discount code text on account/confirmation page.
+* BUG FIX: Fixed issue of child start date being 1 January 1970 during account creation at checkout.
+* BUG FIX: Fixed a warning during child account creation at checkout of duplicate order codes for each child account.
+* BUG FIX: Updates the frontend list of a sponsor's child accounts to only show a link to edit user if they have that capability.
+* BUG FIX: Fixes improper use of a `<th>` where it should be a `<td>` in the discount code table inside the WordPress dashboard.
+
+= 0.8 - 2020-09-30 =
 * BUG FIX: Fixed bug where PayPal Express wasn't saving the number of 'child' seats correctly.
 * BUG FIX: Fixed a PHP warning when editing non-members in the WordPress dashboard. Thanks @cipriantepes
 * BUG FIX: Fixed a warning when child level ID's was an array and tried to output a string value during checkout.
