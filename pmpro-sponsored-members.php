@@ -917,7 +917,7 @@ function pmprosm_pmpro_checkout_boxes()
 						<label for="seats"><?php echo __( 'Number of Seats', 'pmpro-sponsored-members' );?></label>
 						<input type="text" id="seats" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
 				<?php } else { ?>
-						<input type="hidden" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
+						<input type="hidden" id="seats" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
 				<?php } ?>
 
 				<?php
@@ -1109,8 +1109,8 @@ function pmprosm_pmpro_checkout_boxes()
 				jQuery(document).ready(function() {
 					var pmpro_base_level_is_free = <?php if(pmpro_isLevelFree($pmpro_level)) echo "true"; else echo "false";?>;
 					var seat_cost = <?php echo intval($pmprosm_values['seat_cost']);?>;
-					var min_seats = <?php if(!empty($pmprosm_values['min_seats'])) echo intval($pmprosm_values['min_seats']); else echo "0";?>;
-					var max_seats = <?php if(!empty($pmprosm_values['max_seats'])) echo intval($pmprosm_values['max_seats']); else echo "false";?>;
+					var min_seats = <?php if(!empty($pmprosm_values['min_seats'])) echo intval($pmprosm_values['min_seats']); elseif (!empty($pmprosm_values['seats'])) echo intval($pmprosm_values['seats']); else echo "0";?>;
+					var max_seats = <?php if(!empty($pmprosm_values['max_seats'])) echo intval($pmprosm_values['max_seats']); elseif (!empty($pmprosm_values['seats'])) echo intval($pmprosm_values['seats']); else echo "false";?>;
 
 					//update things when the # of seats changes
 					jQuery('#seats, input.old_sub_accounts_active').bind("change", function() { 
