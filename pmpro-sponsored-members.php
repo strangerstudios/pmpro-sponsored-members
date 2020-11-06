@@ -737,6 +737,11 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 		if(!empty($code_id))
 		{
 			$code_user_id = pmprosm_getCodeUserID($code_id);
+
+			// If no user is found for the discount code, assume it's a normal discount code.
+			if ( ! $code_user_id ) {
+				return $pmpro_continue_registration;
+			}
 		
 			$continue_reg = false; 
 
