@@ -253,7 +253,7 @@ function pmprosm_createSponsorCode($user_id, $level_id, $uses = "") {
 	$sponsored_code = $sponsored_code_settings['code'];
 	$code_starts = $sponsored_code_settings['starts'];
 	$code_expires = $sponsored_code_settings['expires'];
-	$code_uses = intval( $sponsored_code_settings['uses'] );
+	$code_uses = ! empty( $sponsored_code_settings['uses'] ) ? intval( $sponsored_code_settings['uses'] ) : '';
 
 	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql( $sponsored_code ) . "', '" . esc_sql( $code_starts ) . "', '" . esc_sql( $code_expires ) . "', '$code_uses')";
 
@@ -628,10 +628,6 @@ function pmprosm_pmpro_confirmation_message($message)
 		if(empty($sponsored_level_ids) || empty($sponsored_level_ids[0]))
 			return $message;
 		
-		//no uses for this code
-		if(empty($code->uses))
-			return $message;
-		
 		$pmpro_levels = pmpro_getAllLevels(false, true);
 				
 		$code_urls = array();
@@ -760,8 +756,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 				return false;
 			}
 			
-			if($code_user_id == get_current_user_id())
-			{
+			if($code_user_id == get_current_user_id()) {
 				pmpro_setMessage(__("Sponsors are not permitted to sign up for sponsored levels. This is most likely a mistake.", "pmpro-sponsored-members"), "pmpro_error");
 				return false;
 			}
@@ -1881,11 +1876,6 @@ function pmprosm_the_content_account_page($content)
 			//no sponsored levels to use codes for
 			if(empty($sponsored_level_ids) || empty($sponsored_level_ids[0]))
 				return $content;
-			
-			//no uses for this code
-			if(empty($code->uses))
-				return $content;
-			
 
 			$code_urls = pmprosm_get_checkout_urls( $code );
 				
@@ -2010,10 +2000,6 @@ function pmprosm_pmpro_email_body($body, $pmpro_email)
 			
 			//no sponsored levels to use codes for
 			if(empty($sponsored_level_ids) || empty($sponsored_level_ids[0]))
-				return $body;
-			
-			//no uses for this code
-			if(empty($code->uses))
 				return $body;
 
 			if(isset($pmprosm_values['add_created_accounts_to_confirmation_email']) && $pmprosm_values['add_created_accounts_to_confirmation_email'] === true) {
