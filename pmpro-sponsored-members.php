@@ -756,7 +756,7 @@ function pmprosm_pmpro_registration_checks($pmpro_continue_registration)
 				return false;
 			}
 			
-			if($code_user_id == get_current_user_id()) {
+			if(!empty($code_user_id) && $code_user_id == get_current_user_id()) {
 				pmpro_setMessage(__("Sponsors are not permitted to sign up for sponsored levels. This is most likely a mistake.", "pmpro-sponsored-members"), "pmpro_error");
 				return false;
 			}
