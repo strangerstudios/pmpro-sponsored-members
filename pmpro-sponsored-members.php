@@ -1772,10 +1772,61 @@ add_action('show_user_profile', 'pmprosm_profile_fields_seats');
 add_action('edit_user_profile', 'pmprosm_profile_fields_seats');
 
 function pmprosm_display_sponsored_accounts($member_ids) {
-
-    //make sure we have something to display
-	if ( empty( $member_ids) ) return '';
+        /*
+         * 
+         * Method variables
+         * 
+         */
+        $content = '';
+        $member_ids;
+        $reponse = false;
 	$count = 0;
+        
+        /*
+         * Get the current logged in user for the front end
+         * or
+         * Get user id for editing the user-edit.php page backend
+         */
+        $user_id = get_current_user_id();
+        if(isset($_REQUEST['user_id'])){
+            $user_id = intval($_REQUEST['user_id']);
+        }
+        
+        /*
+         * For removing members from seats
+         */
+        if(isset($_REQUEST['member_id']) && isset($_REQUEST['levelstocancel']) && isset($_REQUEST['action'])){
+            /*
+             * check nonce for security
+             */
+            if(wp_verify_nonce($_REQUEST['action'], 'remove-member')){
+                /*
+                 * Removes member from seat
+                 */
+                $reponse = pmprosm_remove_member_from_seat(intval($_REQUEST['member_id']), intval($_REQUEST['levelstocancel']), $user_id);
+                if($reponse){
+                    /*
+                     * Get updated member_ids
+                     */
+                    $member_ids = pmprosm_getChildren( $user_id );                
+                }
+            }
+        }
+        /*
+         * 
+         */
+        if(!isset($_REQUEST['user_id'])){
+            /*
+             * Display on the front end - on membership account page
+             */
+            addUsesDisplay($user_id, $member_ids);
+        }
+        
+        /*
+         * double check to make sure that we still have something to do
+         */
+        if ( empty( $member_ids) ) {return '';}
+        
 	ob_start();
     ?>
 
@@ -1799,6 +1850,11 @@ function pmprosm_display_sponsored_accounts($member_ids) {
 				if(empty($member)) {
 					continue;
 				}
+                                /*
+                                 * Create a URL Query to remove member from seat with user_id, member_id, levelstocancel and wp nonce
+                                 */
+                                $url = '?user_id='.$user_id.'&member_id='.$member_id.'&levelstocancel='.$member->membership_level->id;
+                                $nonce_url = add_query_arg('action', wp_create_nonce('remove-member'), $url);
 				?>
                 <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
                     <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
@@ -1811,6 +1867,7 @@ function pmprosm_display_sponsored_accounts($member_ids) {
 						<?php } ?>
                     </td>
                     <td><?php echo $member->membership_level->name; ?></td>
+                    <td><a href="<?php echo esc_url($nonce_url); ?>">Remove</a></td>
                 </tr>
 				<?php
 			}
@@ -1822,6 +1879,84 @@ function pmprosm_display_sponsored_accounts($member_ids) {
 	$content = ob_get_contents();
 	ob_end_clean();
 	return $content;
+}
+function pmprosm_remove_member_from_seat($member_id, $levelstocancel, $user_id){ 
+    /*
+     * 
+     * Method variable(s)
+     * 
+     */
+    $response = false;
+    
+    /*
+     * Double checking user_id is a sponsor
+     */
+    $user_level = pmpro_getMembershipLevelForUser($user_id);
+    
+    if( pmprosm_isSponsoredLevel($user_level->id) )
+    {
+        /*
+         * Removes member from seat
+         */
+        $response = pmprosm_remove_member_from_seat_action($user_id, $member_id, $levelstocancel);
+
+        /*
+         * Get Updated member_ids
+         */
+        if($response){        
+            $member = get_userdata($member_id);
+        ?>
+        <div class="pmpro_message pmpro_success">
+            <?php
+                _e(sprintf('Sponsored User: %s was removed. (Membership Level: %s)',$member->display_name, $levelstocancel ));
+            ?>
+        </div>
+        <?php
+            return true;
+        }
+    }
+    
+    /*
+     * 
+     */
+    return false;
+}
+function pmprosm_remove_member_from_seat_action($user_id, $member_id, $levelstocancel){    
+    /*
+     * Cancels Child user's membership
+     */
+    $reponse = pmpro_cancelMembershipLevel($levelstocancel, $member_id);
+    if(intval($reponse) === 1){  
+        /* 
+         * Get the discount code from sponsor's account
+         */
+        $code_id = pmprosm_getCodeByUserID($user_id);  
+        /*
+         * If child user's successfully cancalled remove the discount code 
+         * from child account
+         */
+        pmprosm_removeDiscountCodeUse($member_id, $code_id);
+        return true;
+    } 
+    
+    return false;
+}
+function addUsesDisplay($user_id, $member_ids){
+    $code_id = pmprosm_getCodeByUserID($user_id);
+    $code = pmprosm_getDiscountCodeByCodeID( $code_id, $member_ids );
+    $count = 0;
+    if ( !empty( $member_ids) ) {
+        $count = count($member_ids);    
+    }
+?>
+    <div class="pmpro_message pmpro_default">
+            <?php if(empty($code->uses)) { ?>
+                    <?php _e("This code has unlimited uses.", "pmpro_sponsored_members");?>
+            <?php } else { ?>
+                    <?php printf(__("%s/%s uses.", "pmpro_sponsored_members"), $count, $code->uses);?>
+            <?php } ?>
+    </div>
+<?php
 }
 //save seats on profile save
 function pmprosm_profile_update_seats($user_id)
@@ -1909,21 +2044,19 @@ function pmprosm_the_content_account_page($content)
                             <li><?php echo $code_url['name'];?>: <strong><a target="_blank" href="<?php echo $code_url['url'];?>"><?php echo $code_url['url'];?></a></strong></li>
                         <?php } ?>
                     </ul>
-                <?php } // hide_display_discount_code ?>
+                <?php } // hide_display_discount_code 
 
                 <div class="pmpro_message pmpro_default">
-					<?php if(empty($code->uses)) { ?>
-						<?php esc_html_e("This code has unlimited uses.", "pmpro-sponsored-members");?>
-					<?php } else { ?>
-						<?php printf(esc_html__("%s/%s uses.", "pmpro-sponsored-members"), count($member_ids), $code->uses);?>
-					<?php } ?>
-				</div>
-				<?php
+                  <?php if(empty($code->uses)) { ?>
+                    <?php esc_html_e("This code has unlimited uses.", "pmpro-sponsored-members");?>
+                  <?php } else { ?>
+                    <?php printf(esc_html__("%s/%s uses.", "pmpro-sponsored-members"), count($member_ids), $code->uses);?>
+                  <?php } ?>
+                </div>
+				        <?php
                     // use same account display as in admin
-                        if ( ! empty( $member_ids ) ) {
                             echo "<hr />";
                             echo pmprosm_display_sponsored_accounts( $member_ids );
-                        }
                 ?>
 			</div> <!-- end pmpro_account-sponsored -->
 			<?php
