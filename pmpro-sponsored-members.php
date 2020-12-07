@@ -807,7 +807,7 @@ function pmprosm_pmpro_discount_code_after_settings() {
 <tr>
     <th scope="row" valign="top"><label for="user_id"><?php esc_html_e( "User ID:", "pmpro-sponsored-members" );?></label></th>
     <td>
-		<input name="user_id" type="text" size="10" value="<?php if( ! empty( $code_user_id ) ) { echo esc_attr( $code_user_id ) };?>" />
+		<input name="user_id" type="text" size="10" value="<?php if( ! empty( $code_user_id ) ) { echo esc_attr( $code_user_id ); }?>" />
 		<small class="pmpro_lite"><?php esc_html_e( "The user ID of the main account holder.", "pmpro-sponsored-members" );?></small>
 	</td>
 </tr>
