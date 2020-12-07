@@ -279,11 +279,10 @@ function pmprosm_createSponsorCode( $user_id, $level_id, $uses = '' ) {
 				'expiration_period' => "'Month'"
 			);
 
-			// Allow override of the discount code values by setting it in the pmprosm_sponsored_account_levels array.
-			if(!empty($pmprosm_values['discount_code']))
-				foreach($discount_code as $col => $value)
-					if(isset($pmprosm_values['discount_code'][$col]))
-						$discount_code[$col] = $pmprosm_values['discount_code'][$col];
+			// Allow override of the discount code values.
+			if( ! empty( $pmprosm_values['discount_code'] ) ) {
+				$discount_code = array_merge( $discount_code, $pmprosm_values['discount_code'] );
+			}
 
 			$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes_levels (code_id,
 																		 level_id,
