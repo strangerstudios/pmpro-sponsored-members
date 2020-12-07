@@ -104,44 +104,38 @@ function pmprosm_isSponsoredLevel( $level_id ) {
 	return false;
 }
 
-//get values by main account level
-function pmprosm_getValuesByMainLevel($level_id)
-{
+/**
+ * Get values by main account level.
+ */
+function pmprosm_getValuesByMainLevel( $level_id ) {
 	global $pmprosm_sponsored_account_levels;
-	if(isset($pmprosm_sponsored_account_levels[$level_id]))
+	if( isset( $pmprosm_sponsored_account_levels[$level_id] ) ) {
 		return $pmprosm_sponsored_account_levels[$level_id];
-	else
+	} else {
 		return false;
+	}
 }
 
-//get values by sponsored account level
-function pmprosm_getValuesBySponsoredLevel($level_id, $first = true)
-{
+/**
+ * Get values by sponsored account level.
+ */
+function pmprosm_getValuesBySponsoredLevel( $level_id, $first = true ) {
 	global $pmprosm_sponsored_account_levels;
 
 	$pmprosm_sponsored_account_values = array();
 
-	foreach($pmprosm_sponsored_account_levels as $key => $values)
-	{
-		if(is_array($values['sponsored_level_id']))
-		{
-			if(in_array($level_id, $values['sponsored_level_id']) && $first)
+	foreach( $pmprosm_sponsored_account_levels as $key => $values ) {
+		if( is_array( $values['sponsored_level_id'] ) ) {
+			if( in_array($level_id, $values['sponsored_level_id']) && $first ) {
 				return $pmprosm_sponsored_account_levels[$key];
-
-			else
-			{
+			} else {
 				$pmprosm_sponsored_account_values[] = $pmprosm_sponsored_account_levels[$key];
 			}
-		}
-		else
-		{
-			if($values['sponsored_level_id'] == $level_id && $first)
+		} else {
+			if( $values['sponsored_level_id'] == $level_id && $first ) {
 				return $pmprosm_sponsored_account_levels[$key];
-
-			else
-			{
+			} else {
 				$pmprosm_sponsored_account_values[] = $pmprosm_sponsored_account_levels[$key];
-
 			}
 		}
 	}
@@ -149,61 +143,56 @@ function pmprosm_getValuesBySponsoredLevel($level_id, $first = true)
 	return $pmprosm_sponsored_account_values;
 }
 
-//cancel sub members when a main account cancels
-//activate sub members when changed to main account
-//generate a discount code when changing to main account level
-function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
-{
+/**
+ * Code to run when a membership level is changed.
+ * Cancel sub members when a main account cancels.
+ * Activate sub members when changed to main account.
+ * Generate a discount code when changing to main account level.
+ */
+function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 	global $wpdb;
 
 	//are they cancelling?
-	if(empty($level_id))
-	{
+	if( empty( $level_id ) ) {
 		//is there a discount code attached to this user?
-		$code_id = pmprosm_getCodeByUserID($user_id);
+		$code_id = pmprosm_getCodeByUserID( $user_id );
 
 		//if so find all users who signed up with that and cancel them as well
-		if(!empty($code_id))
-		{
-			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . $code_id . "'";
+		if( ! empty( $code_id ) ) {
+			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
 			$sub_user_ids = $wpdb->get_col($sqlQuery);
 
-			if(!empty($sub_user_ids))
-			{
-				foreach($sub_user_ids as $sub_user_id)
-				{
+			if( ! empty( $sub_user_ids ) ) {
+				foreach( $sub_user_ids as $sub_user_id ) {
 					//cancel their membership
-					pmpro_changeMembershipLevel(0, $sub_user_id);
+					pmpro_changeMembershipLevel( 0, $sub_user_id );
 				}
 			}
-
 		}
 
 		//remove seats from meta
-		update_user_meta($user_id, "pmprosm_seats", "");
-	}
-	elseif(pmprosm_isMainLevel($level_id))
-	{
+		update_user_meta( $user_id, 'pmprosm_seats', '' );
+	} elseif ( pmprosm_isMainLevel( $level_id ) ) {
 		//get values for this sponsorship
-		$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
+		$pmprosm_values = pmprosm_getValuesByMainLevel( $level_id );
 
 		//check if this user already has a discount code
-		$code_id = pmprosm_getCodeByUserID($user_id);
+		$code_id = pmprosm_getCodeByUserID( $user_id );
 
 		//make sure the code is still around
-		if($code_id)
-		{
-			$code_exists = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE id = '" . $code_id . "' LIMIT 1");
-			if(!$code_exists)
+		if( $code_id ) {
+			$code_exists = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql( $code_id ) . "' LIMIT 1");
+			if( ! $code_exists ) {
 				$code_id = false;
+			}
 		}
 
 		//no code, make one
-		if(empty($code_id))
-		{
+		if( empty( $code_id ) ) {
 			//if seats cost money and there are no seats, just return
-			if(!empty($pmprosm_values['seat_cost']) && empty($_REQUEST['seats']))
+			if( ! empty( $pmprosm_values['seat_cost'] ) && empty( $_REQUEST['seats'] ) ) {
 				return;
+			}
 
 			//check for seats
 			if(isset($_REQUEST['seats']))
@@ -218,41 +207,42 @@ function pmprosm_pmpro_after_change_membership_level($level_id, $user_id)
 				$uses = "";
 
 			//create a new code
-			pmprosm_createSponsorCode($user_id, $level_id, $uses);
+			pmprosm_createSponsorCode( $user_id, $level_id, $uses );
 
 			//make sure seats is correct in user meta
-			update_user_meta($user_id, "pmprosm_seats", $uses);
-		}
-		elseif(!empty($pmprosm_values['sponsored_level_id']))
-		{
+			update_user_meta( $user_id, 'pmprosm_seats', $uses );
+		} elseif( ! empty( $pmprosm_values['sponsored_level_id'] ) ) {
 			//update sponsor code and sub accounts
-			pmprosm_sponsored_account_change($level_id, $user_id);
+			pmprosm_sponsored_account_change( $level_id, $user_id );
 
 			//make sure we only do it once
-			remove_action("pmpro_after_checkout", "pmprosm_pmpro_after_checkout_sponsor_account_change", 10, 2);
+			remove_action( 'pmpro_after_checkout', 'pmprosm_pmpro_after_checkout_sponsor_account_change', 10, 2 );
 		}
 	}
 }
-add_action("pmpro_after_change_membership_level", "pmprosm_pmpro_after_change_membership_level", 10, 2);
+add_action( 'pmpro_after_change_membership_level', 'pmprosm_pmpro_after_change_membership_level', 10, 2 );
 
-/*
-	Create a new sponsor discount code.
-*/
-function pmprosm_createSponsorCode($user_id, $level_id, $uses = "") {
+/**
+ * Create a new sponsor discount code.
+ */
+function pmprosm_createSponsorCode( $user_id, $level_id, $uses = '' ) {
 	global $wpdb;
 
-	//get values for this sponsorship
-	$pmprosm_values = pmprosm_getValuesByMainLevel($level_id);
+	// Get values for this sponsorship.
+	$pmprosm_values = pmprosm_getValuesByMainLevel( $level_id );
 
-	//generate a new code. change these values if you want.
-	if(version_compare(PMPRO_VERSION, "1.7.5") > 0)
-		$code = "S" . pmpro_getDiscountCode($user_id); 	//seed parameter added in version 1.7.6
-	else
+	// Generate a new code. change these values if you want.
+	if( version_compare(PMPRO_VERSION, '1.7.5' ) > 0 ) {
+		//seed parameter added in version 1.7.6
+		$code = "S" . pmpro_getDiscountCode( $user_id );
+	} else {
 		$code = "S" . pmpro_getDiscountCode();
-	$starts = date("Y-m-d", current_time("timestamp"));
-	$expires = date("Y-m-d", strtotime("+1 year", current_time("timestamp")));
+	}
+	
+	$starts = date( 'Y-m-d', current_time( 'timestamp' ) );
+	$expires = date( 'Y-m-d', strtotime( '+1 year', current_time( 'timestamp' ) ) );
 
-	$sponsored_code_settings = apply_filters( 'pmprosm_sponsored_code_settings', array('code' => $code, 'starts' => $starts, 'expires' => $expires, 'uses' => $uses ) );
+	$sponsored_code_settings = apply_filters( 'pmprosm_sponsored_code_settings', array( 'code' => $code, 'starts' => $starts, 'expires' => $expires, 'uses' => $uses ) );
 
 	$sponsored_code = $sponsored_code_settings['code'];
 	$code_starts = $sponsored_code_settings['starts'];
@@ -261,20 +251,19 @@ function pmprosm_createSponsorCode($user_id, $level_id, $uses = "") {
 
 	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql( $sponsored_code ) . "', '" . esc_sql( $code_starts ) . "', '" . esc_sql( $code_expires ) . "', '$code_uses')";
 
-	if($wpdb->query($sqlQuery) !== false)
-	{
+	if( $wpdb->query( $sqlQuery ) !== false ) {
 		//set code in user meta
 		$code_id = $wpdb->insert_id;
-		pmprosm_setCodeUserID($code_id, $user_id);
+		pmprosm_setCodeUserID( $code_id, $user_id );
 
 		//okay update levels for code
-		if(!is_array($pmprosm_values['sponsored_level_id']))
+		if( ! is_array( $pmprosm_values['sponsored_level_id'] ) ) {
 			$sponsored_levels = array($pmprosm_values['sponsored_level_id']);
-		else
+		} else {
 			$sponsored_levels = $pmprosm_values['sponsored_level_id'];
+		}
 
-		foreach($sponsored_levels as $sponsored_level)
-		{
+		foreach( $sponsored_levels as $sponsored_level ) {
 			//default values for discount code; everything free
 			$discount_code = array(
 				'code_id'=>esc_sql($code_id),
@@ -290,7 +279,7 @@ function pmprosm_createSponsorCode($user_id, $level_id, $uses = "") {
 				'expiration_period' => "'Month'"
 			);
 
-			//allow override of the discount code values by setting it in the pmprosm_sponsored_account_levels array
+			// Allow override of the discount code values by setting it in the pmprosm_sponsored_account_levels array.
 			if(!empty($pmprosm_values['discount_code']))
 				foreach($discount_code as $col => $value)
 					if(isset($pmprosm_values['discount_code'][$col]))
