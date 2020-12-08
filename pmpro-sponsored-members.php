@@ -914,7 +914,7 @@ function pmprosm_pmpro_checkout_boxes() {
 						<p class="pmpro_small">
 							<?php
 								//min seats defaults to 1
-								if( ! empty( $pmprosm_values['min_seats'] ) ) {
+								if( isset( $pmprosm_values['min_seats'] ) ) {
 									$min_seats = $pmprosm_values['min_seats'];
 								} else {
 									$min_seats = 1;
