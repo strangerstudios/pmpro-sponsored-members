@@ -1699,6 +1699,27 @@ function pmprosm_profile_fields_seats( $user ) {
 	global $wpdb;
 	$user->membership_level = pmpro_getMembershipLevelForUser( $user->ID );
 	if( current_user_can( "edit_users" ) && ! empty( $user->membership_level ) ) {
+		
+		// Removing a sponsored member?
+		if( isset( $_REQUEST['pmprosm_remove_member_id'] ) && isset( $_REQUEST['pmprosm_remove_member_level'] ) ) {
+			// Check nonce.
+			if( wp_verify_nonce( $_REQUEST['_wpnonce'], 'pmprosm_remove_member' ) ) {
+				// Nonce is good. Remove the member.
+				$removed = pmprosm_remove_member_from_seat( intval( $_REQUEST['pmprosm_remove_member_id'] ), intval( $_REQUEST['pmprosm_remove_member_level'] ), $user->ID );
+				
+				if ( $removed !== false ) {
+					$member = get_userdata( intval( $_REQUEST['pmprosm_remove_member_id'] ) );
+					?>
+					<div class="pmpro_message pmpro_success">
+					<?php
+					echo esc_html( sprintf( __( 'Sponsored User: %s was removed. (Membership Level: %s)', 'pmpro-sponsored-members' ), $member->display_name, intval( $_REQUEST['pmprosm_remove_member_level'] ) ) );
+					?>
+					</div>
+					<?php
+				}
+			}
+		}
+		
 		?>
 		<hr />
 		<h3><?php esc_html_e( 'Sponsored Seats', 'pmpro-sponsored-members' ); ?></h3>
@@ -1762,9 +1783,14 @@ add_action( 'edit_user_profile', 'pmprosm_profile_fields_seats' );
  * Output HTML for list of sponsored members.
  */
 function pmprosm_display_sponsored_accounts( $member_ids ) {
-
-    //make sure we have something to display
-	if ( empty( $member_ids) ) return '';
+    global $current_user;
+	
+	// Make sure we have something to display.
+	if ( empty( $member_ids) ) {
+		return '';
+	}
+	
+	// Display sponsored members.
 	$count = 0;
 	ob_start();
     ?>
@@ -1777,7 +1803,8 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
                 <th><?php esc_html_e( 'Date', 'pmpro-sponsored-members' ); ?></th>
                 <th><?php esc_html_e( 'Name', 'pmpro-sponsored-members' ); ?></th>
                 <th><?php esc_html_e( 'Email', 'pmpro-sponsored-members' ); ?></th>
-                <th><?php esc_html_e( 'Membership Level', 'pmpro-sponsored-members' ); ?></th>
+                <th><?php esc_html_e( 'Level', 'pmpro-sponsored-members' ); ?></th>
+				<th></th>
             </tr>
             </thead>
             <tbody>
@@ -1785,10 +1812,37 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 			foreach($member_ids as $member_id)
 			{
 				$member = get_userdata($member_id);
-				$member->membership_level = pmpro_getMembershipLevelForUser($member_id);
 				if(empty($member)) {
 					continue;
 				}
+				$member->membership_level = pmpro_getMembershipLevelForUser($member_id);
+				
+				// Figure out URL based on where we are.
+				if ( $_SERVER['SCRIPT_NAME'] == '/wp-admin/user-edit.php' ) {
+					// Editing another user in the admin.
+					$qargs = array(
+						'user_id' => intval($_REQUEST['user_id']),
+						'pmprosm_remove_member_id' => $member->id,
+						'pmprosm_remove_member_level' => $member->membership_level->id
+					);
+					$remove_url = add_query_arg( $qargs, admin_url('user-edit.php') );
+				} elseif ( $_SERVER['SCRIPT_NAME'] == '/wp-admin/profile.php' ) {
+					// Editing yourself on profile.php
+					$qargs = array(
+						'pmprosm_remove_member_id' => $member->id,
+						'pmprosm_remove_member_level' => $member->membership_level->id
+					);
+					$remove_url = add_query_arg( $qargs, admin_url('profile.php') );
+				} else {
+					// Assume frontend account page.
+					$qargs = array(
+						'user_id' => $current_user->ID,
+						'pmprosm_remove_member_id' => $member->id,
+						'pmprosm_remove_member_level' => $member->membership_level->id
+					);
+					$remove_url = add_query_arg( $qargs, pmpro_url('account') );
+				}
+				$remove_url = wp_nonce_url( $remove_url, 'pmprosm_remove_member' );
 				?>
                 <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
                     <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
@@ -1801,6 +1855,9 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 						<?php } ?>
                     </td>
                     <td><?php echo esc_html( $member->membership_level->name ); ?></td>
+					<td>
+						<a href="<?php echo esc_url($remove_url); ?>"><?php _e( 'Remove', 'pmpro-sponsored-members'); ?></a>
+					</td>
                 </tr>
 				<?php
 			}
@@ -1812,6 +1869,25 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 	$content = ob_get_contents();
 	ob_end_clean();
 	return $content;
+}
+
+/**
+ * Cancel a member and free up the discount code use.
+ * @since 0.9.1
+ */
+function pmprosm_remove_member_from_seat( $child_id, $level_id, $parent_id ) {
+	if( pmprosm_isSponsoredLevel( $level_id ) ) {
+		$removed = pmpro_cancelMembershipLevel( $level_id, $child_id );
+	    if( $removed !== false ) {
+	        $code_id = pmprosm_getCodeByUserID( $parent_id );
+	        pmprosm_removeDiscountCodeUse( $child_id, $code_id );
+	        return true;
+	    }
+		
+		var_dump( $response );
+    }
+	
+	return false;
 }
 
 /**
@@ -1856,7 +1932,6 @@ function pmprosm_the_content_account_page( $content ) {
 		if(! empty( $code_id ) && ! empty( $pmprosm_values ) ) {
 			$code = pmprosm_getDiscountCodeByCodeID( $code_id );
 
-
 			if( ! is_array( $pmprosm_values['sponsored_level_id'] ) ) {
 				$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
 			} else {
@@ -1882,7 +1957,7 @@ function pmprosm_the_content_account_page( $content ) {
 			?>
 			<div id="pmpro_account-sponsored" class="pmpro_box">
 
-				<h3><?php esc_html_e( "Sponsored Members", "pmpro-sponsored-members" );?></h3>
+				<h3><?php esc_html_e( "Sponsored Seats", "pmpro-sponsored-members" );?></h3>
                 <?php if (empty($pmprosm_values['hide_display_discount_code']) || $pmprosm_values['hide_display_discount_code'] === false ) { ?>
                     <p><?php printf(esc_html__("Give this code to your sponsored members to use at checkout: %s", "pmpro-sponsored-members"), '<strong>' . $code->code . '</strong>');?></p>
                     <?php if(count($code_urls) > 1) { ?>
