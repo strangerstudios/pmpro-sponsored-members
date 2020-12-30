@@ -1710,11 +1710,11 @@ function pmprosm_profile_fields_seats( $user ) {
 				if ( $removed !== false ) {
 					$member = get_userdata( intval( $_REQUEST['pmprosm_remove_member_id'] ) );
 					?>
-					<div class="pmpro_message pmpro_success">
+					<div class="notice notice-success"><p>
 					<?php
 					echo esc_html( sprintf( __( 'Sponsored User: %s was removed. (Membership Level: %s)', 'pmpro-sponsored-members' ), $member->display_name, intval( $_REQUEST['pmprosm_remove_member_level'] ) ) );
 					?>
-					</div>
+					</p></div>
 					<?php
 				}
 			}
