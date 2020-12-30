@@ -1719,7 +1719,6 @@ function pmprosm_profile_fields_seats( $user ) {
 				}
 			}
 		}
-		
 		?>
 		<hr />
 		<h3><?php esc_html_e( 'Sponsored Seats', 'pmpro-sponsored-members' ); ?></h3>
@@ -1877,6 +1876,13 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
  */
 function pmprosm_remove_member_from_seat( $child_id, $level_id, $parent_id ) {
 	if( pmprosm_isSponsoredLevel( $level_id ) ) {
+		// Check if the parent is really the parent of this child.
+		$real_parent = pmprosm_getSponsor( $child_id );
+		if ( empty( $real_parent) || $real_parent->ID !== $parent_id ) {
+			return false;
+		}
+		
+		// We're good. Remove.
 		$removed = pmpro_cancelMembershipLevel( $level_id, $child_id );
 	    if( $removed !== false ) {
 	        $code_id = pmprosm_getCodeByUserID( $parent_id );
@@ -1950,6 +1956,20 @@ function pmprosm_the_content_account_page( $content ) {
 				$limit = $pmprosm_values['max_seats'];
 			}
 
+			// Removing a sponsored member?
+			if( isset( $_REQUEST['pmprosm_remove_member_id'] ) && isset( $_REQUEST['pmprosm_remove_member_level'] ) ) {
+				// Check nonce.
+				if( wp_verify_nonce( $_REQUEST['_wpnonce'], 'pmprosm_remove_member' ) ) {
+					// Nonce is good. Remove the member.
+					$removed = pmprosm_remove_member_from_seat( intval( $_REQUEST['pmprosm_remove_member_id'] ), intval( $_REQUEST['pmprosm_remove_member_level'] ), $current_user->ID );
+					
+					if ( $removed !== false ) {
+						$member = get_userdata( intval( $_REQUEST['pmprosm_remove_member_id'] ) );
+						$removed_message = sprintf( __( 'Sponsored User: %s was removed. (Membership Level: %s)', 'pmpro-sponsored-members' ), $member->display_name, intval( $_REQUEST['pmprosm_remove_member_level'] ) );
+					}
+				}
+			}
+
 			// Get members.
 			$member_ids = pmprosm_getChildren($current_user->ID);
 			?>
@@ -1979,7 +1999,14 @@ function pmprosm_the_content_account_page( $content ) {
 					<?php } ?>
 				</div>
 				<?php
-                    // use same account display as in admin
+                    // Did we remove a child earlier?
+					if ( ! empty( $removed_message ) ) {
+					?>
+					<div class="pmpro_message pmpro_success"><?php echo esc_html( $removed_message ); ?></div>
+					<?php
+					}
+					
+					// use same account display as in admin
                     if ( ! empty( $member_ids ) ) {
                         echo "<hr />";
                         echo pmprosm_display_sponsored_accounts( $member_ids );
