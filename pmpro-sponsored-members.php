@@ -2041,7 +2041,7 @@ function pmprosm_getSponsor( $user_id, $force = false) {
 
 	//make sure this user has one of the sponsored levels
 	$user_level = pmpro_getMembershipLevelForUser( $user_id );
-	if( ! pmprosm_isSponsoredLevel( $user_level->id ) ) {
+	if( empty( $user_level ) || ! pmprosm_isSponsoredLevel( $user_level->id ) ) {
 		$pmprosm_user_sponsors[$user_id] = false;
 		return $pmprosm_user_sponsors[$user_id];
 	}
