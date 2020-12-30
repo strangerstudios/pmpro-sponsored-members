@@ -1821,14 +1821,14 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 					// Editing another user in the admin.
 					$qargs = array(
 						'user_id' => intval($_REQUEST['user_id']),
-						'pmprosm_remove_member_id' => $member->id,
+						'pmprosm_remove_member_id' => $member->ID,
 						'pmprosm_remove_member_level' => $member->membership_level->id
 					);
 					$remove_url = add_query_arg( $qargs, admin_url('user-edit.php') );
 				} elseif ( $_SERVER['SCRIPT_NAME'] == '/wp-admin/profile.php' ) {
 					// Editing yourself on profile.php
 					$qargs = array(
-						'pmprosm_remove_member_id' => $member->id,
+						'pmprosm_remove_member_id' => $member->ID,
 						'pmprosm_remove_member_level' => $member->membership_level->id
 					);
 					$remove_url = add_query_arg( $qargs, admin_url('profile.php') );
@@ -1836,7 +1836,7 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 					// Assume frontend account page.
 					$qargs = array(
 						'user_id' => $current_user->ID,
-						'pmprosm_remove_member_id' => $member->id,
+						'pmprosm_remove_member_id' => $member->ID,
 						'pmprosm_remove_member_level' => $member->membership_level->id
 					);
 					$remove_url = add_query_arg( $qargs, pmpro_url('account') );
