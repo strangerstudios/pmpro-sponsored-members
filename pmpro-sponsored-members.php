@@ -1883,8 +1883,6 @@ function pmprosm_remove_member_from_seat( $child_id, $level_id, $parent_id ) {
 	        pmprosm_removeDiscountCodeUse( $child_id, $code_id );
 	        return true;
 	    }
-		
-		var_dump( $response );
     }
 	
 	return false;
