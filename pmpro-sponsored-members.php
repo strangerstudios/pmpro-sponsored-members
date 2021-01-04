@@ -1577,7 +1577,7 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 	$unique_emails = array_unique( array_filter( $child_emails ) );
 	$passwords = array_filter( $child_passwords );
 
-	if( false && $num_new_accounts > 0 && ( count( $unique_usernames ) < $num_new_accounts || count( $unique_emails ) < $num_new_accounts || count( $passwords ) < $num_new_accounts ) ) {
+	if( $num_new_accounts > 0 && ( ($pmprosm_values['children_hide_username'] !== true && count( $unique_usernames ) < $num_new_accounts) || count( $unique_emails ) < $num_new_accounts || count( $passwords ) < $num_new_accounts ) ) {
 		pmpro_setMessage( esc_html__( "Please enter details for each new sponsored account." ), "pmpro_error" );
 		$okay = false;
 	} elseif( count( $unique_usernames ) != count( $child_usernames ) || count( $unique_emails ) != count( $child_emails ) ) {
