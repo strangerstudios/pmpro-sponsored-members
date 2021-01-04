@@ -845,14 +845,12 @@ function pmprosm_pmpro_checkout_boxes() {
 
 	//make sure options are defined for this
 	$pmprosm_values = pmprosm_getValuesByMainLevel( $pmpro_level->id );
-
-	if ( ( empty( $pmprosm_values['seats'] ) && empty( $pmprosm_values['max_seats'] ) )
-		|| ! isset( $pmprosm_values['seat_cost'] ) ) {
+	if ( ( empty( $pmprosm_values ) ) {
 		return;
 	}
 
 	$can_edit_seats = ! empty( $pmprosm_values['max_seats'] ) || ! empty( $pmprosm_values['min_seats'] );
-	$seat_cost = $pmprosm_values['seat_cost'];
+	$seat_cost = empty( $pmprosm_values['seat_cost'] ) ? null : $pmprosm_values['seat_cost'];
 	$max_seats = empty( $pmprosm_values['max_seats'] ) ? null : $pmprosm_values['max_seats'];
 
 	//get seats from submit
