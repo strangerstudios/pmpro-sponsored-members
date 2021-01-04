@@ -1318,7 +1318,17 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 					continue;
 				}
 
-				$child_user_id = wp_create_user( $child_username[$i], $child_password[$i], $child_email[$i] );
+				// We may need to generate a username
+				if ( ! empty( $child_username[$i] ) ) {
+					$new_username = $child_username[$i];
+				} else {
+					$new_email = empty( $child_email[$i] ) ? null : $child_email[$i];
+					$new_first_name = empty( $child_first_name[$i] ) ? null : $child_first_name[$i];
+					$new_last_name = empty( $child_last_name[$i] ) ? null : $child_last_name[$i];
+					$new_username = pmpro_generateUsername( $new_first_name, $new_last_name, $new_email );
+				}
+
+				$child_user_id = wp_create_user( $new_username, $child_password[$i], $child_email[$i] );
 
 				if( is_wp_error($child_user_id) ) {
 
@@ -1567,7 +1577,7 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 	$unique_emails = array_unique( array_filter( $child_emails ) );
 	$passwords = array_filter( $child_passwords );
 
-	if( $num_new_accounts > 0 && ( count( $unique_usernames ) < $num_new_accounts || count( $unique_emails ) < $num_new_accounts || count( $passwords ) < $num_new_accounts ) ) {
+	if( false && $num_new_accounts > 0 && ( count( $unique_usernames ) < $num_new_accounts || count( $unique_emails ) < $num_new_accounts || count( $passwords ) < $num_new_accounts ) ) {
 		pmpro_setMessage( esc_html__( "Please enter details for each new sponsored account." ), "pmpro_error" );
 		$okay = false;
 	} elseif( count( $unique_usernames ) != count( $child_usernames ) || count( $unique_emails ) != count( $child_emails ) ) {
