@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 4.0
-Tested up to: 5.5
-Stable tag: 0.9
+Tested up to: 5.6
+Stable tag: 0.10
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,15 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 0.10 - 2021-01-03 =
+* FEATURE: Admins and users can now remove sponsored child accounts to free up the spot.
+* BUG FIX/ENHANCEMENT: We are not generating a username for child accounts at checkout if you use the children_hide_username option to hide the username field. Child accounts still need an email or name fields to generate a user account.
+* BUG FIX/ENHANCEMENT: Now allowing a min_seats value of 0.
+* BUG FIX/ENHANCEMENT: Now allowing seats set to a specific value, with max_seats and/or min_seats not defined.
+* BUG FIX: Fixed an issue where 'normal' discount codes wouldn't work on child levels at checkout.
+* Bug Fix: Fixed an issue where unlimited codes were not working as intended/hidden from the front-end.
+* BUG FIX: Fixed some warnings when finding a sponsor of a user with no level and in some other cases.
+
 = 0.9 - 2020-10-15 =
 * BUG FIX: Fixed warning of undefined constant when creating child accounts at checkout.
 * BUG FIX: Fixed incorrect escaping of discount code text on account/confirmation page.
