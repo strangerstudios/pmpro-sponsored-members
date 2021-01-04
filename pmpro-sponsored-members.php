@@ -2193,6 +2193,7 @@ function pmprosm_get_checkout_urls( $code ) {
 	$sql_code = "SELECT level_id, name FROM $wpdb->pmpro_discount_codes_levels c INNER JOIN $wpdb->pmpro_membership_levels l ON c.level_id = l.id WHERE c.code_id =" . esc_sql( $code_id );
 
 	$levels_id = $wpdb->get_results( $sql_code );
+
 	foreach ( $levels_id as $value ) {
 		$checkout_urls[] = array( "name" => $value->name, "url" => pmpro_url( "checkout", "?level=" . $value->level_id . "&discount_code=" . $code->code ) );
 	}
@@ -2205,6 +2206,7 @@ function pmprosm_get_checkout_urls( $code ) {
  */
 function pmprosm_pmpro_members_list_csv_extra_columns( $columns ) {
 	$columns['sponsorcode'] = 'pmprosm_pmpro_members_list_csv_sponsorcode';
+
 	return $columns;
 }
 add_filter( 'pmpro_members_list_csv_extra_columns', 'pmprosm_pmpro_members_list_csv_extra_columns' );
