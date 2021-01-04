@@ -845,7 +845,8 @@ function pmprosm_pmpro_checkout_boxes() {
 
 	//make sure options are defined for this
 	$pmprosm_values = pmprosm_getValuesByMainLevel( $pmpro_level->id );
-	if ( ( empty( $pmprosm_values ) ) {
+
+	if ( empty( $pmprosm_values ) ) {
 		return;
 	}
 
