@@ -3,94 +3,255 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
-"POT-Creation-Date: 2020-09-29 14:20+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2021-02-08T18:55:45+00:00\n"
+"PO-Revision-Date: 2021-02-08 21:06+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.2\n"
 
-#: pmpro-sponsored-members.php:424
-#, php-format
+#. Plugin Name of the plugin
+msgid "Paid Memberships Pro - Sponsored Members Add On"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/"
+msgstr ""
+
+#. Description of the plugin
+msgid ""
+"Generate discount code for a main account holder to distribute to sponsored "
+"members."
+msgstr ""
+
+#. Author of the plugin
+msgid "Paid Memberships Pro"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://www.paidmembershipspro.com"
+msgstr ""
+
+#: pmpro-sponsored-members.php:408
 msgid ""
 "This user has fewer seats than they had sponsored accounts. The sponsored "
 "accounts have been deactivated. The user must have his sponsored accounts "
 "checkout again using the code: %s."
 msgstr ""
 
-#: pmpro-sponsored-members.php:476
-#, php-format
+#: pmpro-sponsored-members.php:459
 msgid ""
 "<p><strong>Notice:</strong>Your current membership has fewer seats than you "
 "had sponsored accounts. The accounts have been deactivated. You must have "
 "your sponsored accounts checkout again using your code: %s.</p>"
 msgstr ""
 
-#: pmpro-sponsored-members.php:643 pmpro-sponsored-members.php:645
+#: pmpro-sponsored-members.php:636 pmpro-sponsored-members.php:638
 msgid "Give this code to your sponsored members to use at checkout:"
 msgstr ""
 
-#: pmpro-sponsored-members.php:643
+#: pmpro-sponsored-members.php:636 pmpro-sponsored-members.php:1991
+#: pmpro-sponsored-members.php:2142
 msgid "Or provide one of these direct links to register:"
 msgstr ""
 
-#: pmpro-sponsored-members.php:645
+#: pmpro-sponsored-members.php:638 pmpro-sponsored-members.php:1993
+#: pmpro-sponsored-members.php:2144
 msgid "Or provide this direct link to register:"
 msgstr ""
 
-#: pmpro-sponsored-members.php:655
+#: pmpro-sponsored-members.php:648 pmpro-sponsored-members.php:2005
 msgid "This code has unlimited uses."
 msgstr ""
 
-#: pmpro-sponsored-members.php:657
-#, php-format
+#: pmpro-sponsored-members.php:650
 msgid "This code has %d uses."
 msgstr ""
 
-#: pmpro-sponsored-members.php:719
+#: pmpro-sponsored-members.php:708
 msgid "You must use a valid discount code to register for this level."
 msgstr ""
 
-#: pmpro-sponsored-members.php:747
+#: pmpro-sponsored-members.php:738
 msgid "The sponsor for this code is inactive. Ask them to renew their account."
 msgstr ""
 
-#: pmpro-sponsored-members.php:753
+#: pmpro-sponsored-members.php:743
 msgid ""
 "Sponsors are not permitted to sign up for sponsored levels. This is most "
 "likely a mistake."
 msgstr ""
 
-#: pmpro-sponsored-members.php:765
+#: pmpro-sponsored-members.php:753
 msgid "The maximum number of seats allowed is "
 msgstr ""
 
-#: pmpro-sponsored-members.php:770
+#: pmpro-sponsored-members.php:757
 msgid "The minimum number of seats allowed is "
 msgstr ""
 
-#: pmpro-sponsored-members.php:898
+#: pmpro-sponsored-members.php:769
+msgid "Parent Account"
+msgstr ""
+
+#: pmpro-sponsored-members.php:804
+msgid "For Sponsored Accounts"
+msgstr ""
+
+#: pmpro-sponsored-members.php:808
+msgid "User ID:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:811
+msgid "The user ID of the main account holder."
+msgstr ""
+
+#: pmpro-sponsored-members.php:890
+msgid "Would you like to purchase extra seat(s)?"
+msgstr ""
+
+#: pmpro-sponsored-members.php:892
+msgid "Would you like to create extra account(s)?"
+msgstr ""
+
+#: pmpro-sponsored-members.php:904
 msgid "Number of Seats"
 msgstr ""
 
-#: pmpro-sponsored-members.php:910
-#, php-format
+#: pmpro-sponsored-members.php:924
 msgid "Enter a number from %d to %d. %s"
 msgstr ""
 
-#: pmpro-sponsored-members.php:912
-#, php-format
+#: pmpro-sponsored-members.php:926
 msgid "Enter a number from %d to %d. +%s per extra seat."
 msgstr ""
 
-#: pmpro-sponsored-members.php:2138
-#, php-format
+#: pmpro-sponsored-members.php:985
+msgid "Keep checked to keep this account active."
+msgstr ""
+
+#: pmpro-sponsored-members.php:987
+msgid "Check to reactivate this account."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1057
+msgid " account information."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1061 pmpro-sponsored-members.php:1168
+msgid "Please fill in following information and account(s) will be created."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1065
+msgid "First Name"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1068
+msgid "Last Name"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1073
+msgid "Username"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1078 pmpro-sponsored-members.php:1813
+msgid "Email"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1083
+msgid "Password"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1168
+msgid " account information # XXXX"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1496
+msgid "Child account created during checkout of sponsored member."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1724 pmpro-sponsored-members.php:1977
+msgid "Sponsored User: %s was removed. (Membership Level: %s)"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1733 pmpro-sponsored-members.php:1987
+msgid "Sponsored Seats"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1742 pmpro-sponsored-members.php:1759
+msgid "Sponsor Code"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1748
+msgid "Seats"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1760
+msgid "This membership level does not include a sponsor code."
+msgstr ""
+
+#: pmpro-sponsored-members.php:1770
+msgid "Parent"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1806
+msgid "Sponsored Members"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1811
+msgid "Date"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1812
+msgid "Name"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1814
+msgid "Level"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1867
+msgid "Remove"
+msgstr ""
+
+#: pmpro-sponsored-members.php:1989 pmpro-sponsored-members.php:2139
+msgid "Give this code to your sponsored members to use at checkout: %s"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2007
+msgid "%s/%s uses."
+msgstr ""
+
+#: pmpro-sponsored-members.php:2108
+msgid "Accounts created at checkout:"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2167
+msgid "View Documentation"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2167
+msgid "Docs"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2168
+msgid "Visit Customer Support Forum"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2168
+msgid "Support"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2233
+msgid "Sponsor/Code"
+msgstr ""
+
+#: pmpro-sponsored-members.php:2251
 msgid "Sponsored by %s"
 msgstr ""
