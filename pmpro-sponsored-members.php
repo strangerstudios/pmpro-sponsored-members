@@ -902,7 +902,7 @@ function pmprosm_pmpro_checkout_boxes() {
 					if ( $can_edit_seats ) {
 				?>
 						<label for="seats"><?php echo __( 'Number of Seats', 'pmpro-sponsored-members' );?></label>
-						<input type="text" id="seats" name="seats" class="<?php echo pmpro_get_element_class('input', 'pmprosm_input'); ?>"  value="<?php echo esc_attr( $seats ); ?>" size="10" />
+						<input type="text" id="seats" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
 				<?php } else { ?>
 						<input type="hidden" id="seats" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
 				<?php } ?>
@@ -1750,7 +1750,7 @@ function pmprosm_profile_fields_seats( $user ) {
 							<?php
 								$seats = intval( get_user_meta( $user->ID, "pmprosm_seats", true ) );
 							?>
-							<input type="text" id="seats" name="seats" class="<?php echo pmpro_get_element_class('input', 'pmprosm_input'); ?>"  size="5" value="<?php echo esc_attr( $seats );?>" />
+							<input type="text" id="seats" name="seats" size="5" value="<?php echo esc_attr( $seats );?>" />
 						</td>
 					</tr>
 					<?php
