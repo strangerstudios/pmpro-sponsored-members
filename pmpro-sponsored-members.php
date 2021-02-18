@@ -1805,7 +1805,7 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 
     <h3><?php esc_html_e( "Sponsored Members", "pmpro-sponsored-members" );?></h3>
     <div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
-        <table class="wp-list-table widefat fixed" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <table class="wp-list-table widefat" width="100%" cellpadding="0" cellspacing="0" border="0">
             <thead>
             <tr>
                 <th><?php esc_html_e( 'Date', 'pmpro-sponsored-members' ); ?></th>
@@ -1853,7 +1853,7 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 				$remove_url = wp_nonce_url( $remove_url, 'pmprosm_remove_member' );
 				?>
                 <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
-                    <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
+                    <td><?php echo date_i18n( get_option( 'date_format' ), $member->membership_level->startdate); ?></td>
                     <td><?php echo esc_html( $member->display_name ); ?></td>
                     <td>
 						<?php if ( current_user_can( 'edit_users' ) ) { ?>
