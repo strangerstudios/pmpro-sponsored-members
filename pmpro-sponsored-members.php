@@ -1853,7 +1853,7 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 				$remove_url = wp_nonce_url( $remove_url, 'pmprosm_remove_member' );
 				?>
                 <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
-                    <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
+                    <td><?php echo date_i18n( get_option( 'date_format' ), $member->membership_level->startdate); ?></td>
                     <td><?php echo esc_html( $member->display_name ); ?></td>
                     <td>
 						<?php if ( current_user_can( 'edit_users' ) ) { ?>
