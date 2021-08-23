@@ -1063,20 +1063,20 @@ function pmprosm_pmpro_checkout_boxes() {
                         </div>
                         <?php if(!empty($pmprosm_values['children_get_name'])) { ?>
 							<label><?php echo esc_html__("First Name", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_first_name[]" value="<?php echo esc_attr($child_first_name);?>" size="20" />
+							<input type="text" name="add_sub_accounts_first_name[]" value="<?php echo esc_attr($child_first_name);?>"  class="input pmpro_required" size="20" />
 							<br>
 							<label><?php echo esc_html__("Last Name", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_last_name[]" value="<?php echo esc_attr($child_last_name);?>" size="20" />
+							<input type="text" name="add_sub_accounts_last_name[]" value="<?php echo esc_attr($child_last_name);?>"  class="input pmpro_required" size="20" />
 							<br>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_username'])) { ?>
 							<label><?php echo esc_html__("Username", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_username[]" value="<?php echo esc_attr($child_username);?>" size="20" />
+							<input type="text" name="add_sub_accounts_username[]" value="<?php echo esc_attr($child_username);?>"  class="input pmpro_required" size="20" />
 							<br>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_email'])) { ?>
 							<label><?php echo esc_html__("Email", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_email[]" value="<?php echo esc_attr($child_email);?>" size="20" />
+							<input type="text" name="add_sub_accounts_email[]" value="<?php echo esc_attr($child_email);?>" class="input pmpro_required" size="20" />
 							<br>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_password'])) { ?>
@@ -1165,7 +1165,7 @@ function pmprosm_pmpro_checkout_boxes() {
 									i = children.length;
 
 									while (i < newseats) {
-                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>';
+                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" class="input pmpro_required" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" class="input pmpro_required" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" class="input pmpro_required" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" class="input pmpro_required" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" class="input pmpro_required" size="20" /><?php echo $empty_child_fields;?></div>';
                                         newdiv = div.replace(/XXXX/g,i+1);
                                         jQuery('#sponsored_accounts').append(newdiv); i++;
 									}
