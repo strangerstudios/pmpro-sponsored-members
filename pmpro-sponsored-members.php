@@ -21,7 +21,7 @@ Domain Path: /languages
 		//set 5 seats at checkout
 		1 => array(
 			'main_level_id' => 1,		//redundant but useful
-			'sponsored_level_id' => array(1,2),	//array or single id
+			'sponsored_level_id' => array(2,3),	//array or single id
 			'seats' => 5
 		),
 		//seats based on field at checkout
