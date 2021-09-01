@@ -1805,7 +1805,7 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 
     <h3><?php esc_html_e( "Sponsored Members", "pmpro-sponsored-members" );?></h3>
     <div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
-        <table class="wp-list-table widefat fixed" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <table class="wp-list-table widefat" width="100%" cellpadding="0" cellspacing="0" border="0">
             <thead>
             <tr>
                 <th><?php esc_html_e( 'Date', 'pmpro-sponsored-members' ); ?></th>
