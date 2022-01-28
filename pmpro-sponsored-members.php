@@ -1063,25 +1063,30 @@ function pmprosm_pmpro_checkout_boxes() {
                         </div>
                         <?php if(!empty($pmprosm_values['children_get_name'])) { ?>
 							<label><?php echo esc_html__("First Name", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_first_name[]" value="<?php echo esc_attr($child_first_name);?>" size="20" />
+							<input type="text" name="add_sub_accounts_first_name[]" value="<?php echo esc_attr($child_first_name);?>" size="20" class="input pmpro_error pmpro_required">
+                                                       
 							<br>
 							<label><?php echo esc_html__("Last Name", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_last_name[]" value="<?php echo esc_attr($child_last_name);?>" size="20" />
+							<input type="text" name="add_sub_accounts_last_name[]" value="<?php echo esc_attr($child_last_name);?>" size="20" class="input pmpro_error pmpro_required">
+                                                        
 							<br>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_username'])) { ?>
 							<label><?php echo esc_html__("Username", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_username[]" value="<?php echo esc_attr($child_username);?>" size="20" />
+							<input type="text" name="add_sub_accounts_username[]" value="<?php echo esc_attr($child_username);?>" size="20" class="input pmpro_error pmpro_required">
+                                                        
 							<br>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_email'])) { ?>
 							<label><?php echo esc_html__("Email", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_email[]" value="<?php echo esc_attr($child_email);?>" size="20" />
+							<input type="text" name="add_sub_accounts_email[]" value="<?php echo esc_attr($child_email);?>" size="30" class="input pmpro_error pmpro_required">
+                                                        
 							<br>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_password'])) { ?>
 							<label><?php echo esc_html__("Password", "pmpro-sponsored-members");?></label>
-							<input type="password" name="add_sub_accounts_password[]" value="" size="20" />
+							<input type="password" name="add_sub_accounts_password[]" value="" size="20" class="input pmpro_error pmpro_required">
+                                                       
 						<?php } ?>
 						<?php do_action('pmprosm_children_fields', $i, $seats);?>
 					</div>
