@@ -339,7 +339,7 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 			$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];
 
 			for( $i = 0; $i < count( $children ); $i++ ) {
-				if( in_array( $children[$i], $old_sub_accounts_active ) ) {
+				if( is_array( $old_sub_accounts_active ) && in_array( $children[$i], $old_sub_accounts_active ) ) {
 					//they should have their level/etc from before
 				} else {
 					//remove their level
@@ -1165,7 +1165,7 @@ function pmprosm_pmpro_checkout_boxes() {
 									i = children.length;
 
 									while (i < newseats) {
-                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>';
+                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_email"])){ ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_password"])){ ?><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php } ?><?php echo $empty_child_fields;?></div>';
                                         newdiv = div.replace(/XXXX/g,i+1);
                                         jQuery('#sponsored_accounts').append(newdiv); i++;
 									}
@@ -1572,12 +1572,51 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 		$child_passwords = array();
 	}
 
+	if( ! empty( $pmprosm_values['children_hide_email'] ) && $pmprosm_values['children_hide_email'] === true && ! empty( $child_usernames ) ) {
+		//We're hiding the child email address field so lets generate our own 
+		//based on each username. 
+		global $current_user;
+		if( ! empty( $current_user->user_email ) ) {
+			//Logged in, get their email address
+			$sponsor_email = $current_user->user_email;
+		} else {
+			//New user
+			$sponsor_email = sanitize_text_field( $_REQUEST['bemail'] );
+		}
+
+		$sponsored_email_array = explode( '@', $sponsor_email );
+
+		/**
+		 * This will create an aliased email address for each child account. 
+		 * The sponsored email address (for eg) could be dev@website.com
+		 * The child's username is 'safety1'
+		 * The child's email address becomes dev+safety1@website.com
+		 */
+		if( ! empty( $sponsored_email_array ) ){
+			foreach( $child_usernames as $child_username ) {
+				$child_emails[] = $sponsored_email_array[0].'+'.$child_username.'@'.$sponsored_email_array[1];
+			}
+		}
+
+	}
+
 	//check that these emails and usernames are unique
 	$unique_usernames = array_unique( array_filter( $child_usernames ) );
 	$unique_emails = array_unique( array_filter( $child_emails ) );
 	$passwords = array_filter( $child_passwords );
 
-	if( $num_new_accounts > 0 && ( ($pmprosm_values['children_hide_username'] !== true && count( $unique_usernames ) < $num_new_accounts) || count( $unique_emails ) < $num_new_accounts || count( $passwords ) < $num_new_accounts ) ) {
+	//Adjusted formatting of first if statement due to the number of conditions (and readability)
+	if( 
+		$num_new_accounts > 0 && 
+		( 
+			(
+				( ! isset( $pmprosm_values['children_hide_username'] ) || $pmprosm_values['children_hide_username'] !== true ) && 
+				count( $unique_usernames ) < $num_new_accounts
+			) || 
+			count( $unique_emails ) < $num_new_accounts || 
+			count( $passwords ) < $num_new_accounts 
+		) 
+	) {
 		pmpro_setMessage( esc_html__( "Please enter details for each new sponsored account." ), "pmpro_error" );
 		$okay = false;
 	} elseif( count( $unique_usernames ) != count( $child_usernames ) || count( $unique_emails ) != count( $child_emails ) ) {
