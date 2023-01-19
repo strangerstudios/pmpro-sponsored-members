@@ -1307,6 +1307,10 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 		if ( ! is_array( $child_email ) && empty( $child_email ) ) {
 			return;
 		}
+		
+		if( empty( $child_password ) && ! empty( $parent_level['children_hide_password'] ) && $parent_level['children_hide_password'] === true ){
+			$child_password = pmprosm_handle_child_accounts_without_password( $parent_level, $child_username );
+		}
 
 		$sponsored_code = pmprosm_getCodeByUserID( $user_id );
 
@@ -1584,6 +1588,10 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 		$child_emails = $child_account_emails;
 	}
 
+	if( empty( $child_passwords ) && ! empty( $pmprosm_values['children_hide_password'] ) && $pmprosm_values['children_hide_password'] === true ){
+		$child_passwords = pmprosm_handle_child_accounts_without_password( $pmprosm_values, $child_usernames );
+	}
+
 	//check that these emails and usernames are unique
 	$unique_usernames = array_unique( array_filter( $child_usernames ) );
 	$unique_emails = array_unique( array_filter( $child_emails ) );
@@ -1691,6 +1699,29 @@ function pmprosm_handle_child_accounts_without_email( $pmprosm_values, $child_us
 	}
 
 	return $child_emails;
+}
+
+/**
+ * Creates WP Generated passwords for child accounts when the children account passwords are set to not show
+ * 
+ * @param $pmprosm_values Contains the Sponsored Members settings in an array
+ * @param $child_usernames Contains the child account usernames
+ * 
+ * @since TBD
+ * 
+ * @return $passwords Contains an array of aliased email addresses from the child usernames
+ */
+function pmprosm_handle_child_accounts_without_password( $pmprosm_values, $child_usernames ){
+
+	$passwords = array();
+
+	if( ! empty( $pmprosm_values['children_hide_password'] ) && $pmprosm_values['children_hide_password'] === true && ! empty( $child_usernames ) ) {
+		foreach( $child_usernames as $child_username ) {
+			$passwords[] = wp_generate_password();
+		}
+	}
+
+	return $passwords;
 }
 
 // Save fields in session for PayPal Express/etc.
