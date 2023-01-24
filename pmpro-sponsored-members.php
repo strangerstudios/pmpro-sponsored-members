@@ -217,6 +217,7 @@ function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 
 			//make sure we only do it once
 			remove_action( 'pmpro_after_checkout', 'pmprosm_pmpro_after_checkout_sponsor_account_change', 10, 2 );
+
 		}
 	}
 }
@@ -327,8 +328,42 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 	else
 		$seats = "";
 
+	$level = pmpro_getLevel( $level_id );
+
 	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "' WHERE id = '" . $code_id . "' LIMIT 1";
 	$wpdb->query( $sqlQuery );
+
+	//Check if its a renewal - if so, extend its validity
+	$morder = new MemberOrder();
+	$morder->getLastMemberOrder( $user_id, 'success', $level_id );
+	if( $morder->is_renewal() ) {
+		//Is a renewal, so we should extend the discount code and reset the uses.
+		if( ! empty( $level->cycle_period ) ){
+			//Is a recurring level
+			$discount_code = pmprosm_getDiscountCodeByCodeID( $code_id );
+			
+			if( ! empty( $discount_code ) ) {
+				$expiration = $discount_code->expires;
+				//We're extending the uses instead of resetting this
+				//Will need to test this a bit more for real-world use cases
+				$uses = $discount_code->uses;
+
+				$new_expiration_date = date('Y-m-d', strtotime( $expires . ' + '.$level->cycle_number.' '.$level->cycle_period ) );
+
+				$updated = $wpdb->update( $wpdb->pmpro_discount_codes, 
+					array (
+						'uses' => esc_sql( $uses + $seats ),
+						'expires' => $new_expiration_date
+					),
+					array(
+						'id' => esc_sql( $code_id )
+					)
+				);
+
+			}
+			
+		}
+	}	
 
 	//activate/deactivate old accounts
 	if( ! empty( $pmprosm_values['sponsored_accounts_at_checkout'] ) ) {
@@ -339,7 +374,7 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 			$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];
 
 			for( $i = 0; $i < count( $children ); $i++ ) {
-				if( in_array( $children[$i], $old_sub_accounts_active ) ) {
+				if( is_array( $old_sub_accounts_active  ) && in_array( $children[$i], $old_sub_accounts_active ) ) {
 					//they should have their level/etc from before
 				} else {
 					//remove their level
@@ -429,13 +464,9 @@ function pmprosm_pmpro_after_checkout_sponsor_account_change( $user_id ) {
 		$level_id = false;
 	}
 
-	if( empty( $level_id ) ) {
-		return;
-	}
-
     // Handle sponsored accounts.
     if ( pmprosm_isMainLevel( $level_id ) ) {
-		pmprosm_sponsored_account_change($level_id, $user_id);
+		pmprosm_sponsored_account_change($level_id, $user_id);		
 	}
 }
 add_action( 'pmpro_after_checkout', 'pmprosm_pmpro_after_checkout_sponsor_account_change', 10, 2 );
