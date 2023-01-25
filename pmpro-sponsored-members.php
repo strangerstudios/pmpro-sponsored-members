@@ -1864,7 +1864,10 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
                     </td>
                     <td><?php echo esc_html( $member->membership_level->name ); ?></td>
 					<td>
-						<a href="<?php echo esc_url($remove_url); ?>"><?php _e( 'Remove', 'pmpro-sponsored-members'); ?></a>
+						<?php
+						$delete_text = esc_html__('Are you sure you want to remove this member?', 'pmpro-sponsored-members' );
+						?>
+						<a href="javascript:void(0);" onclick="<?php echo esc_js('javascript:confirm("' . $delete_text . '", "'.$remove_url.'");'); ?>"><?php _e( 'Remove', 'pmpro-sponsored-members'); ?></a>
 					</td>
                 </tr>
 				<?php
