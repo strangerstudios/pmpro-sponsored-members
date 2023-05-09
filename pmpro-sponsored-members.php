@@ -647,7 +647,7 @@ function pmprosm_pmpro_confirmation_message( $message ) {
 			if ( empty( $code->uses ) ) {
 				$message .= __( "This code has unlimited uses.", "pmpro-sponsored-members" );
 			} else {
-				$message .= sprintf( ngettext( __( "This code has %d use.", "pmpro-sponsored-members" ), __( "This code has %d uses.", "pmpro-sponsored-members" ), $code->uses ), $code->uses );
+				$message .= sprintf( _n( 'This code has %d use.', 'This code has %d uses.', $code->uses, 'pmpro-sponsored-members' ), $code->uses );
 			}
 
 			$message .= "</div>";
