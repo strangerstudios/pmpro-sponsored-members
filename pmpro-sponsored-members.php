@@ -509,7 +509,7 @@ function pmprosm_getChildren( $user_id = NULL ) {
 	// So we can get a list of old children accounts
 	// by getting all the uses of the discount code.
 
-	if ( empty( $children ) ) {
+	if ( empty( $children ) && ! empty( $code_id ) ) {
 		$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
 		$children = $wpdb->get_col( $sqlQuery );
 	}
