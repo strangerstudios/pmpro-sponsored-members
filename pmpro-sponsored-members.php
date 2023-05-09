@@ -1317,12 +1317,6 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 		$child_password = isset( $_REQUEST['add_sub_accounts_password'] ) ? $_REQUEST['add_sub_accounts_password'] : '';
 		$child_email = isset( $_REQUEST['add_sub_accounts_email'] ) ? $_REQUEST['add_sub_accounts_email'] : '';
 
-		$child_account_emails = pmprosm_handle_child_accounts_without_email( $parent_level, $child_username );
-
-		if( ! empty( $child_account_emails ) ) {
-			$child_email = $child_account_emails;
-		}
-
 		// Bail if the child accounts aren't set.
 		if ( ! is_array( $child_email ) && empty( $child_email ) ) {
 			return;
@@ -1675,51 +1669,6 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 	return $okay;
 }
 add_action( 'pmpro_registration_checks', 'pmprosm_pmpro_registration_checks_sponsored_accounts' );
-
-/**
- * Creates aliased emails off of the usernames provided for child accounts
- * 
- * @param $pmprosm_values Contains the Sponsored Members settings in an array
- * @param $child_usernames Contains the child account usernames
- * 
- * @since TBD
- * 
- * @return $child_emails Contains an array of aliased email addresses from the child usernames
- */
-function pmprosm_handle_child_accounts_without_email( $pmprosm_values, $child_usernames ){
-
-	$child_emails = array();
-
-	if( ! empty( $pmprosm_values['children_hide_email'] ) && $pmprosm_values['children_hide_email'] === true && ! empty( $child_usernames ) ) {
-		//We're hiding the child email address field so lets generate our own 
-		//based on each username. 
-		global $current_user;
-		if( ! empty( $current_user->user_email ) ) {
-			//Logged in, get their email address
-			$sponsor_email = $current_user->user_email;
-		} else {
-			//New user
-			$sponsor_email = sanitize_text_field( $_REQUEST['bemail'] );
-		}
-
-		$sponsored_email_array = explode( '@', $sponsor_email );
-
-		/**
-		 * This will create an aliased email address for each child account. 
-		 * The sponsored email address (for eg) could be dev@website.com
-		 * The child's username is 'safety1'
-		 * The child's email address becomes dev+safety1@website.com
-		 */
-		if( ! empty( $sponsored_email_array ) ){
-			foreach( $child_usernames as $child_username ) {
-				$child_emails[] = $sponsored_email_array[0].'+'.$child_username.'@'.$sponsored_email_array[1];
-			}
-		}
-
-	}
-
-	return $child_emails;
-}
 
 /**
  * Creates WP Generated passwords for child accounts when the children account passwords are set to not show
