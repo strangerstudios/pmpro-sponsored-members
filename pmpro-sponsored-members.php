@@ -54,6 +54,15 @@ function pmprosm_load_textdomain(){
 }
 add_action( 'init', 'pmprosm_load_textdomain' );
 
+/**
+ * Mark the plugin as MMPU-incompatible.
+ */
+function pmprosm_mmpu_incompatible_add_ons( $incompatible ) {
+    $incompatible[] = 'PMPro Sponsored Members Add On';
+    return $incompatible;
+}
+add_filter( 'pmpro_mmpu_incompatible_add_ons', 'pmprosm_mmpu_incompatible_add_ons' );
+
 // Includes.
 if( is_admin() ) {
 	require_once(dirname(__FILE__) . '/includes/import-users-from-csv.php');
