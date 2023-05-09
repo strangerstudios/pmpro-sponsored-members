@@ -618,6 +618,10 @@ function pmprosm_pmpro_confirmation_message( $message ) {
 		$pmprosm_values = pmprosm_getValuesByMainLevel( $current_user->membership_level->ID );
 		$code = pmprosm_getDiscountCodeByCodeID( $code_id );
 
+		if( empty( $pmprosm_values['sponsored_level_id'] ) ) {
+			return $message;
+		}
+
 		if( ! is_array($pmprosm_values['sponsored_level_id'] ) ) {
 			$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
 		} else {
