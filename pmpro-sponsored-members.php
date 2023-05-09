@@ -1091,7 +1091,9 @@ function pmprosm_pmpro_checkout_boxes() {
 								<input type="text" name="add_sub_accounts_username[]" class="pmpro_required" value="<?php echo esc_attr($child_username);?>" size="20" />
 							</div>
 						<?php } ?>
-						<?php if(empty($pmprosm_values['children_hide_email'])) { ?>
+						<?php
+						// The `children_hide_email` option is deprecated, but keeping it in the code in case someone is using it.
+						if(empty($pmprosm_values['children_hide_email'])) { ?>
 							<div class="pmpro_checkout-field">
 								<label><?php echo esc_html__("Email", "pmpro-sponsored-members");?></label>
 								<input type="text" name="add_sub_accounts_email[]" class="pmpro_required" value="<?php echo esc_attr($child_email);?>" size="20" />
