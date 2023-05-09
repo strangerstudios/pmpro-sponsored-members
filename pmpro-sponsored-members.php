@@ -335,7 +335,10 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 	else
 		$seats = "";
 
-	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "' WHERE id = '" . $code_id . "' LIMIT 1";
+	// Extend the expiration date of the discount code just in case.
+	$expires = date( 'Y-m-d', strtotime( '+1 year', current_time( 'timestamp' ) ) );
+
+	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "', expires = '" . $expires . "' WHERE id = '" . $code_id . "' LIMIT 1";
 	$wpdb->query( $sqlQuery );
 
 	//activate/deactivate old accounts
@@ -437,13 +440,9 @@ function pmprosm_pmpro_after_checkout_sponsor_account_change( $user_id ) {
 		$level_id = false;
 	}
 
-	if( empty( $level_id ) ) {
-		return;
-	}
-
     // Handle sponsored accounts.
     if ( pmprosm_isMainLevel( $level_id ) ) {
-		pmprosm_sponsored_account_change($level_id, $user_id);
+		pmprosm_sponsored_account_change($level_id, $user_id);		
 	}
 }
 add_action( 'pmpro_after_checkout', 'pmprosm_pmpro_after_checkout_sponsor_account_change', 10, 2 );
