@@ -508,9 +508,11 @@ function pmprosm_getChildren( $user_id = NULL ) {
 
     $code_id = pmprosm_getCodeByUserID( $user_id );
 
-    if( ! empty( $code_id ) ) {
-		$children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = '" . esc_sql( $code_id ) . "' AND status = 'active'");
+	if( empty( $code_id ) ) {
+		return false;
 	}
+
+	$children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = '" . esc_sql( $code_id ) . "' AND status = 'active'");
 
 	// If sponsor account is expired or cancelled,
 	// then children accounts are no longer active.
@@ -521,6 +523,7 @@ function pmprosm_getChildren( $user_id = NULL ) {
 		$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
 		$children = $wpdb->get_col( $sqlQuery );
 	}
+	
     return $children;
 }
 
