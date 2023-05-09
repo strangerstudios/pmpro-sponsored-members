@@ -348,7 +348,7 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 			$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];
 
 			for( $i = 0; $i < count( $children ); $i++ ) {
-				if( in_array( $children[$i], $old_sub_accounts_active ) ) {
+				if( is_array( $old_sub_accounts_active ) && in_array( $children[$i], $old_sub_accounts_active ) ) {
 					//they should have their level/etc from before
 				} else {
 					//remove their level
