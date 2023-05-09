@@ -161,27 +161,7 @@ function pmprosm_getValuesBySponsoredLevel( $level_id, $first = true ) {
 function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 	global $wpdb;
 
-	//are they cancelling?
-	if( empty( $level_id ) ) {
-		//is there a discount code attached to this user?
-		$code_id = pmprosm_getCodeByUserID( $user_id );
-
-		//if so find all users who signed up with that and cancel them as well
-		if( ! empty( $code_id ) ) {
-			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
-			$sub_user_ids = $wpdb->get_col($sqlQuery);
-
-			if( ! empty( $sub_user_ids ) ) {
-				foreach( $sub_user_ids as $sub_user_id ) {
-					//cancel their membership
-					pmpro_changeMembershipLevel( 0, $sub_user_id );
-				}
-			}
-		}
-
-		//remove seats from meta
-		update_user_meta( $user_id, 'pmprosm_seats', '' );
-	} elseif ( pmprosm_isMainLevel( $level_id ) ) {
+	if ( pmprosm_isMainLevel( $level_id ) ) { // Changing to a sponsoring level.
 		//get values for this sponsorship
 		$pmprosm_values = pmprosm_getValuesByMainLevel( $level_id );
 
@@ -227,7 +207,26 @@ function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 			//make sure we only do it once
 			remove_action( 'pmpro_after_checkout', 'pmprosm_pmpro_after_checkout_sponsor_account_change', 10, 2 );
 		}
-	}
+	} else { // They are cancelling or changing to a non-sponsor level.
+		//is there a discount code attached to this user?
+		$code_id = pmprosm_getCodeByUserID( $user_id );
+
+		//if so find all users who signed up with that and cancel them as well
+		if( ! empty( $code_id ) ) {
+			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
+			$sub_user_ids = $wpdb->get_col($sqlQuery);
+
+			if( ! empty( $sub_user_ids ) ) {
+				foreach( $sub_user_ids as $sub_user_id ) {
+					//cancel their membership
+					pmpro_changeMembershipLevel( 0, $sub_user_id );
+				}
+			}
+		}
+
+		//remove seats from meta
+		update_user_meta( $user_id, 'pmprosm_seats', '' );
+	} 
 }
 add_action( 'pmpro_after_change_membership_level', 'pmprosm_pmpro_after_change_membership_level', 10, 2 );
 
