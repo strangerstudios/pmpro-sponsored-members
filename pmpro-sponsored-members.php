@@ -206,7 +206,6 @@ function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 
 			//make sure we only do it once
 			remove_action( 'pmpro_after_checkout', 'pmprosm_pmpro_after_checkout_sponsor_account_change', 10, 2 );
-
 		}
 	} else { // They are cancelling or changing to a non-sponsor level.
 		//is there a discount code attached to this user?
@@ -336,42 +335,11 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 	else
 		$seats = "";
 
-	$level = pmpro_getLevel( $level_id );
+	// Extend the expiration date of the discount code just in case.
+	$expires = date( 'Y-m-d', strtotime( '+1 year', current_time( 'timestamp' ) ) );
 
-	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "' WHERE id = '" . $code_id . "' LIMIT 1";
+	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "', expires = '" . $expires . "' WHERE id = '" . $code_id . "' LIMIT 1";
 	$wpdb->query( $sqlQuery );
-
-	//Check if its a renewal - if so, extend its validity
-	$morder = new MemberOrder();
-	$morder->getLastMemberOrder( $user_id, 'success', $level_id );
-	if( $morder->is_renewal() ) {
-		//Is a renewal, so we should extend the discount code and reset the uses.
-		if( ! empty( $level->cycle_period ) ){
-			//Is a recurring level
-			$discount_code = pmprosm_getDiscountCodeByCodeID( $code_id );
-			
-			if( ! empty( $discount_code ) ) {
-				$expiration = $discount_code->expires;
-				//We're extending the uses instead of resetting this
-				//Will need to test this a bit more for real-world use cases
-				$uses = $discount_code->uses;
-
-				$new_expiration_date = date('Y-m-d', strtotime( $expires . ' + '.$level->cycle_number.' '.$level->cycle_period ) );
-
-				$updated = $wpdb->update( $wpdb->pmpro_discount_codes, 
-					array (
-						'uses' => esc_sql( $uses + $seats ),
-						'expires' => $new_expiration_date
-					),
-					array(
-						'id' => esc_sql( $code_id )
-					)
-				);
-
-			}
-			
-		}
-	}	
 
 	//activate/deactivate old accounts
 	if( ! empty( $pmprosm_values['sponsored_accounts_at_checkout'] ) ) {
