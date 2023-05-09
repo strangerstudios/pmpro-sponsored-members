@@ -21,7 +21,7 @@ Domain Path: /languages
 		//set 5 seats at checkout
 		1 => array(
 			'main_level_id' => 1,		//redundant but useful
-			'sponsored_level_id' => array(1,2),	//array or single id
+			'sponsored_level_id' => array(2,3),	//array or single id
 			'seats' => 5
 		),
 		//seats based on field at checkout
@@ -53,6 +53,15 @@ function pmprosm_load_textdomain(){
 	load_plugin_textdomain( 'pmpro-sponsored-members', false, basename( dirname( __FILE__ ) ) . '/languages' );
 }
 add_action( 'init', 'pmprosm_load_textdomain' );
+
+/**
+ * Mark the plugin as MMPU-incompatible.
+ */
+function pmprosm_mmpu_incompatible_add_ons( $incompatible ) {
+    $incompatible[] = 'PMPro Sponsored Members Add On';
+    return $incompatible;
+}
+add_filter( 'pmpro_mmpu_incompatible_add_ons', 'pmprosm_mmpu_incompatible_add_ons' );
 
 // Includes.
 if( is_admin() ) {
@@ -152,27 +161,7 @@ function pmprosm_getValuesBySponsoredLevel( $level_id, $first = true ) {
 function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 	global $wpdb;
 
-	//are they cancelling?
-	if( empty( $level_id ) ) {
-		//is there a discount code attached to this user?
-		$code_id = pmprosm_getCodeByUserID( $user_id );
-
-		//if so find all users who signed up with that and cancel them as well
-		if( ! empty( $code_id ) ) {
-			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
-			$sub_user_ids = $wpdb->get_col($sqlQuery);
-
-			if( ! empty( $sub_user_ids ) ) {
-				foreach( $sub_user_ids as $sub_user_id ) {
-					//cancel their membership
-					pmpro_changeMembershipLevel( 0, $sub_user_id );
-				}
-			}
-		}
-
-		//remove seats from meta
-		update_user_meta( $user_id, 'pmprosm_seats', '' );
-	} elseif ( pmprosm_isMainLevel( $level_id ) ) {
+	if ( pmprosm_isMainLevel( $level_id ) ) { // Changing to a sponsoring level.
 		//get values for this sponsorship
 		$pmprosm_values = pmprosm_getValuesByMainLevel( $level_id );
 
@@ -219,7 +208,26 @@ function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 			remove_action( 'pmpro_after_checkout', 'pmprosm_pmpro_after_checkout_sponsor_account_change', 10, 2 );
 
 		}
-	}
+	} else { // They are cancelling or changing to a non-sponsor level.
+		//is there a discount code attached to this user?
+		$code_id = pmprosm_getCodeByUserID( $user_id );
+
+		//if so find all users who signed up with that and cancel them as well
+		if( ! empty( $code_id ) ) {
+			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
+			$sub_user_ids = $wpdb->get_col($sqlQuery);
+
+			if( ! empty( $sub_user_ids ) ) {
+				foreach( $sub_user_ids as $sub_user_id ) {
+					//cancel their membership
+					pmpro_changeMembershipLevel( 0, $sub_user_id );
+				}
+			}
+		}
+
+		//remove seats from meta
+		update_user_meta( $user_id, 'pmprosm_seats', '' );
+	} 
 }
 add_action( 'pmpro_after_change_membership_level', 'pmprosm_pmpro_after_change_membership_level', 10, 2 );
 
@@ -374,7 +382,7 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 			$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];
 
 			for( $i = 0; $i < count( $children ); $i++ ) {
-				if( is_array( $old_sub_accounts_active  ) && in_array( $children[$i], $old_sub_accounts_active ) ) {
+				if( is_array( $old_sub_accounts_active ) && in_array( $children[$i], $old_sub_accounts_active ) ) {
 					//they should have their level/etc from before
 				} else {
 					//remove their level
@@ -531,9 +539,11 @@ function pmprosm_getChildren( $user_id = NULL ) {
 
     $code_id = pmprosm_getCodeByUserID( $user_id );
 
-    if( ! empty( $code_id ) ) {
-		$children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = '" . esc_sql( $code_id ) . "' AND status = 'active'");
+	if( empty( $code_id ) ) {
+		return false;
 	}
+
+	$children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = '" . esc_sql( $code_id ) . "' AND status = 'active'");
 
 	// If sponsor account is expired or cancelled,
 	// then children accounts are no longer active.
@@ -544,6 +554,7 @@ function pmprosm_getChildren( $user_id = NULL ) {
 		$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
 		$children = $wpdb->get_col( $sqlQuery );
 	}
+	
     return $children;
 }
 
@@ -640,6 +651,10 @@ function pmprosm_pmpro_confirmation_message( $message ) {
 		$pmprosm_values = pmprosm_getValuesByMainLevel( $current_user->membership_level->ID );
 		$code = pmprosm_getDiscountCodeByCodeID( $code_id );
 
+		if( empty( $pmprosm_values['sponsored_level_id'] ) ) {
+			return $message;
+		}
+
 		if( ! is_array($pmprosm_values['sponsored_level_id'] ) ) {
 			$sponsored_level_ids = array($pmprosm_values['sponsored_level_id']);
 		} else {
@@ -678,7 +693,7 @@ function pmprosm_pmpro_confirmation_message( $message ) {
 			if ( empty( $code->uses ) ) {
 				$message .= __( "This code has unlimited uses.", "pmpro-sponsored-members" );
 			} else {
-				$message .= sprintf( __( "This code has %d uses.", "pmpro-sponsored-members" ), $code->uses );
+				$message .= sprintf( _n( 'This code has %d use.', 'This code has %d uses.', $code->uses, 'pmpro-sponsored-members' ), $code->uses );
 			}
 
 			$message .= "</div>";
@@ -1093,26 +1108,32 @@ function pmprosm_pmpro_checkout_boxes() {
 								?></h4>
                         </div>
                         <?php if(!empty($pmprosm_values['children_get_name'])) { ?>
-							<label><?php echo esc_html__("First Name", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_first_name[]" value="<?php echo esc_attr($child_first_name);?>" size="20" />
-							<br>
-							<label><?php echo esc_html__("Last Name", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_last_name[]" value="<?php echo esc_attr($child_last_name);?>" size="20" />
-							<br>
+							<div class="pmpro_checkout-field">
+								<label><?php echo esc_html__("First Name", "pmpro-sponsored-members");?></label>
+								<input type="text" name="add_sub_accounts_first_name[]" class="pmpro_required" value="<?php echo esc_attr($child_first_name);?>" size="20" />
+							</div>
+							<div class="pmpro_checkout-field">
+								<label><?php echo esc_html__("Last Name", "pmpro-sponsored-members");?></label>
+								<input type="text" name="add_sub_accounts_last_name[]" class="pmpro_required" value="<?php echo esc_attr($child_last_name);?>" size="20" />
+							</div>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_username'])) { ?>
-							<label><?php echo esc_html__("Username", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_username[]" value="<?php echo esc_attr($child_username);?>" size="20" />
-							<br>
+							<div class="pmpro_checkout-field">
+								<label><?php echo esc_html__("Username", "pmpro-sponsored-members");?></label>
+								<input type="text" name="add_sub_accounts_username[]" class="pmpro_required" value="<?php echo esc_attr($child_username);?>" size="20" />
+							</div>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_email'])) { ?>
-							<label><?php echo esc_html__("Email", "pmpro-sponsored-members");?></label>
-							<input type="text" name="add_sub_accounts_email[]" value="<?php echo esc_attr($child_email);?>" size="20" />
-							<br>
+							<div class="pmpro_checkout-field">
+								<label><?php echo esc_html__("Email", "pmpro-sponsored-members");?></label>
+								<input type="text" name="add_sub_accounts_email[]" class="pmpro_required" value="<?php echo esc_attr($child_email);?>" size="20" />
+							</div>
 						<?php } ?>
 						<?php if(empty($pmprosm_values['children_hide_password'])) { ?>
-							<label><?php echo esc_html__("Password", "pmpro-sponsored-members");?></label>
-							<input type="password" name="add_sub_accounts_password[]" value="" size="20" />
+							<div class="pmpro_checkout-field">
+								<label><?php echo esc_html__("Password", "pmpro-sponsored-members");?></label>
+								<input type="password" name="add_sub_accounts_password[]" class="pmpro_required" value="" size="20" />
+							</div>
 						<?php } ?>
 						<?php do_action('pmprosm_children_fields', $i, $seats);?>
 					</div>
@@ -1196,7 +1217,7 @@ function pmprosm_pmpro_checkout_boxes() {
 									i = children.length;
 
 									while (i < newseats) {
-                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" size="20" /><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" size="20" /><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" size="20" /><?php echo $empty_child_fields;?></div>';
+                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" class="input" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" class="input" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><?php echo $empty_child_fields;?></div>';
                                         newdiv = div.replace(/XXXX/g,i+1);
                                         jQuery('#sponsored_accounts').append(newdiv); i++;
 									}
@@ -1836,7 +1857,7 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 
     <h3><?php esc_html_e( "Sponsored Members", "pmpro-sponsored-members" );?></h3>
     <div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
-        <table class="wp-list-table widefat fixed" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <table class="wp-list-table widefat striped" width="100%" cellpadding="0" cellspacing="0" border="0">
             <thead>
             <tr>
                 <th><?php esc_html_e( 'Date', 'pmpro-sponsored-members' ); ?></th>
@@ -1895,7 +1916,10 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
                     </td>
                     <td><?php echo esc_html( $member->membership_level->name ); ?></td>
 					<td>
-						<a href="<?php echo esc_url($remove_url); ?>"><?php _e( 'Remove', 'pmpro-sponsored-members'); ?></a>
+						<?php
+						$delete_text = esc_attr__('Are you sure you want to remove this member?', 'pmpro-sponsored-members' );
+						?>
+						<a href="<?php echo $remove_url; ?>" onclick="<?php echo esc_js('return confirm("' . $delete_text . '");'); ?>"><?php _e( 'Remove', 'pmpro-sponsored-members'); ?></a>
 					</td>
                 </tr>
 				<?php
