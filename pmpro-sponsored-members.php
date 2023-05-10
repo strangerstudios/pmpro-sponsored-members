@@ -338,7 +338,10 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 	// Extend the expiration date of the discount code just in case.
 	$expires = date( 'Y-m-d', strtotime( '+1 year', current_time( 'timestamp' ) ) );
 
-	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $seats . "', expires = '" . $expires . "' WHERE id = '" . $code_id . "' LIMIT 1";
+	// Support for customizing the discount code expires/uses.
+	$sponsored_code_settings = apply_filters( 'pmprosm_sponsored_code_settings', array( 'code' => '', 'starts' => '', 'expires' => $expires, 'uses' => $seats ) );
+
+	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $sponsored_code_settings['uses'] . "', expires = '" . $sponsored_code_settings['expires'] . "' WHERE id = '" . $code_id . "' LIMIT 1";
 	$wpdb->query( $sqlQuery );
 
 	//activate/deactivate old accounts
