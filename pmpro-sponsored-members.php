@@ -1187,7 +1187,7 @@ function pmprosm_pmpro_checkout_boxes() {
 									i = children.length;
 
 									while (i < newseats) {
-                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" class="input" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" class="input" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><?php echo $empty_child_fields;?></div>';
+                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" class="input" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" class="input" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><?php if(empty($pmprosm_values["children_hide_email"])){ ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><?php if(empty($pmprosm_values["children_hide_password"])){ ?><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><?php } ?><?php echo $empty_child_fields;?></div>';
                                         newdiv = div.replace(/XXXX/g,i+1);
                                         jQuery('#sponsored_accounts').append(newdiv); i++;
 									}
@@ -1323,7 +1323,6 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 		if ( ! is_array( $child_email ) && empty( $child_email ) ) {
 			return;
 		}
-
 		$sponsored_code = pmprosm_getCodeByUserID( $user_id );
 
 		if( $parent_level ) {
@@ -1350,7 +1349,11 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 					$new_username = pmpro_generateUsername( $new_first_name, $new_last_name, $new_email );
 				}
 
-				$child_user_id = wp_create_user( $new_username, $child_password[$i], $child_email[$i] );
+				// If we don't have a password, generate one.
+				$new_password = isset( $child_password[$i] ) ? $child_password[$i] : wp_generate_password();
+
+				// Create the user.
+				$child_user_id = wp_create_user( $new_username, $new_password, $child_email[$i] );
 
 				if( is_wp_error($child_user_id) ) {
 
@@ -1599,8 +1602,22 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 	$unique_emails = array_unique( array_filter( $child_emails ) );
 	$passwords = array_filter( $child_passwords );
 
-	if( $num_new_accounts > 0 && ( ($pmprosm_values['children_hide_username'] !== true && count( $unique_usernames ) < $num_new_accounts) || count( $unique_emails ) < $num_new_accounts || count( $passwords ) < $num_new_accounts ) ) {
-		pmpro_setMessage( esc_html__( "Please enter details for each new sponsored account." ), "pmpro_error" );
+	// Expressions to simplify error logic below.
+	$creating_accounts = $num_new_accounts > 0;
+	$requiring_usernames = ( ! isset( $pmprosm_values['children_hide_username'] ) || $pmprosm_values['children_hide_username'] !== true );
+	$usernames_provided = count( $unique_usernames ) >= $num_new_accounts;
+	$requiring_passwords = ( ! isset( $pmprosm_values['children_hide_password'] ) || $pmprosm_values['children_hide_password'] !== true );
+	$passwords_provided = count( $passwords ) >= $num_new_accounts;
+	$emails_provided = count( $unique_emails ) >= $num_new_accounts;
+
+	if( $creating_accounts && $requiring_usernames && ! $usernames_provided ) {
+		pmpro_setMessage( esc_html__( "Please enter a username for each new sponsored account." ), "pmpro_error" );
+		$okay = false;
+	} elseif( $creating_accounts && $requiring_passwords && ! $passwords_provided ) {
+		pmpro_setMessage( esc_html__( "Please enter a password for each new sponsored account." ), "pmpro_error" );
+		$okay = false;
+	} elseif( $creating_accounts && ! $emails_provided ) {
+		pmpro_setMessage( esc_html__( "Please enter an email for each new sponsored account." ), "pmpro_error" );
 		$okay = false;
 	} elseif( count( $unique_usernames ) != count( $child_usernames ) || count( $unique_emails ) != count( $child_emails ) ) {
 		pmpro_setMessage( esc_html__( "Each sponsored account must have a unique username and email address." ), "pmpro_error" );
