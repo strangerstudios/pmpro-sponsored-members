@@ -1321,11 +1321,6 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 		if ( ! is_array( $child_email ) && empty( $child_email ) ) {
 			return;
 		}
-		
-		if( empty( $child_password ) && ! empty( $parent_level['children_hide_password'] ) && $parent_level['children_hide_password'] === true ){
-			$child_password = pmprosm_handle_child_accounts_without_password( $parent_level, $child_username );
-		}
-
 		$sponsored_code = pmprosm_getCodeByUserID( $user_id );
 
 		if( $parent_level ) {
@@ -1352,7 +1347,11 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 					$new_username = pmpro_generateUsername( $new_first_name, $new_last_name, $new_email );
 				}
 
-				$child_user_id = wp_create_user( $new_username, $child_password[$i], $child_email[$i] );
+				// If we don't have a password, generate one.
+				$new_password = isset( $child_password[$i] ) ? $child_password[$i] : wp_generate_password();
+
+				// Create the user.
+				$child_user_id = wp_create_user( $new_username, $new_password, $child_email[$i] );
 
 				if( is_wp_error($child_user_id) ) {
 
@@ -1596,28 +1595,27 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 		$child_passwords = array();
 	}
 
-	if( empty( $child_passwords ) && ! empty( $pmprosm_values['children_hide_password'] ) && $pmprosm_values['children_hide_password'] === true ){
-		$child_passwords = pmprosm_handle_child_accounts_without_password( $pmprosm_values, $child_usernames );
-	}
-
 	//check that these emails and usernames are unique
 	$unique_usernames = array_unique( array_filter( $child_usernames ) );
 	$unique_emails = array_unique( array_filter( $child_emails ) );
 	$passwords = array_filter( $child_passwords );
 
-	//Adjusted formatting of first if statement due to the number of conditions (and readability)
-	if( 
-		$num_new_accounts > 0 && 
-		( 
-			(
-				( ! isset( $pmprosm_values['children_hide_username'] ) || $pmprosm_values['children_hide_username'] !== true ) && 
-				count( $unique_usernames ) < $num_new_accounts
-			) || 
-			count( $unique_emails ) < $num_new_accounts || 
-			count( $passwords ) < $num_new_accounts 
-		) 
-	) {
-		pmpro_setMessage( esc_html__( "Please enter details for each new sponsored account." ), "pmpro_error" );
+	// Expressions to simplify error logic below.
+	$creating_accounts = $num_new_accounts > 0;
+	$requiring_usernames = ( ! isset( $pmprosm_values['children_hide_username'] ) || $pmprosm_values['children_hide_username'] !== true );
+	$usernames_provided = count( $unique_usernames ) >= $num_new_accounts;
+	$requiring_passwords = ( ! isset( $pmprosm_values['children_hide_password'] ) || $pmprosm_values['children_hide_password'] !== true );
+	$passwords_provided = count( $passwords ) >= $num_new_accounts;
+	$emails_provided = count( $unique_emails ) >= $num_new_accounts;
+
+	if( $creating_accounts && $requiring_usernames && ! $usernames_provided ) {
+		pmpro_setMessage( esc_html__( "Please enter a username for each new sponsored account." ), "pmpro_error" );
+		$okay = false;
+	} elseif( $creating_accounts && $requiring_passwords && ! $passwords_provided ) {
+		pmpro_setMessage( esc_html__( "Please enter a password for each new sponsored account." ), "pmpro_error" );
+		$okay = false;
+	} elseif( $creating_accounts && ! $emails_provided ) {
+		pmpro_setMessage( esc_html__( "Please enter an email for each new sponsored account." ), "pmpro_error" );
 		$okay = false;
 	} elseif( count( $unique_usernames ) != count( $child_usernames ) || count( $unique_emails ) != count( $child_emails ) ) {
 		pmpro_setMessage( esc_html__( "Each sponsored account must have a unique username and email address." ), "pmpro_error" );
@@ -1663,29 +1661,6 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 	return $okay;
 }
 add_action( 'pmpro_registration_checks', 'pmprosm_pmpro_registration_checks_sponsored_accounts' );
-
-/**
- * Creates WP Generated passwords for child accounts when the children account passwords are set to not show
- * 
- * @param $pmprosm_values Contains the Sponsored Members settings in an array
- * @param $child_usernames Contains the child account usernames
- * 
- * @since TBD
- * 
- * @return $passwords Contains an array of aliased email addresses from the child usernames
- */
-function pmprosm_handle_child_accounts_without_password( $pmprosm_values, $child_usernames ){
-
-	$passwords = array();
-
-	if( ! empty( $pmprosm_values['children_hide_password'] ) && $pmprosm_values['children_hide_password'] === true && ! empty( $child_usernames ) ) {
-		foreach( $child_usernames as $child_username ) {
-			$passwords[] = wp_generate_password();
-		}
-	}
-
-	return $passwords;
-}
 
 // Save fields in session for PayPal Express/etc.
 function pmprosm_pmpro_paypalexpress_session_vars() {
