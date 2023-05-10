@@ -1596,12 +1596,6 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 		$child_passwords = array();
 	}
 
-	$child_account_emails = pmprosm_handle_child_accounts_without_email( $pmprosm_values, $child_usernames );
-
-	if( ! empty( $child_account_emails ) ) {
-		$child_emails = $child_account_emails;
-	}
-
 	if( empty( $child_passwords ) && ! empty( $pmprosm_values['children_hide_password'] ) && $pmprosm_values['children_hide_password'] === true ){
 		$child_passwords = pmprosm_handle_child_accounts_without_password( $pmprosm_values, $child_usernames );
 	}
