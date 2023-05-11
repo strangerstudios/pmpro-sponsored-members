@@ -940,7 +940,7 @@ function pmprosm_pmpro_checkout_boxes() {
 									if ( isset( $pmprosm_values['seat_cost_text'] ) ) {
 										printf( esc_html__( "Enter a number from %d to %d. %s", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text'] );
 									} else {
-										printf( esc_html__( "Enter a number from %d to %d. +%s per extra seat.", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $pmprosm_values['seat_cost'] );
+										printf( esc_html__( "Enter a number from %d to %d. +%s per extra seat.", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . empty( $pmprosm_values['seat_cost'] ) ? 0 : $pmprosm_values['seat_cost'] );
 									}
 								}
 							?>
@@ -1130,7 +1130,7 @@ function pmprosm_pmpro_checkout_boxes() {
 				<script>
 				jQuery(document).ready(function() {
 					var pmpro_base_level_is_free = <?php if(pmpro_isLevelFree($pmpro_level)) echo "true"; else echo "false";?>;
-					var seat_cost = <?php echo intval($pmprosm_values['seat_cost']);?>;
+					var seat_cost = <?php echo ( empty( $pmprosm_values['seat_cost'] ) ? 0 : intval( $pmprosm_values['seat_cost'] ) )?>;
 					var min_seats = <?php if(!empty($pmprosm_values['min_seats'])) echo intval($pmprosm_values['min_seats']); elseif (!empty($pmprosm_values['seats'])) echo intval($pmprosm_values['seats']); else echo "0";?>;
 					var max_seats = <?php if(!empty($pmprosm_values['max_seats'])) echo intval($pmprosm_values['max_seats']); elseif (!empty($pmprosm_values['seats'])) echo intval($pmprosm_values['seats']); else echo "false";?>;
 
