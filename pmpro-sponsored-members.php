@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Sponsored Members Add On
 Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-sponsored-members/
 Description: Generate discount code for a main account holder to distribute to sponsored members.
-Version: 0.10
+Version: 0.10.1
 Author: Paid Memberships Pro
 Author URI: https://www.paidmembershipspro.com
 Text Domain: pmpro-sponsored-members

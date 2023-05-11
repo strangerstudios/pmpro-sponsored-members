@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 4.0
 Tested up to: 5.6
-Stable tag: 0.10
+Stable tag: 0.10.1
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,22 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 0.10.1 - 2023-05-11 =
+* ENHANCEMENT: Adding a confirmation check before a child user is removed (@JarrydLong)
+* BUG FIX/ENHANCEMENT: Now marking required child fields with asterisk at checkout (@kimwhite, @sensemonster)
+* BUG FIX/ENHANCEMENT: Now extending discount code expiration date when sponsor level is renewed (@JarrydLong)
+* BUG FIX/ENHANCEMENT: Now correctly handling plurals when localizing discount code uses text on the membership confirmation page (@JarrydLong)
+* BUG FIX/ENHANCEMENT: Marking plugin as incompatible with Multiple Memberships Per User for the PMPro v3.0 update (@dparker1005)
+* BUG FIX/ENHANCEMENT: Updating sample code to not have child level be the same as sponsoring level (@kimwhite)
+* BUG FIX: Preventing exploit where child accounts for a sponsoring member would stay active if sponsoring member changed to a non-sponsor level (@dparker1005)
+* BUG FIX: Fixing issue where child fields may not be hidden correctly at checkout (@JarrydLong, @dparker1005)
+* BUG FIX: Resolving issue where the query to find child accounts for a user may return incorrect results if the user does not have a sponsor code (@JarrydLong)
+* BUG FIX: Resolving PHP error on confirmation page when an existing sponsor checks out for a non-sponsoring level (@JarrydLong)
+* BUG FIX: Resolving PHP error when an existing sponsor renews their membership without deciding to keep any old child accounts active (@JarrydLong)
+* BUG FIX: Resolving issue where the `pmprosm_sponsored_code_settings` filter may sometimes be ignored (@dparker1005)
+* BUG FIX: Removed `fixed` class from list table to resolve UI issues in some themes (@kimwhite)
+* DEPRECATED: No longer documenting the `children_hide_email` setting as it hasn’t worked for the last few versions, but leaving the existing code in place in case a site is using it.
+
 = 0.10 - 2021-01-03 =
 * FEATURE: Admins and users can now remove sponsored child accounts to free up the spot.
 * BUG FIX/ENHANCEMENT: We are not generating a username for child accounts at checkout if you use the children_hide_username option to hide the username field. Child accounts still need an email or name fields to generate a user account.
