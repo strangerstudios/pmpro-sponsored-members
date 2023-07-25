@@ -940,7 +940,8 @@ function pmprosm_pmpro_checkout_boxes() {
 									if ( isset( $pmprosm_values['seat_cost_text'] ) ) {
 										printf( esc_html__( "Enter a number from %d to %d. %s", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text'] );
 									} else {
-										printf( esc_html__( "Enter a number from %d to %d. +%s per extra seat.", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . empty( $pmprosm_values['seat_cost'] ) ? 0 : $pmprosm_values['seat_cost'] );
+										$seat_cost = empty( $pmprosm_values['seat_cost'] ) ? 0 : $pmprosm_values['seat_cost'];
+										printf( esc_html__( "Enter a number from %d to %d. +%s per extra seat.", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $seat_cost );									
 									}
 								}
 							?>
