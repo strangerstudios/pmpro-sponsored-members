@@ -39,7 +39,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 == Changelog ==
 = 0.10.2 - 2023-07-25 =
 * BUG FIX: Fixed issue where the seat cost would always show $0 at checkout.
-* ENHANCEMENT: Updated <h3> tags to <h2> tags for better accessibility.
+* ENHANCEMENT: Updated `<h3>` tags to `<h2>` tags for better accessibility.
 * REFACTOR: Now getting level information at checkout from `pmpro_getLevelAtCheckout()` instead of pulling from `$_REQUEST`
 
 = 0.10.1 - 2023-05-11 =
