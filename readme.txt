@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 4.0
-Tested up to: 5.6
-Stable tag: 0.10.1
+Tested up to: 6.2
+Stable tag: 0.10.2
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -37,6 +37,11 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 0.10.2 - 2023-07-25 =
+* BUG FIX: Fixed issue where the seat cost would always show $0 at checkout.
+* ENHANCEMENT: Updated <h3> tags to <h2> tags for better accessibility.
+* REFACTOR: Now getting level information at checkout from `pmpro_getLevelAtCheckout()` instead of pulling from `$_REQUEST`
+
 = 0.10.1 - 2023-05-11 =
 * ENHANCEMENT: Adding a confirmation check before a child user is removed (@JarrydLong)
 * BUG FIX/ENHANCEMENT: Now marking required child fields with asterisk at checkout (@kimwhite, @sensemonster)
