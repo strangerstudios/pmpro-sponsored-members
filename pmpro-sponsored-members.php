@@ -434,14 +434,9 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 function pmprosm_pmpro_after_checkout_sponsor_account_change( $user_id ) {
 	global $pmpro_level;
 
-	//get level
-	if ( ! empty( $pmpro_level ) ) {
-		$level_id = $pmpro_level->id;
-	} elseif ( ! empty( $_REQUEST['level'] ) ) {
-		$level_id = intval($_REQUEST['level']);
-	} else {
-		$level_id = false;
-	}
+	// Get checkout level.
+	$level = pmpro_getLevelAtCheckout();
+	$level_id = empty( $level->id ) ? false : $level->id;
 
     // Handle sponsored accounts.
     if ( pmprosm_isMainLevel( $level_id ) ) {
@@ -1275,13 +1270,8 @@ add_filter( "pmpro_checkout_level", "pmprosm_pmpro_checkout_levels" );
 function pmprosm_pmpro_after_checkout( $user_id ) {
 	global $current_user, $pmprosm_sponsored_account_levels, $pmpro_level;
 
-	if( ! empty( $pmpro_level ) ) {
-		$level_id = $pmpro_level->id;
-	} elseif( ! empty( $_REQUEST['level'] ) ) {
-		$level_id = intval($_REQUEST['level']);
-	} else {
-		$level_id = false;
-	}
+	$level = pmpro_getLevelAtCheckout();
+	$level_id = empty( $level->id ) ? false : $level->id;
 
 	if( empty( $level_id ) ) {
 		return;
@@ -1405,13 +1395,8 @@ add_action( "pmpro_after_checkout", "pmprosm_pmpro_after_checkout" );
 function pmprosm_after_checkout_children_updated( $user_id ) {
 	global $current_user, $pmprosm_sponsored_account_levels, $pmpro_level;
 
-	if( ! empty( $pmpro_level ) ) {
-		$level_id = $pmpro_level->id;
-	} elseif( ! empty( $_REQUEST['level'] ) ) {
-		$level_id = intval($_REQUEST['level']);
-	} else {
-		$level_id = false;
-	}
+	$level = pmpro_getLevelAtCheckout();
+	$level_id = empty( $level->id ) ? false : $level->id;
 
 	if( empty( $level_id ) ) {
 		return;
@@ -1547,8 +1532,11 @@ function pmprosm_removeDiscountCodeUse( $user_id, $code_id ) {
 function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 	global $pmpro_msg, $pmpro_msgt;
 
+	$level = pmpro_getLevelAtCheckout();
+	$level_id = empty( $level->id ) ? false : $level->id;
+
 	// Only if we're adding accounts at checkout.
-	$pmprosm_values = pmprosm_getValuesByMainLevel( $_REQUEST['level'] );
+	$pmprosm_values = pmprosm_getValuesByMainLevel( $level_id );
 	if( empty( $pmprosm_values['sponsored_accounts_at_checkout'] ) ) {
 		return $okay;
 	}
