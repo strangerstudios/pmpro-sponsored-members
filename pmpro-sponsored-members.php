@@ -813,7 +813,7 @@ function pmprosm_pmpro_discount_code_after_settings() {
 		$code_user_id = "";
 	}
 ?>
-<h3><?php esc_html_e( "For Sponsored Accounts", "pmpro-sponsored-members" );?></h3>
+<h2><?php esc_html_e( "For Sponsored Accounts", "pmpro-sponsored-members" );?></h2>
 <table class="form-table">
 <tbody>
 <tr>
@@ -895,8 +895,8 @@ function pmprosm_pmpro_checkout_boxes() {
 			if ( $can_edit_seats ) {
 		?>
 			<hr />
-			<h3>
-				<span class="pmpro_checkout-h3-name">
+			<h2>
+				<span class="pmpro_checkout-h2-name">
 				<?php
 					if ( $seat_cost >  0) {
 						esc_html_e( "Would you like to purchase extra seat(s)?", "pmpro-sponsored-members" );
@@ -905,7 +905,7 @@ function pmprosm_pmpro_checkout_boxes() {
 					}
 				?>
 				</span>
-			</h3>
+			</h2>
 		<?php } ?>
 		<div class="pmpro_checkout-fields">
 			<div class="pmpro_checkout-field pmpro_checkout-field-seats">
@@ -1067,7 +1067,7 @@ function pmprosm_pmpro_checkout_boxes() {
 					?>
 					<div id="sponsored_account_<?php echo intval( $i );?>">
 						<hr />
-                        <div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(' account information.', 'pmpro-sponsored-members'); ?> </h3>
+                        <div><h2><?php echo esc_html( $sponsored_level->name ); esc_html_e(' account information.', 'pmpro-sponsored-members'); ?> </h2>
                             <h4><?php if (isset($pmprosm_values['sponsored_header_text']))
 									echo $pmprosm_values['sponsored_header_text'];
 								else
@@ -1186,7 +1186,7 @@ function pmprosm_pmpro_checkout_boxes() {
 									i = children.length;
 
 									while (i < newseats) {
-                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h3><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h3><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" class="input" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" class="input" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><?php if(empty($pmprosm_values["children_hide_email"])){ ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><?php if(empty($pmprosm_values["children_hide_password"])){ ?><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><?php } ?><?php echo $empty_child_fields;?></div>';
+                                        var div = '<div id="sponsored_account_'+i+'"><hr /><div><h2><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h2><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" class="input" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" class="input" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><?php if(empty($pmprosm_values["children_hide_email"])){ ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><?php if(empty($pmprosm_values["children_hide_password"])){ ?><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><?php } ?><?php echo $empty_child_fields;?></div>';
                                         newdiv = div.replace(/XXXX/g,i+1);
                                         jQuery('#sponsored_accounts').append(newdiv); i++;
 									}
@@ -1761,7 +1761,7 @@ function pmprosm_profile_fields_seats( $user ) {
 		}
 		?>
 		<hr />
-		<h3><?php esc_html_e( 'Sponsored Seats', 'pmpro-sponsored-members' ); ?></h3>
+		<h2><?php esc_html_e( 'Sponsored Seats', 'pmpro-sponsored-members' ); ?></h2>
 		<table class="form-table">
 			<?php
 				//get the user's sponsor code
@@ -1834,7 +1834,7 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 	ob_start();
     ?>
 
-    <h3><?php esc_html_e( "Sponsored Members", "pmpro-sponsored-members" );?></h3>
+    <h2><?php esc_html_e( "Sponsored Members", "pmpro-sponsored-members" );?></h2>
     <div class="pmpro-sponsored-members_children" <?php if( count( $member_ids ) > 4 ) { ?>style="height: 150px; overflow: auto;"<?php } ?>>
         <table class="wp-list-table widefat striped" width="100%" cellpadding="0" cellspacing="0" border="0">
             <thead>
@@ -2018,7 +2018,7 @@ function pmprosm_the_content_account_page( $content ) {
 			?>
 			<div id="pmpro_account-sponsored" class="pmpro_box">
 
-				<h3><?php esc_html_e( "Sponsored Seats", "pmpro-sponsored-members" );?></h3>
+				<h2><?php esc_html_e( "Sponsored Seats", "pmpro-sponsored-members" );?></h2>
                 <?php if (empty($pmprosm_values['hide_display_discount_code']) || $pmprosm_values['hide_display_discount_code'] === false ) { ?>
                     <p><?php printf(esc_html__("Give this code to your sponsored members to use at checkout: %s", "pmpro-sponsored-members"), '<strong>' . $code->code . '</strong>');?></p>
                     <?php if(count($code_urls) > 1) { ?>
