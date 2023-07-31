@@ -178,8 +178,8 @@ function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 
 		//no code, make one
 		if( empty( $code_id ) ) {
-			//if seats cost money and there are no seats, just return
-			if( ! empty( $pmprosm_values['seat_cost'] ) && empty( $_REQUEST['seats'] ) ) {
+			// If we are not in the WP admin, seats cost money and there are no seats, just return
+			if( ! is_admin() && ! empty( $pmprosm_values['seat_cost'] ) && empty( $_REQUEST['seats'] ) ) {
 				return;
 			}
 
