@@ -5,6 +5,8 @@
 
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg?style=flat-square)
 
+> :warning: **Note:** This Add On is being deprecated in favor of the new [Group Accounts Add On](https://www.paidmembershipspro.com/add-ons/group-accounts/) that replaces the code-based system in Sponsored Members with more features and no-code setup. There will be no new development on Sponsored Members.
+
 ### Welcome to the Paid Memberships Pro - Sponsored/Group Members GitHub Repository
 For groups or institutions that allow a member to purchase a block of linked accounts. The Add On provides the primary member’s with a code to distribute to their team for use during registration. The primary member can also automatically register the child accounts during checkout.
 
