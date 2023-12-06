@@ -9,6 +9,8 @@ Generate a discount code for a main account holder to distribute to sponsored me
 
 == Description ==
 
+Note: This Add On is being deprecated in favor of the new Group Accounts Add On (https://www.paidmembershipspro.com/add-ons/group-accounts/) that replaces the code-based system in Sponsored Members with more features and no-code setup. There will be no new development on Sponsored Members.
+
 This plugin currently requires Paid Memberships Pro. 
 
 This plugin is meant as a functional demo on how to implement sponsored memberships with Paid Memberships Pro. Feel free to edit as needed for your project.
