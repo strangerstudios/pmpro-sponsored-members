@@ -10,7 +10,7 @@
 	
 	IMPORTANT: Make sure that sponsors are imported BEFORE their child accounts. i.e. sponsors should come earlier/higher up in the CSV	
 */
-function pmprosm_is_iu_post_user_import($user_id) {
+function pmprosm_pmproiucsv_post_user_import($user_id) {
 	global $wpdb;
 		
 	//get user and make sure they have a membership level
@@ -64,4 +64,4 @@ function pmprosm_is_iu_post_user_import($user_id) {
 		delete_user_meta($user_id, 'pmprosm_sponsor');
 	}
 }
-add_action("is_iu_post_user_import", "pmprosm_is_iu_post_user_import", 20);
+add_action("pmproiucsv_post_user_import", "pmprosm_pmproiucsv_post_user_import", 20);
