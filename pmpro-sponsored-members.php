@@ -431,11 +431,9 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 /**
  * Make sure we trigger an update when a sponsor renews the same level.
  */
-function pmprosm_pmpro_after_checkout_sponsor_account_change( $user_id ) {
-	global $pmpro_level;
-
+function pmprosm_pmpro_after_checkout_sponsor_account_change( $user_id, $order ) {
 	// Get checkout level.
-	$level = pmpro_getLevelAtCheckout();
+	$level = $order->getMembershipLevelAtCheckout();
 	$level_id = empty( $level->id ) ? false : $level->id;
 
     // Handle sponsored accounts.
@@ -1267,10 +1265,8 @@ function pmprosm_pmpro_checkout_levels( $level ) {
 add_filter( "pmpro_checkout_level", "pmprosm_pmpro_checkout_levels" );
 
 //save seats at checkout
-function pmprosm_pmpro_after_checkout( $user_id ) {
-	global $current_user, $pmprosm_sponsored_account_levels, $pmpro_level;
-
-	$level = pmpro_getLevelAtCheckout();
+function pmprosm_pmpro_after_checkout( $user_id, $order ) {
+	$level = $order->getMembershipLevelAtCheckout();
 	$level_id = empty( $level->id ) ? false : $level->id;
 
 	if( empty( $level_id ) ) {
@@ -1390,12 +1386,10 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 		}
 	}
 }
-add_action( "pmpro_after_checkout", "pmprosm_pmpro_after_checkout" );
+add_action( "pmpro_after_checkout", "pmprosm_pmpro_after_checkout", 10, 2 );
 
-function pmprosm_after_checkout_children_updated( $user_id ) {
-	global $current_user, $pmprosm_sponsored_account_levels, $pmpro_level;
-
-	$level = pmpro_getLevelAtCheckout();
+function pmprosm_after_checkout_children_updated( $user_id, $order ) {
+	$level = $order->getMembershipLevelAtCheckout();
 	$level_id = empty( $level->id ) ? false : $level->id;
 
 	if( empty( $level_id ) ) {
@@ -1450,7 +1444,7 @@ function pmprosm_after_checkout_children_updated( $user_id ) {
 		}
 	}
 }
-add_action("pmpro_after_checkout", "pmprosm_after_checkout_children_updated",30,1);
+add_action("pmpro_after_checkout", "pmprosm_after_checkout_children_updated",30,2);
 
 /**
  * Change a user's level and also set the code_id.
