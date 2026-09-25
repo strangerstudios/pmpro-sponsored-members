@@ -10,6 +10,11 @@
 	
 	IMPORTANT: Make sure that sponsors are imported BEFORE their child accounts. i.e. sponsors should come earlier/higher up in the CSV	
 */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 function pmprosm_is_iu_post_user_import($user_id) {
 	global $wpdb;
 		
@@ -39,7 +44,8 @@ function pmprosm_is_iu_post_user_import($user_id) {
 			//make sure the code is still around
 			if($code_id)
 			{
-				$code_exists = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE id = '" . $code_id . "' LIMIT 1");
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; query is prepared.
+				$code_exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE id = %s LIMIT 1", $code_id ) );
 				if(!$code_exists)
 					$code_id = false;
 			}
@@ -56,7 +62,8 @@ function pmprosm_is_iu_post_user_import($user_id) {
 				$code_id = pmprosm_createSponsorCode($sponsor->ID, $sponsor->membership_level->id, $uses);
 						
 			//update code for sponsored user
-			$wpdb->query("UPDATE $wpdb->pmpro_memberships_users SET code_id = '" . $code_id . "' WHERE user_id = '" . $user_id . "' AND membership_id = '" . $user->membership_level->ID . "' AND status = 'active' LIMIT 1");
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; query is prepared.
+			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->pmpro_memberships_users SET code_id = %s WHERE user_id = %s AND membership_id = %s AND status = 'active' LIMIT 1", $code_id, $user_id, $user->membership_level->ID ) );
 			pmprosm_addDiscountCodeUse($user_id, $user->membership_level->ID, $code_id);
 		}
 		
