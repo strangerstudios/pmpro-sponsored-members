@@ -10,6 +10,10 @@ Text Domain: pmpro-sponsored-members
 Domain Path: /languages
 */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /*
 	Set these to the ids of your main and sponsored levels.
 
@@ -170,6 +174,7 @@ function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 
 		//make sure the code is still around
 		if( $code_id ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 			$code_exists = $wpdb->get_var("SELECT id FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql( $code_id ) . "' LIMIT 1");
 			if( ! $code_exists ) {
 				$code_id = false;
@@ -179,12 +184,15 @@ function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 		//no code, make one
 		if( empty( $code_id ) ) {
 			//if seats cost money and there are no seats, just return
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- intval() read of the seats field during PMPro checkout (nonce verified in core preheaders/checkout.php) or an admin level change (core nonce).
 			if( ! empty( $pmprosm_values['seat_cost'] ) && empty( $_REQUEST['seats'] ) ) {
 				return;
 			}
 
 			//check for seats
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- intval() read of the seats field during PMPro checkout (nonce verified in core preheaders/checkout.php) or an admin level change (core nonce).
 			if(isset($_REQUEST['seats']))
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- intval() read of the seats field during PMPro checkout (nonce verified in core preheaders/checkout.php) or an admin level change (core nonce).
 				$uses = intval($_REQUEST['seats']);
 			elseif(isset($_SESSION['seats']))
 				$uses = intval($_SESSION['seats']);
@@ -214,6 +222,7 @@ function pmprosm_pmpro_after_change_membership_level( $level_id, $user_id ) {
 		//if so find all users who signed up with that and cancel them as well
 		if( ! empty( $code_id ) ) {
 			$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; query built with esc_sql() on quoted values.
 			$sub_user_ids = $wpdb->get_col($sqlQuery);
 
 			if( ! empty( $sub_user_ids ) ) {
@@ -259,6 +268,7 @@ function pmprosm_createSponsorCode( $user_id, $level_id, $uses = '' ) {
 
 	$sqlQuery = "INSERT INTO $wpdb->pmpro_discount_codes (code, starts, expires, uses) VALUES('" . esc_sql( $sponsored_code ) . "', '" . esc_sql( $code_starts ) . "', '" . esc_sql( $code_expires ) . "', '$code_uses')";
 
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; values escaped with esc_sql() and quoted, uses is intval().
 	if( $wpdb->query( $sqlQuery ) !== false ) {
 		//set code in user meta
 		$code_id = $wpdb->insert_id;
@@ -304,6 +314,7 @@ function pmprosm_createSponsorCode( $user_id, $level_id, $uses = '' ) {
 																		 expiration_number,
 																		 expiration_period)
 														VALUES(" . implode(",", $discount_code) . ")";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; values are the new insert_id and developer-defined settings from $pmprosm_sponsored_account_levels (PHP code), not request data.
 			$wpdb->query( $sqlQuery );
 		}
 
@@ -326,7 +337,9 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 	$code_id = pmprosm_getCodeByUserID( $user_id );
 
 	//update seats for code
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- intval() read of the seats field during PMPro checkout (nonce verified in core preheaders/checkout.php) or an admin level change (core nonce).
 	if(isset($_REQUEST['seats']))
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- intval() read of the seats field during PMPro checkout (nonce verified in core preheaders/checkout.php) or an admin level change (core nonce).
 		$seats = intval($_REQUEST['seats']);
 	elseif(isset($_SESSION['seats']))
 		$seats = intval($_SESSION['seats']);
@@ -341,7 +354,8 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 	// Support for customizing the discount code expires/uses.
 	$sponsored_code_settings = apply_filters( 'pmprosm_sponsored_code_settings', array( 'code' => '', 'starts' => '', 'expires' => $expires, 'uses' => $seats ) );
 
-	$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . $sponsored_code_settings['uses'] . "', expires = '" . $sponsored_code_settings['expires'] . "' WHERE id = '" . $code_id . "' LIMIT 1";
+	$sqlQuery = $wpdb->prepare( "UPDATE $wpdb->pmpro_discount_codes SET uses = %s, expires = %s WHERE id = %s LIMIT 1", $sponsored_code_settings['uses'], $sponsored_code_settings['expires'], $code_id );
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- PMPro custom table; query prepared on the line above.
 	$wpdb->query( $sqlQuery );
 
 	//activate/deactivate old accounts
@@ -350,7 +364,8 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 		// so we need to deactivate old accounts.
 		$children = pmprosm_getChildren( $user_id );
 		if( $children ) {
-			$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Only compared with in_array(); runs during PMPro checkout (nonce verified in core preheaders/checkout.php) or an admin level change (core nonce).
+			$old_sub_accounts_active = isset( $_REQUEST['old_sub_accounts_active'] ) ? $_REQUEST['old_sub_accounts_active'] : array();
 
 			for( $i = 0; $i < count( $children ); $i++ ) {
 				if( is_array( $old_sub_accounts_active ) && in_array( $children[$i], $old_sub_accounts_active ) ) {
@@ -371,6 +386,7 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 	// if not sponsored_accounts_at_checkout then
 	//see if we should enable some accounts
 	$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; query built with esc_sql() on quoted values.
 	$sub_user_ids = $wpdb->get_col( $sqlQuery );
 
 	if( ! empty( $sub_user_ids ) ) {
@@ -383,6 +399,7 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 				//change their membership
 				if( is_array( $pmprosm_values['sponsored_level_id'] ) ) {
 					//what level did this user have last that is a sponsored level?
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 					$last_level_id = $wpdb->get_var("SELECT membership_id FROM $wpdb->pmpro_memberships_users WHERE user_id = '" . esc_sql( $sub_user_id ) . "' AND status = 'inactive' ORDER BY id DESC");
 
 					//okay give them that level back
@@ -404,6 +421,7 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 			}
 		} else {
 			// Get code.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 			$code = $wpdb->get_var("SELECT code FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql( $code_id ) . "' LIMIT 1");
 
 			// Cancel sponsnored accounts.
@@ -414,6 +432,7 @@ function pmprosm_sponsored_account_change( $level_id, $user_id ) {
 
 			//detach sponsored accounts
 			$sqlQuery = "DELETE FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; query built with esc_sql() on quoted values.
 			$wpdb->query( $sqlQuery );
 
 			//we better warn them
@@ -459,12 +478,14 @@ function pmprosm_pmpro_confirmation_url_lowseats($url)
 function pmprosm_pmpro_confirmation_message_lowseats( $message ) {
 	global $wpdb, $current_user;
 	$code_id = pmprosm_getCodeByUserID($current_user->ID);
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 	$code = $wpdb->get_var("SELECT code FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql( $code_id ) . "' LIMIT 1");
 
 	$message .= sprintf(__( "<p><strong>Notice:</strong>Your current membership has fewer seats than you had sponsored accounts. The accounts have been deactivated. You must have your sponsored accounts checkout again using your code: %s.</p>", 'pmpro-sponsored-members' ), $code );
 
 	return $message;
 }
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only flag that adds a confirmation message.
 if( ! empty( $_REQUEST['lowseats'] ) ) {
 	add_filter( 'pmpro_confirmation_message', 'pmprosm_pmpro_confirmation_message_lowseats' );
 }
@@ -476,7 +497,7 @@ function pmprosm_admin_head_errors() {
 	?>
 		<script>
 		jQuery(document).ready(function() {
-			jQuery('div.wrap h2').after('<div id="message" class="updated"><p><?php echo $error;?></p></div>');
+			jQuery('div.wrap h2').after('<div id="message" class="updated"><p><?php echo esc_js( $error );?></p></div>');
 		});
 		</script>
 	<?php
@@ -509,6 +530,7 @@ function pmprosm_getChildren( $user_id = NULL ) {
 		return false;
 	}
 
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 	$children = $wpdb->get_col("SELECT user_id FROM $wpdb->pmpro_memberships_users WHERE code_id = '" . esc_sql( $code_id ) . "' AND status = 'active'");
 
 	// If sponsor account is expired or cancelled,
@@ -518,6 +540,7 @@ function pmprosm_getChildren( $user_id = NULL ) {
 
 	if ( empty( $children ) ) {
 		$sqlQuery = "SELECT user_id FROM $wpdb->pmpro_discount_codes_uses WHERE code_id = '" . esc_sql( $code_id ) . "'";
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; query built with esc_sql() on quoted values.
 		$children = $wpdb->get_col( $sqlQuery );
 	}
 	
@@ -599,6 +622,7 @@ function pmprosm_getDiscountCodeByCodeID( $code_id ) {
 
 	if( !isset( $discount_codes[$code_id] ) ) {
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 		$discount_codes[$code_id] = $wpdb->get_row( "SELECT * FROM $wpdb->pmpro_discount_codes WHERE id = '" . esc_sql( $code_id ) . "' LIMIT 1");
 	}
 
@@ -726,6 +750,7 @@ function pmprosm_pmpro_registration_checks( $pmpro_continue_registration ) {
 	if( pmprosm_isSponsoredLevel( $pmpro_level->id ) && !empty( $discount_code ) ) {
 		$pmprosm_values = pmprosm_getValuesBySponsoredLevel( $pmpro_level->id, false );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 		$code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes WHERE code = '" . esc_sql($discount_code) . "' LIMIT 1" );
 		if( ! empty( $code_id ) ) {
 			$code_user_id = pmprosm_getCodeUserID( $code_id );
@@ -761,6 +786,7 @@ function pmprosm_pmpro_registration_checks( $pmpro_continue_registration ) {
 	// If the level has max or min seats, check them. Seats can never be negative.
 	if( pmprosm_isMainLevel( $pmpro_level->id ) ) {
 		$pmprosm_values = pmprosm_getValuesByMainLevel( $pmpro_level->id );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- PMPro registration checks (nonce verified in core preheaders/checkout.php); intval() comparison only.
 		$seats = isset( $_REQUEST['seats'] ) ? intval( $_REQUEST['seats'] ) : 0;
 		$min_seats = ! empty( $pmprosm_values['min_seats'] ) ? intval( $pmprosm_values['min_seats'] ) : 0;
 		if( ! empty( $pmprosm_values['max_seats'] ) && $seats > intval( $pmprosm_values['max_seats'] ) ) {
@@ -791,7 +817,7 @@ function pmprosm_pmpro_discountcodes_extra_cols_body( $code ) {
 	?>
 	<td>
 	<?php if( ! empty( $code_user_id ) && ! empty( $code_user ) ) { ?>
-		<a href="<?php echo get_edit_user_link( $code_user_id ); ?>"><?php echo $code_user->user_login; ?></a>
+		<a href="<?php echo esc_url( get_edit_user_link( $code_user_id ) ); ?>"><?php echo esc_html( $code_user->user_login ); ?></a>
 	<?php } elseif( ! empty( $code_user_id ) && empty( $code_user ) ) { ?>
 		<em>Missing User</em>
 	<?php } ?>
@@ -805,9 +831,12 @@ add_action( "pmpro_discountcodes_extra_cols_body", "pmprosm_pmpro_discountcodes_
  * Add user id field to discount code page.
  */
 function pmprosm_pmpro_discount_code_after_settings() {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Read-only: prefills the discount code edit form; intval().
 	$code_id = intval( $_REQUEST['edit'] );
 
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: prefills the discount code edit form; intval().
 	if( ! empty( $_REQUEST['user_id'] ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: prefills the discount code edit form; intval().
 		$code_user_id = intval( $_REQUEST['user_id'] );
 	} elseif( $code_id > -1 ) {
 		$code_user_id = pmprosm_getCodeUserID( $code_id );
@@ -838,10 +867,12 @@ function pmprosm_pmpro_save_discount_code( $code_id ) {
 	//fix in case this is a new discount code (for PMPro versions < 1.7.1)
 	if( $code_id < 0 ) {
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; static query.
 		$code_id = $wpdb->get_var( "SELECT id FROM $wpdb->pmpro_discount_codes ORDER BY id DESC LIMIT 1" );
 	}
 
 	if( ! empty( $code_id ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Runs on pmpro_save_discount_code after core check_admin_referer( 'save', 'pmpro_discountcodes_nonce' ); intval().
 		$code_user_id = intval( $_REQUEST['user_id'] );
 		pmprosm_setCodeUserID( $code_id, $code_user_id );
 	}
@@ -869,7 +900,9 @@ function pmprosm_pmpro_checkout_boxes() {
 	$max_seats = empty( $pmprosm_values['max_seats'] ) ? null : $pmprosm_values['max_seats'];
 
 	//get seats from submit
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: repopulates the checkout seats field; intval().
 	if( isset( $_REQUEST['seats'] ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: repopulates the checkout seats field; intval().
 		$seats = intval( $_REQUEST['seats'] );
 	} elseif( ! empty( $current_user->ID ) ) {
 		$seats = get_user_meta( $current_user->ID, "pmprosm_seats", true );
@@ -915,7 +948,7 @@ function pmprosm_pmpro_checkout_boxes() {
 				<?php
 					if ( $can_edit_seats ) {
 				?>
-						<label for="seats"><?php echo __( 'Number of Seats', 'pmpro-sponsored-members' );?></label>
+						<label for="seats"><?php esc_html_e( 'Number of Seats', 'pmpro-sponsored-members' );?></label>
 						<input type="text" id="seats" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
 				<?php } else { ?>
 						<input type="hidden" id="seats" name="seats" value="<?php echo esc_attr( $seats ); ?>" size="10" />
@@ -935,9 +968,11 @@ function pmprosm_pmpro_checkout_boxes() {
 
 								if ( $max_seats > 1 ) {
 									if ( isset( $pmprosm_values['seat_cost_text'] ) ) {
+										// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Seat counts are %d; seat_cost_text is developer-defined in $pmprosm_sponsored_account_levels (PHP code) and may contain HTML.
 										printf( esc_html__( "Enter a number from %d to %d. %s", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmprosm_values['seat_cost_text'] );
 									} else {
 										$seat_cost = empty( $pmprosm_values['seat_cost'] ) ? 0 : $pmprosm_values['seat_cost'];
+										// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Seat counts are %d; the currency symbol comes from PMPro core (may be an HTML entity) and seat_cost is developer-defined config.
 										printf( esc_html__( "Enter a number from %d to %d. +%s per extra seat.", "pmpro-sponsored-members" ), $min_seats, $pmprosm_values['max_seats'], $pmpro_currency_symbol . $seat_cost );									
 									}
 								}
@@ -951,6 +986,7 @@ function pmprosm_pmpro_checkout_boxes() {
 					// add extra_seat_prompt_text
 					if(!empty($pmprosm_values['extra_seat_prompt_text'])) {
 						echo '<div id="pmpro_extra_seat_prompt">';
+						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Developer-defined HTML from $pmprosm_sponsored_account_levels (PHP code).
 						echo  $pmprosm_values['extra_seat_prompt_text'];
 						echo '</div>';
 					}
@@ -961,7 +997,9 @@ function pmprosm_pmpro_checkout_boxes() {
 						echo "<hr />";
 
 						//get checkbox values if there
+						// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: only used to pre-check checkboxes via in_array().
 						if( isset( $_REQUEST['old_sub_accounts_active'] ) ) {
+							// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Read-only: only used to pre-check checkboxes via in_array().
 							$old_sub_accounts_active = $_REQUEST['old_sub_accounts_active'];
 						} else {
 							$old_sub_accounts_active = array();
@@ -1010,6 +1048,7 @@ function pmprosm_pmpro_checkout_boxes() {
 
 					echo "<div id = 'sponsored_accounts'>";
 
+					// phpcs:disable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Read-only: repopulates the checkout form; each value is escaped with esc_attr() on output.
 					if( ! empty( $_REQUEST['add_sub_accounts_username'] ) ) {
 						$child_usernames = $_REQUEST['add_sub_accounts_username'];
 					} elseif( $seats ) {
@@ -1041,6 +1080,7 @@ function pmprosm_pmpro_checkout_boxes() {
 					} else {
 						$child_emails = array();
 					}
+					// phpcs:enable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 
 					for( $i = 0; $i < count( $child_usernames ); $i++ ) {
 						if( is_array( $child_usernames ) ) {
@@ -1071,6 +1111,7 @@ function pmprosm_pmpro_checkout_boxes() {
 						<hr />
                         <div><h2><?php echo esc_html( $sponsored_level->name ); esc_html_e(' account information.', 'pmpro-sponsored-members'); ?> </h2>
                             <h4><?php if (isset($pmprosm_values['sponsored_header_text']))
+									// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Developer-defined HTML from $pmprosm_sponsored_account_levels (PHP code).
 									echo $pmprosm_values['sponsored_header_text'];
 								else
 									esc_html_e('Please fill in following information and account(s) will be created.', 'pmpro-sponsored-members');
@@ -1188,6 +1229,7 @@ function pmprosm_pmpro_checkout_boxes() {
 									i = children.length;
 
 									while (i < newseats) {
+                                        <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Level name is escaped; header text is developer-defined config; extra fields are HTML from the pmprosm_children_fields action. ?>
                                         var div = '<div id="sponsored_account_'+i+'"><hr /><div><h2><?php echo esc_html( $sponsored_level->name ); esc_html_e(" account information # XXXX", 'pmpro-sponsored-members'); ?> </h2><h4><?php if (isset($pmprosm_values["sponsored_header_text"]))echo $pmprosm_values["sponsored_header_text"];else esc_html_e("Please fill in following information and account(s) will be created.", 'pmpro-sponsored-members');?></h4></div><?php if(!empty($pmprosm_values["children_get_name"])) { ?><label>First Name</label><input type="text" name="add_sub_accounts_first_name[]" value="" class="input" size="20" /><br><label>Last Name</label><input type="text" name="add_sub_accounts_last_name[]" value="" class="input" size="20" /><br><?php } ?><?php if(empty($pmprosm_values["children_hide_username"])){ ?><label>Username</label><input type="text" name="add_sub_accounts_username[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><?php if(empty($pmprosm_values["children_hide_email"])){ ?><label>Email</label><input type="text" name="add_sub_accounts_email[]" value"" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><br><?php } ?><?php if(empty($pmprosm_values["children_hide_password"])){ ?><label>Password</label><input type="password" name="add_sub_accounts_password[]" value="" class="input pmpro_required" size="20" /> <span class="pmpro_asterisk"><abbr title="Required Field">*</abbr></span><?php } ?><?php echo $empty_child_fields;?></div>';
                                         newdiv = div.replace(/XXXX/g,i+1);
                                         jQuery('#sponsored_accounts').append(newdiv); i++;
@@ -1224,7 +1266,9 @@ add_action( "pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes" );
 //adjust price based on seats
 function pmprosm_pmpro_checkout_levels( $level ) {
 	//get seats from submit, never less than 0
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: intval() seats used to price the checkout level.
 	if( isset( $_REQUEST['seats'] ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: intval() seats used to price the checkout level.
 		$seats = max( 0, intval( $_REQUEST['seats'] ) );
 	} else {
 		$seats = "";
@@ -1284,7 +1328,9 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 	//get seats from submit
 	if( ! empty( $parent_level['seats'] ) ) {
 		$seats = $parent_level['seats'];
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- PMPro checkout; nonce verified in core preheaders/checkout.php (pmpro_checkout_nonce); intval().
 	} elseif( isset( $_REQUEST['seats'] ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- PMPro checkout; nonce verified in core preheaders/checkout.php (pmpro_checkout_nonce); intval().
 		$seats = intval($_REQUEST['seats']);
 	} else {
 		$seats = "";
@@ -1294,6 +1340,7 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 
 	if( ! empty( $parent_level['sponsored_accounts_at_checkout'] ) ) {
 		//Create additional child member here
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- PMPro checkout; nonce verified in core preheaders/checkout.php (pmpro_checkout_nonce). Values go to wp_create_user() (sanitizes login/email itself) and update_user_meta() (expects slashed data; names sanitized at use). Passwords must not be altered.
 		if( ! empty( $_REQUEST['add_sub_accounts_username'] ) ) {
 			$child_username = $_REQUEST['add_sub_accounts_username'];
 		} else {
@@ -1314,6 +1361,7 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 
 		$child_password = isset( $_REQUEST['add_sub_accounts_password'] ) ? $_REQUEST['add_sub_accounts_password'] : '';
 		$child_email = isset( $_REQUEST['add_sub_accounts_email'] ) ? $_REQUEST['add_sub_accounts_email'] : '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 
 		// Bail if the child accounts aren't set.
 		if ( ! is_array( $child_email ) && empty( $child_email ) ) {
@@ -1376,10 +1424,10 @@ function pmprosm_pmpro_after_checkout( $user_id ) {
 
 				// Update first/last.
 				if( ! empty( $child_first_name[$i] ) ) {
-					update_user_meta($child_user_id, "first_name", $child_first_name[$i]);
+					update_user_meta($child_user_id, "first_name", sanitize_text_field( $child_first_name[$i] ) );
 				}
 				if( ! empty( $child_last_name[$i] ) ) {
-					update_user_meta($child_user_id, "last_name", $child_last_name[$i]);
+					update_user_meta($child_user_id, "last_name", sanitize_text_field( $child_last_name[$i] ) );
 				}
 
 				if( pmprosm_changeMembershipLevelWithCode( $child_level_id, $child_user_id, $sponsored_code ) ) {
@@ -1487,6 +1535,7 @@ function pmprosm_getOrderByCodeUser( $code_id, $user_id ) {
 	global $wpdb;
 
 	$sqlQuery = "SELECT order_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . esc_sql( $user_id ) . "' AND code_id = '". esc_sql( $code_id ) ."' ";
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; query built with esc_sql() on quoted values.
 	$order_id = $wpdb->get_var( $sqlQuery );
 	return $order_id;
 
@@ -1519,6 +1568,7 @@ function pmprosm_addDiscountCodeUse( $user_id, $level_id, $code_id ) {
 	}
 
 	global $wpdb;
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 	$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . esc_sql($code_id) . "', '" . esc_sql($user_id) . "', '" . intval($code_order_id) . "', now())");
 }
 
@@ -1528,6 +1578,7 @@ function pmprosm_addDiscountCodeUse( $user_id, $level_id, $code_id ) {
 function pmprosm_removeDiscountCodeUse( $user_id, $code_id ) {
 	global $wpdb;
 
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- PMPro custom table; values escaped with esc_sql() and quoted.
 	$wpdb->query("DELETE FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . esc_sql($user_id) . "' AND code_id = '" . esc_sql($code_id) . "'");
 }
 
@@ -1544,6 +1595,7 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 	}
 
 	// Get number of old accounts to test later.
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- PMPro checkout; nonce verified in core preheaders/checkout.php (pmpro_checkout_nonce). Values are only counted, compared and validated here; error messages are output through wp_kses_post() by core. Passwords must not be altered.
 	if( ! empty( $_REQUEST['old_sub_accounts_active'] ) ) {
 		$num_old_accounts = count($_REQUEST['old_sub_accounts_active']);
 	} else {
@@ -1654,12 +1706,15 @@ function pmprosm_pmpro_registration_checks_sponsored_accounts( $okay ) {
 		}
 	}
 
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+
 	return $okay;
 }
 add_action( 'pmpro_registration_checks', 'pmprosm_pmpro_registration_checks_sponsored_accounts' );
 
 // Save fields in session for PayPal Express/etc.
 function pmprosm_pmpro_paypalexpress_session_vars() {
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- Stashes checkout fields in the session for offsite gateways during PMPro checkout (nonce verified in core preheaders/checkout.php) and restores them on return. Values are sanitized where used; passwords must not be altered.
 	if(!empty($_REQUEST['seats']))
 		$_SESSION['seats'] = $_REQUEST['seats'];
 	else
@@ -1722,6 +1777,7 @@ function pmprosm_init_load_session_vars( $param ) {
 		$_REQUEST['old_sub_accounts_active'] = $_SESSION['old_sub_accounts_active'];
 		unset( $_SESSION['old_sub_accounts_active'] );
 	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 
 	return $param;
 }
@@ -1729,7 +1785,9 @@ add_action( 'pmpro_checkout_preheader', 'pmprosm_init_load_session_vars', 5 );
 
 // Add the 'seats' parameter to the Paypal Express return url so we charge the correct amount
 function pmprosm_paypal_express_return_url_parameters( $params ) {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: intval() seats passed through the PayPal Express return URL.
 	if( isset( $_REQUEST['seats'] ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: intval() seats passed through the PayPal Express return URL.
 		$params['seats'] = intval( $_REQUEST['seats'] );
 	}
 	return $params;
@@ -1745,7 +1803,7 @@ function pmprosm_profile_fields_seats( $user ) {
 		// Removing a sponsored member?
 		if( isset( $_REQUEST['pmprosm_remove_member_id'] ) && isset( $_REQUEST['pmprosm_remove_member_level'] ) ) {
 			// Check nonce.
-			if( wp_verify_nonce( $_REQUEST['_wpnonce'], 'pmprosm_remove_member' ) ) {
+			if( isset( $_REQUEST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'pmprosm_remove_member' ) ) {
 				// Nonce is good. Remove the member.
 				$removed = pmprosm_remove_member_from_seat( intval( $_REQUEST['pmprosm_remove_member_id'] ), intval( $_REQUEST['pmprosm_remove_member_level'] ), $user->ID );
 				
@@ -1774,7 +1832,7 @@ function pmprosm_profile_fields_seats( $user ) {
 					<tr>
 						<th><label for="sponsor_code"><?php esc_html_e( 'Sponsor Code', 'pmpro-sponsored-members' ); ?></label></th>
 						<td>
-							<?php echo $code->code; ?>
+							<?php echo esc_html( $code->code ); ?>
 						</td>
 					</tr>
 					<tr>
@@ -1801,7 +1859,7 @@ function pmprosm_profile_fields_seats( $user ) {
 						?>
 						<tr>
 							<th><label for="parent"><?php esc_html_e( 'Parent', 'pmpro-sponsored-members' ); ?></label></th>
-							<td><a href="<?php echo get_edit_user_link( $parent->ID ); ?>"><?php echo esc_html( $parent->display_name ); ?></a></td>
+							<td><a href="<?php echo esc_url( get_edit_user_link( $parent->ID ) ); ?>"><?php echo esc_html( $parent->display_name ); ?></a></td>
 						</tr>
 						<?php
 					}
@@ -1813,6 +1871,7 @@ function pmprosm_profile_fields_seats( $user ) {
 			if ( !empty( $member_ids) ) {
             // this was already in profile so don't restrict by 'list_sponsored_accounts' - Keep backward compatability
                 echo "<hr />";
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pmprosm_display_sponsored_accounts() escapes its output.
                 echo pmprosm_display_sponsored_accounts( $member_ids );
 			}
 	}
@@ -1859,15 +1918,16 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 				$member->membership_level = pmpro_getMembershipLevelForUser($member_id);
 				
 				// Figure out URL based on where we are.
-				if ( $_SERVER['SCRIPT_NAME'] == '/wp-admin/user-edit.php' ) {
+				if ( isset( $_SERVER['SCRIPT_NAME'] ) && $_SERVER['SCRIPT_NAME'] == '/wp-admin/user-edit.php' ) {
 					// Editing another user in the admin.
 					$qargs = array(
+						// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotValidated -- Read-only: builds a nonce-protected remove link; intval().
 						'user_id' => intval($_REQUEST['user_id']),
 						'pmprosm_remove_member_id' => $member->ID,
 						'pmprosm_remove_member_level' => $member->membership_level->id
 					);
 					$remove_url = add_query_arg( $qargs, admin_url('user-edit.php') );
-				} elseif ( $_SERVER['SCRIPT_NAME'] == '/wp-admin/profile.php' ) {
+				} elseif ( isset( $_SERVER['SCRIPT_NAME'] ) && $_SERVER['SCRIPT_NAME'] == '/wp-admin/profile.php' ) {
 					// Editing yourself on profile.php
 					$qargs = array(
 						'pmprosm_remove_member_id' => $member->ID,
@@ -1886,11 +1946,11 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 				$remove_url = wp_nonce_url( $remove_url, 'pmprosm_remove_member' );
 				?>
                 <tr<?php if($count++ % 2 == 1) { ?> class="alternate"<?php } ?>>
-                    <td><?php echo date(get_option("date_format"), $member->membership_level->startdate); ?></td>
+                    <td><?php echo esc_html( date(get_option("date_format"), $member->membership_level->startdate) ); ?></td>
                     <td><?php echo esc_html( $member->display_name ); ?></td>
                     <td>
 						<?php if ( current_user_can( 'edit_users' ) ) { ?>
-							<a href="<?php echo get_edit_user_link($member_id); ?>"><?php echo esc_html( $member->user_email ); ?></a>
+							<a href="<?php echo esc_url( get_edit_user_link($member_id) ); ?>"><?php echo esc_html( $member->user_email ); ?></a>
 						<?php } else { ?>
 							<?php echo esc_html( $member->user_email ); ?>
 						<?php } ?>
@@ -1900,7 +1960,7 @@ function pmprosm_display_sponsored_accounts( $member_ids ) {
 						<?php
 						$delete_text = esc_attr__('Are you sure you want to remove this member?', 'pmpro-sponsored-members' );
 						?>
-						<a href="<?php echo $remove_url; ?>" onclick="<?php echo esc_js('return confirm("' . $delete_text . '");'); ?>"><?php _e( 'Remove', 'pmpro-sponsored-members'); ?></a>
+						<a href="<?php echo esc_url( $remove_url ); ?>" onclick="<?php echo esc_js('return confirm("' . $delete_text . '");'); ?>"><?php esc_html_e( 'Remove', 'pmpro-sponsored-members'); ?></a>
 					</td>
                 </tr>
 				<?php
@@ -1949,14 +2009,18 @@ function pmprosm_profile_update_seats( $user_id ) {
 	}
 
 	//only let admin's edit the seats
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- profile_update from user-edit.php/profile.php, which verify the update-user_ nonce; manage_options checked here; intval().
 	if( current_user_can( "manage_options" ) && isset( $_POST['seats'] ) ) {
 		//update user meta
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- profile_update from user-edit.php/profile.php, which verify the update-user_ nonce; manage_options checked here; intval().
 		update_user_meta( $user_id, "pmprosm_seats", intval($_POST['seats']) );
 
 		//update code
 		global $wpdb;
 		$code_id = pmprosm_getCodeByUserID( $user_id );
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- profile_update from user-edit.php/profile.php, which verify the update-user_ nonce; manage_options checked here; intval().
 		$sqlQuery = "UPDATE $wpdb->pmpro_discount_codes SET uses = '" . intval($_POST['seats']) . "' WHERE id = '" . esc_sql( $code_id ) . "' LIMIT 1";
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; values intval()/esc_sql() and quoted.
 		$wpdb->query($sqlQuery);
 	}
 }
@@ -2004,7 +2068,7 @@ function pmprosm_the_content_account_page( $content ) {
 			// Removing a sponsored member?
 			if( isset( $_REQUEST['pmprosm_remove_member_id'] ) && isset( $_REQUEST['pmprosm_remove_member_level'] ) ) {
 				// Check nonce.
-				if( wp_verify_nonce( $_REQUEST['_wpnonce'], 'pmprosm_remove_member' ) ) {
+				if( isset( $_REQUEST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'pmprosm_remove_member' ) ) {
 					// Nonce is good. Remove the member.
 					$removed = pmprosm_remove_member_from_seat( intval( $_REQUEST['pmprosm_remove_member_id'] ), intval( $_REQUEST['pmprosm_remove_member_level'] ), $current_user->ID );
 					
@@ -2022,7 +2086,7 @@ function pmprosm_the_content_account_page( $content ) {
 
 				<h2><?php esc_html_e( "Sponsored Seats", "pmpro-sponsored-members" );?></h2>
                 <?php if (empty($pmprosm_values['hide_display_discount_code']) || $pmprosm_values['hide_display_discount_code'] === false ) { ?>
-                    <p><?php printf(esc_html__("Give this code to your sponsored members to use at checkout: %s", "pmpro-sponsored-members"), '<strong>' . $code->code . '</strong>');?></p>
+                    <p><?php printf(esc_html__("Give this code to your sponsored members to use at checkout: %s", "pmpro-sponsored-members"), '<strong>' . esc_html( $code->code ) . '</strong>');?></p>
                     <?php if(count($code_urls) > 1) { ?>
                         <p><?php esc_html_e("Or provide one of these direct links to register:", "pmpro-sponsored-members");?></p>
                     <?php } else { ?>
@@ -2040,7 +2104,7 @@ function pmprosm_the_content_account_page( $content ) {
 					<?php if(empty($code->uses)) { ?>
 						<?php esc_html_e( "This code has unlimited uses.", "pmpro-sponsored-members" );?>
 					<?php } else { ?>
-						<?php printf( esc_html__("%s/%s uses.", "pmpro-sponsored-members" ), count( $member_ids ), $code->uses );?>
+						<?php printf( esc_html__("%s/%s uses.", "pmpro-sponsored-members" ), esc_html( count( $member_ids ) ), esc_html( $code->uses ) );?>
 					<?php } ?>
 				</div>
 				<?php
@@ -2054,6 +2118,7 @@ function pmprosm_the_content_account_page( $content ) {
 					// use same account display as in admin
                     if ( ! empty( $member_ids ) ) {
                         echo "<hr />";
+                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pmprosm_display_sponsored_accounts() escapes its output.
                         echo pmprosm_display_sponsored_accounts( $member_ids );
                     }
                 ?>
@@ -2093,6 +2158,7 @@ function pmprosm_getSponsor( $user_id, $force = false) {
 
 	//what code did this user_id sign up for?
 	$sqlQuery = "SELECT code_id FROM $wpdb->pmpro_discount_codes_uses WHERE user_id = '" . esc_sql( $user_id ) . "' ORDER BY id DESC";
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- PMPro custom table; query built with esc_sql() on quoted values.
 	$code_id = $wpdb->get_var( $sqlQuery );
 
 	// Found a code?
@@ -2117,6 +2183,7 @@ function pmprosm_pmpro_email_body( $body, $pmpro_email ) {
 	//only checkout emails, not admins
 	if(strpos($pmpro_email->template, "checkout") !== false && strpos($pmpro_email->template, "admin") === false && strpos($pmpro_email->template, "debug") === false) {
 		//get the user_id from the email
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Value escaped with esc_sql() and quoted.
 		$user_id = $wpdb->get_var("SELECT ID FROM $wpdb->users WHERE user_email = '" . esc_sql( $pmpro_email->data['user_email'] ) . "' LIMIT 1");
 		$level_id = $pmpro_email->data['membership_id'];
 		$code_id = pmprosm_getCodeByUserID( $user_id );
@@ -2226,8 +2293,9 @@ function pmprosm_get_checkout_urls( $code ) {
 		return;
 	}
 
-	$sql_code = "SELECT level_id, name FROM $wpdb->pmpro_discount_codes_levels c INNER JOIN $wpdb->pmpro_membership_levels l ON c.level_id = l.id WHERE c.code_id =" . esc_sql( $code_id );
+	$sql_code = "SELECT level_id, name FROM $wpdb->pmpro_discount_codes_levels c INNER JOIN $wpdb->pmpro_membership_levels l ON c.level_id = l.id WHERE c.code_id =" . intval( $code_id );
 
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- PMPro custom tables; code_id is intval().
 	$levels_id = $wpdb->get_results( $sql_code );
 
 	foreach ( $levels_id as $value ) {
@@ -2283,11 +2351,11 @@ function pmprosm_pmpro_memberslist_extra_cols_body( $theuser ) {
 <td>
 	<?php
 		if( !empty( $sponsor) ) {
-			$user_link = '<a href="' . add_query_arg('user_id', $sponsor->ID, admin_url('user-edit.php') ) . '">' . esc_html( $sponsor->user_login ) . '</a>';
-			printf( __( 'Sponsored by %s', 'pmpro-sponsored-members' ), $user_link );
+			$user_link = '<a href="' . esc_url( add_query_arg('user_id', $sponsor->ID, admin_url('user-edit.php') ) ) . '">' . esc_html( $sponsor->user_login ) . '</a>';
+			echo wp_kses_post( sprintf( __( 'Sponsored by %s', 'pmpro-sponsored-members' ), $user_link ) );
 		}
 		if( !empty( $sponsor_code ) ) {
-			echo '<a href="' . add_query_arg( array( 'page' => 'pmpro-discountcodes', 'edit' => $sponsor_code_id ), admin_url( 'admin.php' ) ) . '">' . esc_html( $sponsor_code->code ) . '</a>';
+			echo '<a href="' . esc_url( add_query_arg( array( 'page' => 'pmpro-discountcodes', 'edit' => $sponsor_code_id ), admin_url( 'admin.php' ) ) ) . '">' . esc_html( $sponsor_code->code ) . '</a>';
 		}
 	?>
 </td>
