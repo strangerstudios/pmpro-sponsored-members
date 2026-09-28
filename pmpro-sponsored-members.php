@@ -758,15 +758,17 @@ function pmprosm_pmpro_registration_checks( $pmpro_continue_registration ) {
 		}
 	}
 
-	// If the level has max or min seats, check them.
+	// If the level has max or min seats, check them. Seats can never be negative.
 	if( pmprosm_isMainLevel( $pmpro_level->id ) ) {
-		$pmprosm_values = pmprosm_getValuesBySponsoredLevel( $pmpro_level->id, false );
-		if( isset( $pmprosm_values['max_seats']) && intval( $_REQUEST['seats']) > intval( $pmprosm_values['max_seats'] ) ) {
+		$pmprosm_values = pmprosm_getValuesByMainLevel( $pmpro_level->id );
+		$seats = isset( $_REQUEST['seats'] ) ? intval( $_REQUEST['seats'] ) : 0;
+		$min_seats = ! empty( $pmprosm_values['min_seats'] ) ? intval( $pmprosm_values['min_seats'] ) : 0;
+		if( ! empty( $pmprosm_values['max_seats'] ) && $seats > intval( $pmprosm_values['max_seats'] ) ) {
 			pmpro_setMessage( __("The maximum number of seats allowed is " . intval( $pmprosm_values['max_seats'] ) . ".", "pmpro-sponsored-members" ), "pmpro_error" );
 			return false;
 		}
-		elseif( isset( $pmprosm_values['min_seats'] ) && intval( $_REQUEST['seats'] ) < intval( $pmprosm_values['min_seats'] ) ) {
-			pmpro_setMessage( __( "The minimum number of seats allowed is " . intval( $pmprosm_values['min_seats'] ) . ".", "pmpro-sponsored-members" ), "pmpro_error" );
+		elseif( $seats < $min_seats ) {
+			pmpro_setMessage( __( "The minimum number of seats allowed is " . $min_seats . ".", "pmpro-sponsored-members" ), "pmpro_error" );
 			return false;
 		}
 	}
@@ -1221,9 +1223,9 @@ add_action( "pmpro_checkout_boxes", "pmprosm_pmpro_checkout_boxes" );
 
 //adjust price based on seats
 function pmprosm_pmpro_checkout_levels( $level ) {
-	//get seats from submit
+	//get seats from submit, never less than 0
 	if( isset( $_REQUEST['seats'] ) ) {
-		$seats = intval( $_REQUEST['seats'] );
+		$seats = max( 0, intval( $_REQUEST['seats'] ) );
 	} else {
 		$seats = "";
 	}
