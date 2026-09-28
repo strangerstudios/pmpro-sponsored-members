@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, membership, user pages
 Requires at least: 4.0
-Tested up to: 6.2
-Stable tag: 0.10.2
+Tested up to: 7.1
+Stable tag: 0.10.3
 
 Generate a discount code for a main account holder to distribute to sponsored members.
 
@@ -39,6 +39,12 @@ Once the plugin is activated with the PMPROSM_MAIN_ACCOUNT_LEVEL and PMPROSM_SPO
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sponsored-members/issues
 
 == Changelog ==
+= 0.10.3 - 2026-09-28 =
+* SECURITY: The number of seats is now validated at checkout, including the minimum and maximum seats settings. #149 (@dparker1005)
+* SECURITY: Prepared discount code queries and escaped output on the account page, profile screen, discount codes list and members list. #148 (@dparker1005)
+* SECURITY: Sanitized child account names created at checkout. #148 (@dparker1005)
+* BUG FIX: Fixed the low-seats admin notice breaking when the translated text contains an apostrophe. #148 (@dparker1005)
+
 = 0.10.2 - 2023-07-25 =
 * BUG FIX: Fixed issue where the seat cost would always show $0 at checkout.
 * ENHANCEMENT: Updated `<h3>` tags to `<h2>` tags for better accessibility.
